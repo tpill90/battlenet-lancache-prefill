@@ -41,7 +41,7 @@ namespace BuildBackup
             }
             else
             {
-                cacheDir = @"\\huiskamer\2tb\";
+                cacheDir = @"H:\";
             }
 
             if (!Directory.Exists(cacheDir)) { Directory.CreateDirectory(cacheDir); }
@@ -61,15 +61,23 @@ namespace BuildBackup
             Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
 
             cdnConfig = getCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
-            Console.WriteLine("CDNConfig loaded, " + cdnConfig.builds.Count() + " builds, " + cdnConfig.archives.Count() + " archives");
 
-            cdnBuildConfigs = new buildConfigFile[cdnConfig.builds.Count()];
+            if (cdnConfig.builds != null)
+            {
+                Console.WriteLine("CDNConfig loaded, " + cdnConfig.builds.Count() + " builds, " + cdnConfig.archives.Count() + " archives");
+                cdnBuildConfigs = new buildConfigFile[cdnConfig.builds.Count()];
+            }
+            else
+            {
+                Console.WriteLine("CDNConfig loaded, " + cdnConfig.archives.Count() + " archives");
+            }
+
 
             var allBuilds = true; // Whether or not to grab other builds mentioned in cdnconfig, adds a few min to execution if it has to DL everything fresh.
 
             Dictionary<string, string> hashes = new Dictionary<string, string>();
 
-            if (allBuilds == true)
+            if (allBuilds == true && cdnConfig.builds != null)
             {
                 for (var i = 0; i < cdnConfig.builds.Count(); i++)
                 {
@@ -376,6 +384,18 @@ namespace BuildBackup
                         break;
                     case "build-number": // Overwatch
                         buildConfig.buildNumber = cols[1];
+                        break;
+                    case "install-size":
+                        buildConfig.installSize = cols[1];
+                        break;
+                    case "download-size":
+                        buildConfig.downloadSize = cols[1];
+                        break;
+                    case "partial-priority":
+                        buildConfig.partialPriority = cols[1];
+                        break;
+                    case "partial-priority-size":
+                        buildConfig.partialPrioritySize = cols[1];
                         break;
                     default:
                         throw new Exception("Unknown BuildConfig variable '" + cols[0] + "'");

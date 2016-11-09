@@ -48,6 +48,10 @@ namespace BuildBackup
         public string patch;
         public string patchSize;
         public string patchConfig;
+        public string installSize;
+        public string downloadSize;
+        public string partialPriority;
+        public string partialPrioritySize;
     }
 
     public struct cdnConfigFile
