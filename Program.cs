@@ -558,7 +558,8 @@ namespace BuildBackup
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
             {
-                //if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN") { throw new Exception("Error while parsing install file. Did BLTE header size change?"); }
+
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN") { throw new Exception("Error while parsing install file. Did BLTE header size change?"); }
                 //install.unk = bin.ReadUInt32();
                // install.numEntries = bin.ReadUInt32();
             }
