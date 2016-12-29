@@ -141,9 +141,10 @@ namespace BuildBackup
 
                 if (cdnConfig.patchArchives != null)
                 {
+                    var totalPatchArchives = cdnConfig.patchArchives.Count();
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
-                        Console.WriteLine("Downloading patch archive " + cdnConfig.patchArchives[i]);
+                        Console.WriteLine("[" + (i + 1) + "/" + totalPatchArchives + "] Downloading patch archive " + cdnConfig.patchArchives[i]);
                         downloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i]);
                         downloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index");
                     }
@@ -152,9 +153,24 @@ namespace BuildBackup
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
                 indexes = getIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
+
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
                 getArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
+
+                if(cdnConfig.archiveGroup != null)
+                {
+                    Console.Write("Downloading archive group index..");
+                    Console.WriteLine("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + cdnConfig.archiveGroup[0] + cdnConfig.archiveGroup[1] + "/" + cdnConfig.archiveGroup[2] + cdnConfig.archiveGroup[3] + "/" + cdnConfig.archiveGroup + ".index");
+                    Console.WriteLine("..done\n");
+                }
+
+                if (cdnConfig.patchArchiveGroup != null)
+                {
+                    Console.Write("Downloading archive group index..");
+                    Console.WriteLine("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + cdnConfig.patchArchiveGroup[0] + cdnConfig.patchArchiveGroup[1] + "/" + cdnConfig.patchArchiveGroup[2] + cdnConfig.patchArchiveGroup[3] + "/" + cdnConfig.patchArchiveGroup + ".index");
+                    Console.WriteLine("..done\n");
+                }
 
                 Console.Write("Loading encoding..");
                 encoding = getEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1])); //Use of first encoding is unknown
@@ -200,18 +216,20 @@ namespace BuildBackup
 
                 Console.WriteLine("Downloading " + hashes.Count() + " unarchived files..");
 
+                int h = 1;
+                var tot = hashes.Count;
+
                 foreach (var entry in hashes)
                 {
-                    Console.WriteLine("Downloading " + entry.Key);
+                    Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
                     downloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key);
+                    h++;
                 }
 
                 Console.WriteLine("Done downloading unarchived files.");
 
                 GC.Collect();
             }
-
-            Console.ReadLine();
         }
 
         private static cdnConfigFile getCDNconfig(string program, string url, string hash)
@@ -555,7 +573,7 @@ namespace BuildBackup
                         Console.Write("\n");
                         webClient.DownloadProgressChanged += (s, e) =>
                         {
-                            Console.Write("\r" + e.ProgressPercentage + "% for archive " + archives[i]);
+                            Console.Write("\r [" + (i + 1) + "/" + archives.Count() + "] " + e.ProgressPercentage + "% for archive " + archives[i]);
                         };
 
                         while (webClient.IsBusy)
