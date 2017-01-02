@@ -36,6 +36,54 @@ namespace BuildBackup
             // Check if cache/backup directory exists
             if (!Directory.Exists(cacheDir)) { Directory.CreateDirectory(cacheDir); }
 
+            if(args.Length == 2)
+            {
+                buildConfig = getBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[0]);
+                if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
+
+                cdnConfig = getCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
+
+                encoding = getEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1])); 
+
+                string rootKey = "";
+                string downloadKey = "";
+                string installKey = "";
+
+                Dictionary<string, string> hashes = new Dictionary<string, string>();
+
+                foreach (var entry in encoding.entries)
+                {
+                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; }
+                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; }
+                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; }
+                    if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
+                }
+
+                indexes = getIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                foreach (var index in indexes)
+                {
+                    foreach (var entry in index.archiveIndexEntries)
+                    {
+                        hashes.Remove(entry.headerHash);
+                    }
+                }
+
+                int h = 1;
+                var tot = hashes.Count;
+
+                foreach (var entry in hashes)
+                {
+                    //Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
+                    Console.WriteLine(entry.Key.ToLower());
+                    h++;
+                }
+
+                Environment.Exit(1);
+            }
+
+
             // Load programs
             checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
@@ -237,15 +285,22 @@ namespace BuildBackup
             string content;
             var cdnConfig = new cdnConfigFile();
 
-            try
+            if (url.StartsWith("http"))
             {
-                content = Encoding.UTF8.GetString(downloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
-            }
-            catch (Exception e)
+                try
+                {
+                    content = Encoding.UTF8.GetString(downloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error retrieving CDN config: " + e.Message);
+                    return cdnConfig;
+                }
+            }else
             {
-                Console.WriteLine("Error retrieving CDN config: " + e.Message);
-                return cdnConfig;
+                content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
+
 
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -409,17 +464,25 @@ namespace BuildBackup
 
             var buildConfig = new buildConfigFile();
 
-            try
+            if (url.StartsWith("http"))
             {
-                content = Encoding.UTF8.GetString(downloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+                try
+                {
+                    content = Encoding.UTF8.GetString(downloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error retrieving build config: " + e.Message);
+                    return buildConfig;
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine("Error retrieving build config: " + e.Message);
-                return buildConfig;
+                content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
-            
-            if(string.IsNullOrEmpty(content) || !content.StartsWith("# Build")) {
+
+            if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build")) {
                 Console.WriteLine("Error reading build config!");
                 return buildConfig;
             }
@@ -526,7 +589,16 @@ namespace BuildBackup
                 using (var webClient = new System.Net.WebClient())
                 {
                     byte[] indexContent;
-                    indexContent = downloadAndReturnCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+                    if (url.StartsWith("http"))
+                    {
+                        indexContent = downloadAndReturnCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+
+                    }
+                    else
+                    {
+                        indexContent = File.ReadAllBytes(Path.Combine(url, "data", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
+
+                    }
 
                     using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                     {
@@ -684,26 +756,28 @@ namespace BuildBackup
             var encoding = new encodingFile();
 
             byte[] content;
-            content = downloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
-            if (encodingSize != content.Length)
+            if (url.StartsWith("http:"))
             {
-                
-                content = downloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
+                content = downloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
                 if (encodingSize != content.Length)
                 {
-                    throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
+                    content = downloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
+
+                    if (encodingSize != content.Length)
+                    {
+                        throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
+                    }
                 }
             }
+            else
+            {
+                content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+            }
 
-
-
-            Console.WriteLine("[TEMP] Parsing BLTE file..");
             byte[] parsedContent = parseBLTEfile(content);
-            Console.WriteLine("[TEMP] Parsed BLTE file!");
 
-            Console.WriteLine("[TEMP] Parsing encoding..");
             using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
@@ -758,7 +832,6 @@ namespace BuildBackup
 
                 encoding.entries = entries.ToArray();
             }
-            Console.WriteLine("[TEMP] Done parsing encoding");
 
             return encoding;
         }
