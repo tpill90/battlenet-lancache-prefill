@@ -54,9 +54,9 @@ namespace BuildBackup
 
                 foreach (var entry in encoding.entries)
                 {
-                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; }
-                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; }
-                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; }
+                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
+                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
+                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
                     if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                 }
 
@@ -76,7 +76,7 @@ namespace BuildBackup
                 foreach (var entry in hashes)
                 {
                     //Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
-                    Console.WriteLine(entry.Key.ToLower());
+                    Console.WriteLine("unarchived = " + entry.Key.ToLower());
                     h++;
                 }
 
