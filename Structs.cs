@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace BuildBackup
 {
-    public struct versionsFile
+    public struct VersionsFile
     {
-        public versionsEntry[] entries;
+        public VersionsEntry[] entries;
     }
 
-    public struct versionsEntry
+    public struct VersionsEntry
     {
         public string region;
         public string buildConfig;
@@ -22,19 +22,19 @@ namespace BuildBackup
         public string keyRing;
     }
 
-    public struct cdnsFile
+    public struct CdnsFile
     {
-        public cdnsEntry[] entries;
+        public CdnsEntry[] entries;
     }
 
-    public struct cdnsEntry
+    public struct CdnsEntry
     {
         public string name;
         public string path;
         public string[] hosts;
     }
 
-    public struct buildConfigFile
+    public struct BuildConfigFile
     {
         public string root;
         public string download;
@@ -62,7 +62,7 @@ namespace BuildBackup
         public string partialPrioritySize;
     }
 
-    public struct cdnConfigFile
+    public struct CDNConfigFile
     {
         public string[] archives;
         public string archiveGroup;
@@ -71,20 +71,20 @@ namespace BuildBackup
         public string[] builds;
     }
 
-    public struct archiveIndex
+    public struct ArchiveIndex
     {
         public string name;
-        public archiveIndexEntry[] archiveIndexEntries;
+        public ArchiveIndexEntry[] archiveIndexEntries;
     }
 
-    public struct archiveIndexEntry
+    public struct ArchiveIndexEntry
     {
         public string headerHash;
         public uint offset;
         public uint size;
     }
 
-    public struct encodingFile
+    public struct EncodingFile
     {
         public byte unk1;
         public byte checksumSizeA;
@@ -95,18 +95,18 @@ namespace BuildBackup
         public uint numEntriesB;
         public byte unk2;
         public int stringBlockSize;
-        public encodingHeaderEntry[] headers;
-        public encodingFileEntry[] entries;
+        public EncodingHeaderEntry[] headers;
+        public EncodingFileEntry[] entries;
 
     }
 
-    public struct encodingHeaderEntry
+    public struct EncodingHeaderEntry
     {
         public string firstHash;
         public string checksum;
     }
 
-    public struct encodingFileEntry
+    public struct EncodingFileEntry
     {
         public ushort keyCount;
         public uint size;
@@ -114,33 +114,33 @@ namespace BuildBackup
         public string key;
     }
 
-    public struct installFile
+    public struct InstallFile
     {
         public uint unk;
         public uint numEntries;
-        public installHeaderEntry[] headers;
-        public installFileEntry[] entries;
+        public InstallHeaderEntry[] headers;
+        public InstallFileEntry[] entries;
     }
 
-    public struct installHeaderEntry
+    public struct InstallHeaderEntry
     {
 
     }
 
-    public struct installFileEntry
+    public struct InstallFileEntry
     {
 
     }
 
-    public struct downloadFile
+    public struct DownloadFile
     {
         public byte[] unk;
         public uint numEntries;
         public uint numTags;
-        public downloadEntry[] entries;
+        public DownloadEntry[] entries;
     }
 
-    public struct downloadEntry
+    public struct DownloadEntry
     {
         public string hash;
         public byte[] unk;
@@ -154,15 +154,15 @@ namespace BuildBackup
         public byte[] checkSum;
     }
 
-    public struct rootBlock
+    public struct RootBlock
     {
         public ContentFlags contentFlags;
         public LocaleFlags localeFlags;
     }
 
-    public struct rootEntry
+    public struct RootEntry
     {
-        public rootBlock block;
+        public RootBlock block;
         public int fileDataID;
         public byte[] md5;
     }
