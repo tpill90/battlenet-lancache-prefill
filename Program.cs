@@ -88,7 +88,6 @@ namespace BuildBackup
 
             // Load programs
             checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
-            checkPrograms = new string[] { "wow", "wowt", "wow_beta" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
