@@ -128,70 +128,6 @@ namespace BuildBackup
                     continue;
                 }
 
-                var allBuilds = true; // Whether or not to grab other builds mentioned in cdnconfig, adds a few min to execution if it has to DL everything fresh.
-
-                Dictionary<string, string> hashes = new Dictionary<string, string>();
-
-                if (allBuilds == true && cdnConfig.builds != null)
-                {
-                    for (var i = 0; i < cdnConfig.builds.Count(); i++)
-                    {
-                        cdnBuildConfigs[i] = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.builds[i]);
-
-                        Console.WriteLine("Retrieved additional build config in cdn config: " + cdnBuildConfigs[i].buildName);
-
-                        Console.WriteLine("Loading encoding " + cdnBuildConfigs[i].encoding[1]);
-                        var subBuildEncoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnBuildConfigs[i].encoding[1], int.Parse(cdnBuildConfigs[i].encodingSize[1])); //Use of first encoding is unknown
-
-                        string subBuildRootKey = null;
-                        string subBuildDownloadKey = null;
-                        string subBuildInstallKey = null;
-
-                        foreach (var entry in subBuildEncoding.entries)
-                        {
-                            if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
-
-                            if (entry.hash == cdnBuildConfigs[i].root.ToUpper()) { subBuildRootKey = entry.key; }
-                            if (entry.hash == cdnBuildConfigs[i].download.ToUpper()) { subBuildDownloadKey = entry.key; }
-                            if (entry.hash == cdnBuildConfigs[i].install.ToUpper()) { subBuildInstallKey = entry.key; }
-                        }
-
-                        if (subBuildRootKey != null && program != "pro") // Overwatch has it in archives
-                        {
-                            Console.WriteLine("Downloading root " + subBuildRootKey + " (in buildconfig: " + cdnBuildConfigs[i].root.ToUpper() + ")");
-                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildRootKey[0] + subBuildRootKey[1] + "/" + subBuildRootKey[2] + subBuildRootKey[3] + "/" + subBuildRootKey);
-                        }
-
-                        if (subBuildDownloadKey != null)
-                        {
-                            Console.WriteLine("Downloading download " + subBuildDownloadKey);
-                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildDownloadKey[0] + subBuildDownloadKey[1] + "/" + subBuildDownloadKey[2] + subBuildDownloadKey[3] + "/" + subBuildDownloadKey);
-                        }
-
-                        if (subBuildInstallKey != null)
-                        {
-                            Console.WriteLine("Downloading install " + subBuildInstallKey);
-                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildInstallKey[0] + subBuildInstallKey[1] + "/" + subBuildInstallKey[2] + subBuildInstallKey[3] + "/" + subBuildInstallKey);
-                        }
-
-                        if (cdnBuildConfigs[i].patchConfig != null)
-                        {
-                            if (cdnBuildConfigs[i].patchConfig.Contains(" ")) { throw new Exception("Patch config has multiple entries"); }
-                            Console.WriteLine("Downloading patch config " + cdnBuildConfigs[i].patchConfig);
-                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + cdnBuildConfigs[i].patchConfig[0] + cdnBuildConfigs[i].patchConfig[1] + "/" + cdnBuildConfigs[i].patchConfig[2] + cdnBuildConfigs[i].patchConfig[3] + "/" + cdnBuildConfigs[i].patchConfig);
-                        }
-
-                        if (cdnBuildConfigs[i].patch != null)
-                        {
-                            if (cdnBuildConfigs[i].patch.Contains(" ")) { throw new Exception("Patch has multiple entries"); }
-                            Console.WriteLine("Downloading patch " + cdnBuildConfigs[i].patch);
-                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnBuildConfigs[i].patch[0] + cdnBuildConfigs[i].patch[1] + "/" + cdnBuildConfigs[i].patch[2] + cdnBuildConfigs[i].patch[3] + "/" + cdnBuildConfigs[i].patch);
-                        }
-                    }
-                }
-
-                //Get all stuff from additional builds
-
                 if (cdnConfig.patchArchives != null)
                 {
                     var totalPatchArchives = cdnConfig.patchArchives.Count();
@@ -213,6 +149,8 @@ namespace BuildBackup
 
                 Console.Write("Loading encoding..");
                 encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1])); //Use of first encoding is unknown
+
+                Dictionary<string, string> hashes = new Dictionary<string, string>();
 
                 string rootKey = "";
                 string downloadKey = "";
