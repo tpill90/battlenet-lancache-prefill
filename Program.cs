@@ -28,6 +28,7 @@ namespace BuildBackup
         private static EncodingFile encoding;
         private static InstallFile install;
         private static DownloadFile download;
+        private static RootFile root;
 
         static void Main(string[] args)
         {
@@ -36,7 +37,7 @@ namespace BuildBackup
             // Check if cache/backup directory exists
             if (!Directory.Exists(cacheDir)) { Directory.CreateDirectory(cacheDir); }
 
-            if(args.Length == 2)
+            if (args.Length == 2)
             {
                 buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[0]);
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
@@ -44,7 +45,7 @@ namespace BuildBackup
                 cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
                 if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
 
-                encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]); 
+                encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
 
                 string rootKey = "";
                 string downloadKey = "";
@@ -85,9 +86,9 @@ namespace BuildBackup
                 Environment.Exit(1);
             }
 
-
             // Load programs
             checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            checkPrograms = new string[] { "wow", "wowt", "wow_beta" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
@@ -99,7 +100,7 @@ namespace BuildBackup
                 Console.WriteLine("Loaded " + versions.entries.Count() + " versions");
 
                 cdns = GetCDNs(program);
-                if(cdns.entries == null || cdns.entries.Count() == 0){ Console.WriteLine("Invalid CDNs file for " + program + ", skipping!"); continue; }
+                if (cdns.entries == null || cdns.entries.Count() == 0) { Console.WriteLine("Invalid CDNs file for " + program + ", skipping!"); continue; }
                 Console.WriteLine("Loaded " + cdns.entries.Count() + " cdns");
 
                 buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
@@ -107,7 +108,7 @@ namespace BuildBackup
                 Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
 
                 cdnConfig = GetCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
-                if(cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig for " + program + ", skipping!"); continue; }
+                if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig for " + program + ", skipping!"); continue; }
 
                 if (cdnConfig.builds != null)
                 {
@@ -118,6 +119,8 @@ namespace BuildBackup
                 {
                     Console.WriteLine("CDNConfig loaded, " + cdnConfig.archives.Count() + " archives");
                 }
+
+                if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
 
                 if (!backupPrograms.Contains(program))
                 {
@@ -156,33 +159,33 @@ namespace BuildBackup
                         if (subBuildRootKey != null && program != "pro") // Overwatch has it in archives
                         {
                             Console.WriteLine("Downloading root " + subBuildRootKey + " (in buildconfig: " + cdnBuildConfigs[i].root.ToUpper() + ")");
-                            DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildRootKey[0] + subBuildRootKey[1] + "/" + subBuildRootKey[2] + subBuildRootKey[3] + "/" + subBuildRootKey);
+                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildRootKey[0] + subBuildRootKey[1] + "/" + subBuildRootKey[2] + subBuildRootKey[3] + "/" + subBuildRootKey);
                         }
 
                         if (subBuildDownloadKey != null)
                         {
                             Console.WriteLine("Downloading download " + subBuildDownloadKey);
-                            DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildDownloadKey[0] + subBuildDownloadKey[1] + "/" + subBuildDownloadKey[2] + subBuildDownloadKey[3] + "/" + subBuildDownloadKey);
+                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildDownloadKey[0] + subBuildDownloadKey[1] + "/" + subBuildDownloadKey[2] + subBuildDownloadKey[3] + "/" + subBuildDownloadKey);
                         }
 
                         if (subBuildInstallKey != null)
                         {
                             Console.WriteLine("Downloading install " + subBuildInstallKey);
-                            DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildInstallKey[0] + subBuildInstallKey[1] + "/" + subBuildInstallKey[2] + subBuildInstallKey[3] + "/" + subBuildInstallKey);
+                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + subBuildInstallKey[0] + subBuildInstallKey[1] + "/" + subBuildInstallKey[2] + subBuildInstallKey[3] + "/" + subBuildInstallKey);
                         }
 
                         if (cdnBuildConfigs[i].patchConfig != null)
                         {
                             if (cdnBuildConfigs[i].patchConfig.Contains(" ")) { throw new Exception("Patch config has multiple entries"); }
                             Console.WriteLine("Downloading patch config " + cdnBuildConfigs[i].patchConfig);
-                            DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + cdnBuildConfigs[i].patchConfig[0] + cdnBuildConfigs[i].patchConfig[1] + "/" + cdnBuildConfigs[i].patchConfig[2] + cdnBuildConfigs[i].patchConfig[3] + "/" + cdnBuildConfigs[i].patchConfig);
+                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + cdnBuildConfigs[i].patchConfig[0] + cdnBuildConfigs[i].patchConfig[1] + "/" + cdnBuildConfigs[i].patchConfig[2] + cdnBuildConfigs[i].patchConfig[3] + "/" + cdnBuildConfigs[i].patchConfig);
                         }
 
                         if (cdnBuildConfigs[i].patch != null)
                         {
                             if (cdnBuildConfigs[i].patch.Contains(" ")) { throw new Exception("Patch has multiple entries"); }
                             Console.WriteLine("Downloading patch " + cdnBuildConfigs[i].patch);
-                            DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnBuildConfigs[i].patch[0] + cdnBuildConfigs[i].patch[1] + "/" + cdnBuildConfigs[i].patch[2] + cdnBuildConfigs[i].patch[3] + "/" + cdnBuildConfigs[i].patch);
+                            GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnBuildConfigs[i].patch[0] + cdnBuildConfigs[i].patch[1] + "/" + cdnBuildConfigs[i].patch[2] + cdnBuildConfigs[i].patch[3] + "/" + cdnBuildConfigs[i].patch);
                         }
                     }
                 }
@@ -195,8 +198,8 @@ namespace BuildBackup
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
                         Console.WriteLine("[" + (i + 1) + "/" + totalPatchArchives + "] Downloading patch archive " + cdnConfig.patchArchives[i]);
-                        DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i]);
-                        DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index");
+                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
+                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
                     }
                 }
 
@@ -207,20 +210,6 @@ namespace BuildBackup
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
                 GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
-
-                if(cdnConfig.archiveGroup != null)
-                {
-                    Console.Write("Downloading archive group index..");
-                    Console.WriteLine("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + cdnConfig.archiveGroup[0] + cdnConfig.archiveGroup[1] + "/" + cdnConfig.archiveGroup[2] + cdnConfig.archiveGroup[3] + "/" + cdnConfig.archiveGroup + ".index");
-                    Console.WriteLine("..done\n");
-                }
-
-                if (cdnConfig.patchArchiveGroup != null)
-                {
-                    Console.Write("Downloading archive group index..");
-                    Console.WriteLine("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + cdnConfig.patchArchiveGroup[0] + cdnConfig.patchArchiveGroup[1] + "/" + cdnConfig.patchArchiveGroup[2] + cdnConfig.patchArchiveGroup[3] + "/" + cdnConfig.patchArchiveGroup + ".index");
-                    Console.WriteLine("..done\n");
-                }
 
                 Console.Write("Loading encoding..");
                 encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1])); //Use of first encoding is unknown
@@ -239,11 +228,10 @@ namespace BuildBackup
 
                 Console.Write("..done\n");
 
-
-                if (program != "pro" && program != "agent" && program != "Prot" && program != "bnt" && program != "bna") // These aren't supported right now
+                if (program == "wow" || program == "wowt" || program == "wow_beta") // Only these are supported right now
                 {
                     Console.Write("Loading root..");
-                    if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey); }
+                    if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey); }
                     Console.Write("..done\n");
 
                     Console.Write("Loading download..");
@@ -251,10 +239,9 @@ namespace BuildBackup
                     Console.Write("..done\n");
 
                     Console.Write("Loading install..");
-                    if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", installKey); }
+                    if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", installKey); }
                     Console.Write("..done\n");
                 }
-
 
                 foreach (var index in indexes)
                 {
@@ -271,8 +258,8 @@ namespace BuildBackup
 
                 foreach (var entry in hashes)
                 {
-                    Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
-                    DownloadCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key);
+                    Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key.ToLower());
+                    GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
                     h++;
                 }
 
@@ -291,14 +278,15 @@ namespace BuildBackup
             {
                 try
                 {
-                    content = Encoding.UTF8.GetString(DownloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+                    content = Encoding.UTF8.GetString(GetCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Error retrieving CDN config: " + e.Message);
                     return cdnConfig;
                 }
-            }else
+            }
+            else
             {
                 content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
@@ -361,7 +349,7 @@ namespace BuildBackup
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            if(lines.Count() > 0)
+            if (lines.Count() > 0)
             {
                 versions.entries = new VersionsEntry[lines.Count() - 1];
 
@@ -407,8 +395,8 @@ namespace BuildBackup
 
                 }
             }
-            
-            if(versions.entries != null && versions.entries.Count() > 0)
+
+            if (versions.entries != null && versions.entries.Count() > 0)
             {
                 //TODO For now this'll have to do
                 var dirname = Path.Combine(cacheDir, "ngdp", program, program + "_" + versions.entries[0].buildId + "_" + versions.entries[0].versionsName);
@@ -430,7 +418,8 @@ namespace BuildBackup
                 try
                 {
                     content = webClient.DownloadString(new Uri(baseUrl + program + "/" + "cdns"));
-                }catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine("Error downloading CDNs file" + e.Message);
                     return cdns;
@@ -439,7 +428,7 @@ namespace BuildBackup
 
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 
-            if(lines.Count() > 0)
+            if (lines.Count() > 0)
             {
                 cdns.entries = new CdnsEntry[lines.Count() - 1];
                 for (var i = 0; i < lines.Count(); i++)
@@ -475,7 +464,7 @@ namespace BuildBackup
             {
                 try
                 {
-                    content = Encoding.UTF8.GetString(DownloadAndReturnCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+                    content = Encoding.UTF8.GetString(GetCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
 
                 }
                 catch (Exception e)
@@ -489,13 +478,13 @@ namespace BuildBackup
                 content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
-            if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build")) {
+            if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
+            {
                 Console.WriteLine("Error reading build config!");
                 return buildConfig;
             }
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
 
             for (var i = 0; i < lines.Count(); i++)
             {
@@ -598,7 +587,7 @@ namespace BuildBackup
                     byte[] indexContent;
                     if (url.StartsWith("http"))
                     {
-                        indexContent = DownloadAndReturnCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+                        indexContent = GetCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
 
                     }
                     else
@@ -663,61 +652,88 @@ namespace BuildBackup
 
                     }
                 }
-                else
-                {
-                    var MyClient = WebRequest.Create(name) as HttpWebRequest;
-                    MyClient.Method = WebRequestMethods.Http.Get;
-                    var response = MyClient.GetResponse() as HttpWebResponse;
-                    if (response.Headers["Content-Length"] != new FileInfo(cacheDir + cleanname).Length.ToString())
-                    {
-                        Console.WriteLine("!!! Archive " + cleanname + " is incomplete or has been deleted from CDN. " + response.Headers["Content-Length"] + " vs " + new FileInfo(cacheDir + cleanname).Length.ToString() + ". Attempting redownload!");
-                        using (var webClient = new System.Net.WebClient())
-                        {
-                            //byte[] file;
+                //else
+                //{
+                //    var MyClient = WebRequest.Create(name) as HttpWebRequest;
+                //    MyClient.Method = WebRequestMethods.Http.Get;
+                //    var response = MyClient.GetResponse() as HttpWebResponse;
+                //    if (response.Headers["Content-Length"] != new FileInfo(cacheDir + cleanname).Length.ToString())
+                //    {
+                //        Console.WriteLine("!!! Archive " + cleanname + " is incomplete or has been deleted from CDN. " + response.Headers["Content-Length"] + " vs " + new FileInfo(cacheDir + cleanname).Length.ToString() + ". Attempting redownload!");
+                //        using (var webClient = new System.Net.WebClient())
+                //        {
+                //            //byte[] file;
 
-                            try
-                            {
-                                webClient.DownloadFile(new Uri(name), cacheDir + cleanname);
-                                // file = webClient.DownloadData(new Uri(name));
-                                // if (file != null) File.WriteAllBytes(cacheDir + cleanname, file);
-                            }
-                            catch (WebException e)
-                            {
-                                Console.WriteLine(e.Message);
-                            }
-                        }
-                    }
-                    MyClient.Abort();
+                //            try
+                //            {
+                //                webClient.DownloadFile(new Uri(name), cacheDir + cleanname);
+                //                // file = webClient.DownloadData(new Uri(name));
+                //                // if (file != null) File.WriteAllBytes(cacheDir + cleanname, file);
+                //            }
+                //            catch (WebException e)
+                //            {
+                //                Console.WriteLine(e.Message);
+                //            }
+                //        }
+                //    }
+                //    MyClient.Abort();
 
-                }
+                //}
             }
         }
 
-        private static void GetRoot(string url, string hash)
+        private static RootFile GetRoot(string url, string hash)
         {
-            using (var webClient = new System.Net.WebClient())
+            var root = new RootFile();
+            root.entries = new MultiDictionary<ulong, RootEntry>();
+
+            using (var webClient = new WebClient())
             {
-                byte[] content;
-                //Console.WriteLine(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-                content = DownloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+                byte[] content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
-                //File.WriteAllBytes("root_encoded", content);
+                using (var ms = new MemoryStream(ParseBLTEfile(content)))
+                using (var bin = new BinaryReader(ms))
+                {
+                    while (bin.BaseStream.Position < bin.BaseStream.Length)
+                    {
+                        var count = bin.ReadUInt32();
+                        var contentFlags = (ContentFlags)bin.ReadUInt32();
+                        var localeFlags = (LocaleFlags)bin.ReadUInt32();
 
-                //byte[] parsedContent = parseBLTEfile(content);
+                        var entries = new RootEntry[count];
+                        var filedataIds = new int[count];
 
-                //File.WriteAllBytes("root_decoded", parsedContent);
+                        var fileDataIndex = 0;
+                        for (var i = 0; i < count; ++i)
+                        {
+                            entries[i].localeFlags = localeFlags;
+                            entries[i].contentFlags = contentFlags;
 
+                            filedataIds[i] = fileDataIndex + bin.ReadInt32();
+                            fileDataIndex = filedataIds[i] + 1;
+                        }
+
+                        for (var i = 0; i < count; ++i)
+                        {
+                            entries[i].md5 = bin.ReadBytes(16);
+                            entries[i].lookup = bin.ReadUInt64();
+                            root.entries.Add(entries[i].lookup, entries[i]);
+                        }
+                    }
+                }
             }
+
+            return root;
         }
 
         private static DownloadFile GetDownload(string url, string hash)
         {
             var download = new DownloadFile();
 
-            using (var webClient = new System.Net.WebClient())
+            using (var webClient = new WebClient())
             {
                 byte[] content;
-                content = DownloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+                content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
                 byte[] parsedContent = ParseBLTEfile(content);
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
@@ -743,18 +759,39 @@ namespace BuildBackup
         {
             var install = new InstallFile();
 
-            byte[] content;
+            byte[] content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
-            content = DownloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-
-            byte[] parsedContent = ParseBLTEfile(content);
-
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(ParseBLTEfile(content))))
             {
-
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN") { throw new Exception("Error while parsing install file. Did BLTE header size change?"); }
-                //install.unk = bin.ReadUInt32();
-                // install.numEntries = bin.ReadUInt32();
+
+                bin.ReadByte();
+
+                install.hashSize = bin.ReadByte();
+                if (install.hashSize != 16) throw new Exception("Unsupported install hash size!");
+
+                install.numTags = bin.ReadUInt16(true);
+                install.numEntries = bin.ReadUInt32(true);
+
+                int bytesPerTag = ((int)install.numEntries + 7) / 8;
+
+                install.tags = new InstallTagEntry[install.numTags];
+
+                for (var i = 0; i < install.numTags; i++)
+                {
+                    install.tags[i].name = bin.ReadCString();
+                    install.tags[i].type = bin.ReadUInt16(true);
+                    install.tags[i].files = bin.ReadBytes(bytesPerTag);
+                }
+
+                install.entries = new InstallFileEntry[install.numEntries];
+
+                for (var i = 0; i < install.numEntries; i++)
+                {
+                    install.entries[i].name = bin.ReadCString();
+                    install.entries[i].contentHash = bin.ReadBytes(install.hashSize);
+                    install.entries[i].size = bin.ReadUInt32(true);
+                }
             }
 
             return install;
@@ -768,11 +805,11 @@ namespace BuildBackup
 
             if (url.StartsWith("http:"))
             {
-                content = DownloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+                content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
                 if (encodingSize != content.Length)
                 {
-                    content = DownloadAndReturnCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
+                    content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
 
                     if (encodingSize != content.Length)
                     {
@@ -964,7 +1001,8 @@ namespace BuildBackup
                     if (chunk.inFileSize > bin.BaseStream.Length)
                     {
                         throw new Exception("Trying to read more than is available!");
-                    }else
+                    }
+                    else
                     {
                         bin.BaseStream.Position += chunk.inFileSize;
                     }
@@ -974,30 +1012,7 @@ namespace BuildBackup
             return result.ToArray();
         }
 
-        public static void DownloadCDNFile(string url)
-        {
-            url = url.ToLower();
-
-            string cleanname = url.Replace("http://" + cdns.entries[0].hosts[0], "");
-
-            if (!File.Exists(cacheDir + cleanname))
-            {
-                using (var webClient = new System.Net.WebClient())
-                {
-                    try
-                    {
-                        if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
-                        webClient.DownloadFile(url, cacheDir + cleanname);
-                    }
-                    catch (WebException e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-                }
-            }
-        }
-
-        public static byte[] DownloadAndReturnCDNFile(string url, bool redownload = false)
+        public static byte[] GetCDNFile(string url, bool returnstream = true, bool redownload = false)
         {
             url = url.ToLower();
 
@@ -1005,7 +1020,7 @@ namespace BuildBackup
 
             if (redownload || !File.Exists(cacheDir + cleanname))
             {
-                using (var webClient = new System.Net.WebClient())
+                using (var webClient = new WebClient())
                 {
                     try
                     {
@@ -1019,7 +1034,14 @@ namespace BuildBackup
                 }
             }
 
-            return File.ReadAllBytes(cacheDir + cleanname);
+            if (returnstream)
+            {
+                return File.ReadAllBytes(cacheDir + cleanname);
+            }
+            else
+            {
+                return new byte[0];
+            }
         }
     }
 }
