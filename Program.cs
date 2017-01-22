@@ -37,57 +37,101 @@ namespace BuildBackup
             // Check if cache/backup directory exists
             if (!Directory.Exists(cacheDir)) { Directory.CreateDirectory(cacheDir); }
 
-            if (args.Length == 2)
+            if (args.Length > 0)
             {
-                buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[0]);
-                if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
-
-                cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
-                if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
-
-                encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-
-                string rootKey = "";
-                string downloadKey = "";
-                string installKey = "";
-
-                Dictionary<string, string> hashes = new Dictionary<string, string>();
-
-                foreach (var entry in encoding.entries)
+                if(args[0] == "missingfiles")
                 {
-                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
-                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
-                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
-                    if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
-                }
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
 
-                indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                foreach (var index in indexes)
-                {
-                    Console.WriteLine("Checking " + index.name + " " + index.archiveIndexEntries.Count() + " entries");
-                    foreach (var entry in index.archiveIndexEntries)
+                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+                    if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    Dictionary<string, string> hashes = new Dictionary<string, string>();
+
+                    foreach (var entry in encoding.entries)
                     {
-                        hashes.Remove(entry.headerHash);
-                        Console.WriteLine("Removing " + entry.headerHash.ToLower() + " from list");
+                        if (entry.hash == buildConfig.root.ToUpper()) { root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), entry.hash.ToLower()); }
+                        if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                    foreach (var index in indexes)
+                    {
+                        // If respective archive does not exist, add to separate list
+
+
+
+                        // Remove from list as usual
+                        foreach (var entry in index.archiveIndexEntries)
+                        {
+                            hashes.Remove(entry.headerHash);
+                        }
+                    }
+
+                    // Run through root to see which file hashes belong to which missing file and put those in a list
+                    // Run through listfile to see if files are known
+                    Environment.Exit(1);
                 }
-
-                int h = 1;
-                var tot = hashes.Count;
-
-                foreach (var entry in hashes)
+                if(args[0] == "dumpinfo")
                 {
-                    //Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
-                    Console.WriteLine("unarchived = " + entry.Key.ToLower());
-                    h++;
-                }
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                Environment.Exit(1);
+                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+                    if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    string rootKey = "";
+                    string downloadKey = "";
+                    string installKey = "";
+
+                    Dictionary<string, string> hashes = new Dictionary<string, string>();
+
+                    foreach (var entry in encoding.entries)
+                    {
+                        if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
+                        if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
+                        if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
+                        if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
+                    }
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                    foreach (var index in indexes)
+                    {
+                        Console.WriteLine("Checking " + index.name + " " + index.archiveIndexEntries.Count() + " entries");
+                        foreach (var entry in index.archiveIndexEntries)
+                        {
+                            hashes.Remove(entry.headerHash);
+                            Console.WriteLine("Removing " + entry.headerHash.ToLower() + " from list");
+                        }
+                    }
+
+                    int h = 1;
+                    var tot = hashes.Count;
+
+                    foreach (var entry in hashes)
+                    {
+                        //Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key);
+                        Console.WriteLine("unarchived = " + entry.Key.ToLower());
+                        h++;
+                    }
+
+                    Environment.Exit(1);
+                }
             }
 
             // Load programs
-            checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            //checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            checkPrograms = new string[] { "wow", "wowt", "wow_beta" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
@@ -127,17 +171,6 @@ namespace BuildBackup
                     continue;
                 }
 
-                if (cdnConfig.patchArchives != null)
-                {
-                    var totalPatchArchives = cdnConfig.patchArchives.Count();
-                    for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
-                    {
-                        Console.WriteLine("[" + (i + 1) + "/" + totalPatchArchives + "] Downloading patch archive " + cdnConfig.patchArchives[i]);
-                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
-                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
-                    }
-                }
-
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
                 indexes = GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
@@ -157,9 +190,9 @@ namespace BuildBackup
 
                 foreach (var entry in encoding.entries)
                 {
-                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; }
-                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; }
-                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; }
+                    if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
+                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key.ToLower(); }
+                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key.ToLower(); }
                     if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                 }
 
@@ -185,6 +218,17 @@ namespace BuildBackup
                     foreach (var entry in index.archiveIndexEntries)
                     {
                         hashes.Remove(entry.headerHash);
+                    }
+                }
+
+                if (cdnConfig.patchArchives != null)
+                {
+                    var totalPatchArchives = cdnConfig.patchArchives.Count();
+                    for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
+                    {
+                        Console.WriteLine("[" + (i + 1) + "/" + totalPatchArchives + "] Downloading patch archive " + cdnConfig.patchArchives[i]);
+                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
+                        GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
                     }
                 }
 
@@ -626,7 +670,16 @@ namespace BuildBackup
 
             using (var webClient = new WebClient())
             {
-                byte[] content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+                byte[] content;
+
+                if (url.StartsWith("http:"))
+                {
+                    content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+                }
+                else
+                {
+                    content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+                }
 
                 using (var ms = new MemoryStream(ParseBLTEfile(content)))
                 using (var bin = new BinaryReader(ms))
