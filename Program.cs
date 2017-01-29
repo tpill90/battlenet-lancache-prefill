@@ -77,7 +77,7 @@ namespace BuildBackup
 
                     // Run through root to see which file hashes belong to which missing file and put those in a list
                     // Run through listfile to see if files are known
-                    Environment.Exit(1);
+                    Environment.Exit(0);
                 }
                 if(args[0] == "dumpinfo")
                 {
@@ -151,7 +151,7 @@ namespace BuildBackup
                         Console.WriteLine(entry.Key + " => " + BitConverter.ToString(entry.Value[0].md5).Replace("-", "").ToLower());
                     }
 
-                    Environment.Exit(1);
+                    Environment.Exit(0);
                 }
                 if(args[0] == "diffroot")
                 {
@@ -221,14 +221,82 @@ namespace BuildBackup
                         }
                     }
 
-                    Environment.Exit(1);
+                    Environment.Exit(0);
                 }
                 if(args[0] == "calchash")
                 {
                     var hasher = new Jenkins96();
                     var hash = hasher.ComputeHash(args[1]);
                     Console.WriteLine(hash + " " + hash.ToString("x").PadLeft(16, '0'));
-                    Environment.Exit(1);
+                    Environment.Exit(0);
+                }
+                if(args[0] == "dumpinstall")
+                {
+                    cdns = GetCDNs("wow");
+                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+                    foreach(var entry in install.entries)
+                    {
+                        Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ")");
+                    }
+                    Console.WriteLine(install.entries.Count());
+                    Environment.Exit(0);
+                }
+                if(args[0] == "extractfilebycontenthash")
+                {
+                    if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, contenthash, outname");
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    string target = "";
+
+                    foreach (var entry in encoding.entries)
+                    {
+                        if (entry.hash.ToLower() == args[3]) { target = entry.key; }
+                    }
+
+                    if (string.IsNullOrEmpty(target))
+                    {
+                        throw new Exception("File not found in encoding!");
+                    }
+
+                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                    var done = false;
+                    foreach (var index in indexes)
+                    {
+                        foreach (var entry in index.archiveIndexEntries)
+                        {
+                            if (entry.headerHash.ToLower() == target.ToLower())
+                            {
+                                Console.WriteLine("Found");
+                                var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                if (!File.Exists(archiveName))
+                                {
+                                    throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
+                                }
+
+                                using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
+                                using (BinaryReader bin = new BinaryReader(ms))
+                                {
+                                    bin.BaseStream.Position = entry.offset;
+                                    File.WriteAllBytes(args[4], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                    done = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!done)
+                    {
+                        // If not found here, file is unarchived. TODO!
+                        throw new Exception("Unable to find file in archives. File is either unarchived or not available! TODO");
+                    }
+
+                    Environment.Exit(0);
                 }
             }
 
