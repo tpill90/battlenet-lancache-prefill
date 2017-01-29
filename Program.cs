@@ -153,7 +153,6 @@ namespace BuildBackup
 
                     Environment.Exit(1);
                 }
-
                 if(args[0] == "diffroot")
                 {
                     cdns = GetCDNs("wow");
@@ -169,6 +168,8 @@ namespace BuildBackup
                     var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
                     var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
 
+                    var unkFilenames = new List<ulong>();
+
                     foreach (var entry in root2.entries)
                     {
                         if (!root1.entries.ContainsKey(entry.Key))
@@ -176,11 +177,12 @@ namespace BuildBackup
                             // Added
                             if (fileNames.ContainsKey(entry.Key))
                             {
-                                Console.WriteLine("[ADDED] " + fileNames[entry.Key]);
+                                Console.WriteLine("[ADDED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') +", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
                             }
                             else
                             {
-                                Console.WriteLine("[ADDED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                                Console.WriteLine("[ADDED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
+                                unkFilenames.Add(entry.Key);
                             }
                         }
                     }
@@ -192,11 +194,12 @@ namespace BuildBackup
                             // Removed
                             if (fileNames.ContainsKey(entry.Key))
                             {
-                                Console.WriteLine("[REMOVED] " + fileNames[entry.Key]);
+                                Console.WriteLine("[REMOVED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
                             }
                             else
                             {
-                                Console.WriteLine("[REMOVED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                                Console.WriteLine("[REMOVED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
+                                unkFilenames.Add(entry.Key);
                             }
                         }
                         else
@@ -207,15 +210,24 @@ namespace BuildBackup
                             {
                                 if (fileNames.ContainsKey(entry.Key))
                                 {
-                                    Console.WriteLine("[MODIFIED] " + fileNames[entry.Key]);
+                                    Console.WriteLine("[MODIFIED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", FileData ID: " + entry.Value[0].fileDataID + ")");
                                 }
                                 else
                                 {
-                                    Console.WriteLine("[MODIFIED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                                    Console.WriteLine("[MODIFIED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
+                                    unkFilenames.Add(entry.Key);
                                 }
                             }
                         }
                     }
+
+                    Environment.Exit(1);
+                }
+                if(args[0] == "calchash")
+                {
+                    var hasher = new Jenkins96();
+                    var hash = hasher.ComputeHash(args[1]);
+                    Console.WriteLine(hash + " " + hash.ToString("x").PadLeft(16, '0'));
                     Environment.Exit(1);
                 }
             }
@@ -786,6 +798,8 @@ namespace BuildBackup
                             entries[i].contentFlags = contentFlags;
 
                             filedataIds[i] = fileDataIndex + bin.ReadInt32();
+                            entries[i].fileDataID = (uint)filedataIds[i];
+
                             fileDataIndex = filedataIds[i] + 1;
                         }
 
