@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -127,11 +128,101 @@ namespace BuildBackup
 
                     Environment.Exit(1);
                 }
+                if(args[0] == "dumproot")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    string rootKey = "";
+
+                    foreach (var entry in encoding.entries)
+                    {
+                        if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; }
+                    }
+
+                    cdns = GetCDNs("wow");
+
+                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey);
+                    foreach(var entry in root.entries)
+                    {
+                        Console.WriteLine(entry.Key + " => " + BitConverter.ToString(entry.Value[0].md5).Replace("-", "").ToLower());
+                    }
+
+                    Environment.Exit(1);
+                }
+
+                if(args[0] == "diffroot")
+                {
+                    cdns = GetCDNs("wow");
+
+                    var fileNames = new Dictionary<ulong, string>();
+
+                    var hasher = new Jenkins96();
+                    foreach (var line in File.ReadLines("listfile.txt"))
+                    {
+                        fileNames.Add(hasher.ComputeHash(line), line);
+                    }
+
+                    var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+                    var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
+
+                    foreach (var entry in root2.entries)
+                    {
+                        if (!root1.entries.ContainsKey(entry.Key))
+                        {
+                            // Added
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine("[ADDED] " + fileNames[entry.Key]);
+                            }
+                            else
+                            {
+                                Console.WriteLine("[ADDED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                            }
+                        }
+                    }
+
+                    foreach (var entry in root1.entries)
+                    {
+                        if (!root2.entries.ContainsKey(entry.Key))
+                        {
+                            // Removed
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine("[REMOVED] " + fileNames[entry.Key]);
+                            }
+                            else
+                            {
+                                Console.WriteLine("[REMOVED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                            }
+                        }
+                        else
+                        {
+                            var r1md5 = BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower();
+                            var r2md5 = BitConverter.ToString(root2.entries[entry.Key][0].md5).Replace("-", string.Empty).ToLower();
+                            if (r1md5 != r2md5)
+                            {
+                                if (fileNames.ContainsKey(entry.Key))
+                                {
+                                    Console.WriteLine("[MODIFIED] " + fileNames[entry.Key]);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("[MODIFIED] Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0'));
+                                }
+                            }
+                        }
+                    }
+                    Environment.Exit(1);
+                }
             }
 
             // Load programs
             //checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
-            checkPrograms = new string[] { "wow", "wowt", "wow_beta" };
+            checkPrograms = new string[] { "wowt" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
@@ -180,7 +271,15 @@ namespace BuildBackup
                 Console.Write("..done\n");
 
                 Console.Write("Loading encoding..");
-                encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1])); //Use of first encoding is unknown
+
+                if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                {
+                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                }
+                else
+                {
+                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                }
 
                 Dictionary<string, string> hashes = new Dictionary<string, string>();
 
@@ -377,14 +476,6 @@ namespace BuildBackup
                 }
             }
 
-            if (versions.entries != null && versions.entries.Count() > 0)
-            {
-                //TODO For now this'll have to do
-                var dirname = Path.Combine(cacheDir, "ngdp", program, program + "_" + versions.entries[0].buildId + "_" + versions.entries[0].versionsName);
-                if (!Directory.Exists(dirname)) { Directory.CreateDirectory(dirname); }
-                File.WriteAllText(Path.Combine(dirname, "versions"), content);
-            }
-
             return versions;
         }
 
@@ -426,11 +517,6 @@ namespace BuildBackup
                     }
                 }
             }
-
-            //TODO For now thisll have to do
-            var dirname = Path.Combine(cacheDir, "ngdp", program, program + "_" + versions.entries[0].buildId + "_" + versions.entries[0].versionsName);
-            if (!Directory.Exists(dirname)) { Directory.CreateDirectory(dirname); }
-            File.WriteAllText(Path.Combine(dirname, "cdns"), content);
 
             return cdns;
         }
@@ -801,7 +887,7 @@ namespace BuildBackup
                 {
                     content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
 
-                    if (encodingSize != content.Length)
+                    if (encodingSize != content.Length && encodingSize != 0)
                     {
                         throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
                     }
