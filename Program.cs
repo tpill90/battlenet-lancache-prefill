@@ -238,12 +238,16 @@ namespace BuildBackup
                     {
                         Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ")");
                     }
-                    Console.WriteLine(install.entries.Count());
                     Environment.Exit(0);
                 }
                 if(args[0] == "extractfilebycontenthash")
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, contenthash, outname");
+
+                    var done = false;
+
+                    args[3] = args[3].ToLower();
+
                     buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
@@ -253,7 +257,7 @@ namespace BuildBackup
 
                     foreach (var entry in encoding.entries)
                     {
-                        if (entry.hash.ToLower() == args[3]) { target = entry.key; }
+                        if (entry.hash.ToLower() == args[3]) { target = entry.key.ToLower(); }
                     }
 
                     if (string.IsNullOrEmpty(target))
@@ -261,30 +265,39 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
-
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
-
-                    var done = false;
-                    foreach (var index in indexes)
+                    var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                    if (File.Exists(unarchivedName))
                     {
-                        foreach (var entry in index.archiveIndexEntries)
-                        {
-                            if (entry.headerHash.ToLower() == target.ToLower())
-                            {
-                                Console.WriteLine("Found");
-                                var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
-                                if (!File.Exists(archiveName))
-                                {
-                                    throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
-                                }
+                        Console.WriteLine("File found as unarchived!");
+                        File.WriteAllBytes(args[4], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                        done = true;
+                    }
 
-                                using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
-                                using (BinaryReader bin = new BinaryReader(ms))
+                    if (!done)
+                    {
+                        cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+
+                        indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                        foreach (var index in indexes)
+                        {
+                            foreach (var entry in index.archiveIndexEntries)
+                            {
+                                if (entry.headerHash.ToLower() == target.ToLower())
                                 {
-                                    bin.BaseStream.Position = entry.offset;
-                                    File.WriteAllBytes(args[4], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                    done = true;
+                                    var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                    if (!File.Exists(archiveName))
+                                    {
+                                        throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
+                                    }
+
+                                    using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
+                                    using (BinaryReader bin = new BinaryReader(ms))
+                                    {
+                                        bin.BaseStream.Position = entry.offset;
+                                        File.WriteAllBytes(args[4], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                        done = true;
+                                    }
                                 }
                             }
                         }
@@ -293,7 +306,7 @@ namespace BuildBackup
                     if (!done)
                     {
                         // If not found here, file is unarchived. TODO!
-                        throw new Exception("Unable to find file in archives. File is either unarchived or not available! TODO");
+                        throw new Exception("Unable to find file in archives. File is not available!?");
                     }
 
                     Environment.Exit(0);
@@ -301,8 +314,8 @@ namespace BuildBackup
             }
 
             // Load programs
-            //checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
-            checkPrograms = new string[] { "wowt" };
+            checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            //checkPrograms = new string[] { "wowt" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
@@ -1118,7 +1131,7 @@ namespace BuildBackup
 
                     if (chunk.isFullChunk && BitConverter.ToString(md5sum) != BitConverter.ToString(chunk.checkSum))
                     {
-                        // throw new Exception("MD5 checksum mismatch on BLTE chunk! Sum is " + BitConverter.ToString(md5sum).Replace("-", "") + " but is supposed to be " + BitConverter.ToString(chunk.checkSum).Replace("-", ""));
+                        throw new Exception("MD5 checksum mismatch on BLTE chunk! Sum is " + BitConverter.ToString(md5sum).Replace("-", "") + " but is supposed to be " + BitConverter.ToString(chunk.checkSum).Replace("-", ""));
                     }
 
                     using (BinaryReader chunkreader = new BinaryReader(new MemoryStream(chunkBuffer)))
