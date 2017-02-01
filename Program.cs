@@ -108,11 +108,11 @@ namespace BuildBackup
 
                     foreach (var index in indexes)
                     {
-                        Console.WriteLine("Checking " + index.name + " " + index.archiveIndexEntries.Count() + " entries");
+                        //Console.WriteLine("Checking " + index.name + " " + index.archiveIndexEntries.Count() + " entries");
                         foreach (var entry in index.archiveIndexEntries)
                         {
                             hashes.Remove(entry.headerHash);
-                            Console.WriteLine("Removing " + entry.headerHash.ToLower() + " from list");
+                            //Console.WriteLine("Removing " + entry.headerHash.ToLower() + " from list");
                         }
                     }
 
@@ -130,25 +130,29 @@ namespace BuildBackup
                 }
                 if(args[0] == "dumproot")
                 {
-                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
-                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
-                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
-
-                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-
-                    string rootKey = "";
-
-                    foreach (var entry in encoding.entries)
-                    {
-                        if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; }
-                    }
-
+                    if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, root");
                     cdns = GetCDNs("wow");
 
-                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey);
-                    foreach(var entry in root.entries)
+                    var fileNames = new Dictionary<ulong, string>();
+
+                    var hasher = new Jenkins96();
+                    foreach (var line in File.ReadLines("listfile.txt"))
                     {
-                        Console.WriteLine(entry.Key + " => " + BitConverter.ToString(entry.Value[0].md5).Replace("-", "").ToLower());
+                        fileNames.Add(hasher.ComputeHash(line), line);
+                    }
+
+                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+
+                    foreach (var entry in root.entries)
+                    {
+                        if (fileNames.ContainsKey(entry.Key))
+                        {
+                            Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID);
+                        }
+                        else
+                        {
+                            Console.WriteLine("unknown;" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID);
+                        }
                     }
 
                     Environment.Exit(0);
