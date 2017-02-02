@@ -40,7 +40,7 @@ namespace BuildBackup
 
             if (args.Length > 0)
             {
-                if(args[0] == "missingfiles")
+                if (args[0] == "missingfiles")
                 {
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
 
@@ -79,7 +79,7 @@ namespace BuildBackup
                     // Run through listfile to see if files are known
                     Environment.Exit(0);
                 }
-                if(args[0] == "dumpinfo")
+                if (args[0] == "dumpinfo")
                 {
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
                     buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
@@ -128,7 +128,7 @@ namespace BuildBackup
 
                     Environment.Exit(1);
                 }
-                if(args[0] == "dumproot")
+                if (args[0] == "dumproot")
                 {
                     if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, root");
                     cdns = GetCDNs("wow");
@@ -147,17 +147,17 @@ namespace BuildBackup
                     {
                         if (fileNames.ContainsKey(entry.Key))
                         {
-                            Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID);
+                            Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
                         }
                         else
                         {
-                            Console.WriteLine("unknown;" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID);
+                            Console.WriteLine("unknown;" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
                         }
                     }
 
                     Environment.Exit(0);
                 }
-                if(args[0] == "diffroot")
+                if (args[0] == "diffroot")
                 {
                     cdns = GetCDNs("wow");
 
@@ -181,7 +181,7 @@ namespace BuildBackup
                             // Added
                             if (fileNames.ContainsKey(entry.Key))
                             {
-                                Console.WriteLine("[ADDED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') +", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
+                                Console.WriteLine("[ADDED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
                             }
                             else
                             {
@@ -227,24 +227,37 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
-                if(args[0] == "calchash")
+                if (args[0] == "calchash")
                 {
                     var hasher = new Jenkins96();
                     var hash = hasher.ComputeHash(args[1]);
                     Console.WriteLine(hash + " " + hash.ToString("x").PadLeft(16, '0'));
                     Environment.Exit(0);
                 }
-                if(args[0] == "dumpinstall")
+
+                if (args[0] == "calchashlistfile")
+                {
+                    var hasher = new Jenkins96();
+                    foreach (var line in File.ReadLines("listfile.txt"))
+                    {
+                        if (string.IsNullOrEmpty(line)) continue;
+                        var hash = hasher.ComputeHash(line);
+                        Console.WriteLine(line + " = " + hash.ToString("x").PadLeft(16, '0'));
+                    }
+                    Environment.Exit(0);
+                }
+
+                if (args[0] == "dumpinstall")
                 {
                     cdns = GetCDNs("wow");
                     install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
-                    foreach(var entry in install.entries)
+                    foreach (var entry in install.entries)
                     {
                         Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ")");
                     }
                     Environment.Exit(0);
                 }
-                if(args[0] == "extractfilebycontenthash")
+                if (args[0] == "extractfilebycontenthash")
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, contenthash, outname");
 
