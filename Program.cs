@@ -145,14 +145,25 @@ namespace BuildBackup
 
                     foreach (var entry in root.entries)
                     {
-                        if (fileNames.ContainsKey(entry.Key))
+                        foreach(var subentry in entry.Value)
                         {
-                            Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
+                            if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)) continue;
+
+                            if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                            {
+                                continue;
+                            }
+
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine("unknown;" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
+                            }
                         }
-                        else
-                        {
-                            Console.WriteLine("unknown;" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
-                        }
+
                     }
 
                     Environment.Exit(0);
