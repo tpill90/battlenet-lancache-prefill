@@ -32,6 +32,7 @@ namespace BuildBackup
         public string name;
         public string path;
         public string[] hosts;
+        public string configPath;
     }
 
     public struct BuildConfigFile

@@ -358,6 +358,12 @@ namespace BuildBackup
                 if (cdns.entries == null || cdns.entries.Count() == 0) { Console.WriteLine("Invalid CDNs file for " + program + ", skipping!"); continue; }
                 Console.WriteLine("Loaded " + cdns.entries.Count() + " cdns");
 
+                if (!string.IsNullOrEmpty(versions.entries[0].productConfig))
+                {
+                    Console.WriteLine("Productconfig detected, backing up.");
+                    GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
+                }
+
                 buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig for " + program + ", skipping!"); continue; }
                 Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
@@ -590,10 +596,9 @@ namespace BuildBackup
                                 versions.entries[i - 1].productConfig = row[c];
                                 break;
                             default:
-                                throw new Exception("Unknown BuildConfig variable '" + friendlyName + "'");
+                                throw new Exception("Unknown versions variable '" + friendlyName + "'");
                         }
                     }
-
                 }
             }
 
@@ -624,17 +629,39 @@ namespace BuildBackup
             if (lines.Count() > 0)
             {
                 cdns.entries = new CdnsEntry[lines.Count() - 1];
-                for (var i = 0; i < lines.Count(); i++)
+
+                var cols = lines[0].Split('|');
+
+                for (var c = 0; c < cols.Count(); c++)
                 {
-                    if (lines[i].StartsWith("Name!")) { continue; }
-                    var cols = lines[i].Split('|');
-                    cdns.entries[i - 1].name = cols[0];
-                    cdns.entries[i - 1].path = cols[1];
-                    var hosts = cols[2].Split(' ');
-                    cdns.entries[i - 1].hosts = new string[hosts.Count()];
-                    for (var h = 0; h < hosts.Count(); h++)
+                    var friendlyName = cols[c].Split('!').ElementAt(0);
+
+                    for (var i = 1; i < lines.Count(); i++)
                     {
-                        cdns.entries[i - 1].hosts[h] = hosts[h];
+                        var row = lines[i].Split('|');
+
+                        switch (friendlyName)
+                        {
+                            case "Name":
+                                cdns.entries[i - 1].name = row[c];
+                                break;
+                            case "Path":
+                                cdns.entries[i - 1].path = row[c];
+                                break;
+                            case "Hosts":
+                                var hosts = row[c].Split(' ');
+                                cdns.entries[i - 1].hosts = new string[hosts.Count()];
+                                for (var h = 0; h < hosts.Count(); h++)
+                                {
+                                    cdns.entries[i - 1].hosts[h] = hosts[h];
+                                }
+                                break;
+                            case "ConfigPath":
+                                cdns.entries[i - 1].configPath = row[c];
+                                break;
+                            default:
+                                throw new Exception("Unknown cdns variable '" + friendlyName + "'");
+                        }
                     }
                 }
             }
