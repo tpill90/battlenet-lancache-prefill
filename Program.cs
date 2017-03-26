@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -31,9 +32,13 @@ namespace BuildBackup
         private static DownloadFile download;
         private static RootFile root;
 
+        private static HttpClient httpClient;
+
         static void Main(string[] args)
         {
             cacheDir = ConfigurationManager.AppSettings["cachedir"];
+
+            httpClient = new HttpClient();
 
             // Check if cache/backup directory exists
             if (!Directory.Exists(cacheDir)) { Directory.CreateDirectory(cacheDir); }
@@ -245,7 +250,6 @@ namespace BuildBackup
                     Console.WriteLine(hash + " " + hash.ToString("x").PadLeft(16, '0'));
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "calchashlistfile")
                 {
                     var hasher = new Jenkins96();
@@ -257,7 +261,6 @@ namespace BuildBackup
                     }
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "dumpinstall")
                 {
                     cdns = GetCDNs("wow");
@@ -343,7 +346,7 @@ namespace BuildBackup
 
             // Load programs
             checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
-            //checkPrograms = new string[] { "wowt" };
+            //checkPrograms = new string[] { "wow" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
             foreach (string program in checkPrograms)
@@ -393,9 +396,9 @@ namespace BuildBackup
                 indexes = GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
-                Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
+                Console.WriteLine("Downloading " + cdnConfig.archives.Count() + " archives..");
                 GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
-                Console.Write("..done\n");
+                Console.WriteLine("..done\n");
 
                 Console.Write("Loading encoding..");
 
@@ -465,7 +468,6 @@ namespace BuildBackup
 
                 foreach (var entry in hashes)
                 {
-                    Console.WriteLine("[" + h + "/" + tot + "] Downloading " + entry.Key.ToLower());
                     GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
                     h++;
                 }
@@ -541,17 +543,20 @@ namespace BuildBackup
             string content;
             var versions = new VersionsFile();
 
-            using (var webClient = new WebClient())
+            try
             {
-                try
+                using (HttpResponseMessage response = httpClient.GetAsync(new Uri(baseUrl + program + "/" + "versions")).Result)
                 {
-                    content = webClient.DownloadString(new Uri(baseUrl + program + "/" + "versions"));
+                    using (HttpContent res = response.Content)
+                    {
+                        content = res.ReadAsStringAsync().Result;
+                    }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error retrieving versions: " + e.Message);
-                    return versions;
-                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error retrieving versions: " + e.Message);
+                return versions;
             }
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -611,17 +616,20 @@ namespace BuildBackup
 
             var cdns = new CdnsFile();
 
-            using (var webClient = new System.Net.WebClient())
+            try
             {
-                try
+                using (HttpResponseMessage response = httpClient.GetAsync(new Uri(baseUrl + program + "/" + "cdns")).Result)
                 {
-                    content = webClient.DownloadString(new Uri(baseUrl + program + "/" + "cdns"));
+                    using (HttpContent res = response.Content)
+                    {
+                        content = res.ReadAsStringAsync().Result;
+                    }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error downloading CDNs file" + e.Message);
-                    return cdns;
-                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error retrieving CDNs file: " + e.Message);
+                return cdns;
             }
 
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
@@ -680,7 +688,6 @@ namespace BuildBackup
                 try
                 {
                     content = Encoding.UTF8.GetString(GetCDNFile(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
-
                 }
                 catch (Exception e)
                 {
@@ -797,46 +804,41 @@ namespace BuildBackup
             {
                 indexes[i].name = archives[i];
 
-                using (var webClient = new System.Net.WebClient())
+                byte[] indexContent;
+                if (url.StartsWith("http"))
                 {
-                    byte[] indexContent;
-                    if (url.StartsWith("http"))
-                    {
-                        indexContent = GetCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
-
-                    }
-                    else
-                    {
-                        indexContent = File.ReadAllBytes(Path.Combine(url, "data", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
-
-                    }
-
-                    using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
-                    {
-                        int indexEntries = indexContent.Length / 4096;
-
-                        var entries = new List<ArchiveIndexEntry>();
-
-                        for (int b = 0; b < indexEntries; b++)
-                        {
-                            for (int bi = 0; bi < 170; bi++)
-                            {
-                                var entry = new ArchiveIndexEntry()
-                                {
-                                    headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
-                                    size = bin.ReadUInt32(true),
-                                    offset = bin.ReadUInt32(true)
-                                };
-                                //Console.WriteLine(entry.headerHash + " " + entry.size + " " + entry.offset);
-                                entries.Add(entry);
-                            }
-                            bin.ReadBytes(16);
-                        }
-
-                        indexes[i].archiveIndexEntries = entries.ToArray();
-                    }
-
+                    indexContent = GetCDNFile(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
                 }
+                else
+                {
+                    indexContent = File.ReadAllBytes(Path.Combine(url, "data", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
+                }
+
+                using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
+                {
+                    int indexEntries = indexContent.Length / 4096;
+
+                    var entries = new List<ArchiveIndexEntry>();
+
+                    for (int b = 0; b < indexEntries; b++)
+                    {
+                        for (int bi = 0; bi < 170; bi++)
+                        {
+                            var entry = new ArchiveIndexEntry()
+                            {
+                                headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                                size = bin.ReadUInt32(true),
+                                offset = bin.ReadUInt32(true)
+                            };
+                            //Console.WriteLine(entry.headerHash + " " + entry.size + " " + entry.offset);
+                            entries.Add(entry);
+                        }
+                        bin.ReadBytes(16);
+                    }
+
+                    indexes[i].archiveIndexEntries = entries.ToArray();
+                }
+
             }
             return indexes;
         }
@@ -849,22 +851,19 @@ namespace BuildBackup
                 indexes[i].name = archives[i];
                 string name = url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i];
                 string cleanname = name.Replace("http://" + cdns.entries[0].hosts[0], "");
+
                 if (!File.Exists(cacheDir + cleanname)) // Check if already downloaded
                 {
-                    using (var webClient = new System.Net.WebClient())
+                    Console.WriteLine("Downloading archive " + cleanname);
+                    using (HttpResponseMessage response = httpClient.GetAsync(new Uri(name)).Result)
                     {
-                        webClient.DownloadFileAsync(new Uri(name), cacheDir + cleanname);
-
-                        Console.Write("\n");
-                        webClient.DownloadProgressChanged += (s, e) =>
+                        using (HttpContent res = response.Content)
                         {
-                            Console.Write("\r [" + (i + 1) + "/" + archives.Count() + "] " + e.ProgressPercentage + "% for archive " + archives[i]);
-                        };
-
-                        while (webClient.IsBusy)
-                        {
+                            using (var stream = res.ReadAsByteArrayAsync())
+                            {
+                                File.WriteAllBytes(cacheDir + cleanname, stream.Result);
+                            }
                         }
-
                     }
                 }
                 //else
@@ -902,49 +901,46 @@ namespace BuildBackup
             var root = new RootFile();
             root.entries = new MultiDictionary<ulong, RootEntry>();
 
-            using (var webClient = new WebClient())
+            byte[] content;
+
+            if (url.StartsWith("http:"))
             {
-                byte[] content;
+                content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            }
+            else
+            {
+                content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+            }
 
-                if (url.StartsWith("http:"))
+            using (var ms = new MemoryStream(ParseBLTEfile(content)))
+            using (var bin = new BinaryReader(ms))
+            {
+                while (bin.BaseStream.Position < bin.BaseStream.Length)
                 {
-                    content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-                }
-                else
-                {
-                    content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
-                }
+                    var count = bin.ReadUInt32();
+                    var contentFlags = (ContentFlags)bin.ReadUInt32();
+                    var localeFlags = (LocaleFlags)bin.ReadUInt32();
 
-                using (var ms = new MemoryStream(ParseBLTEfile(content)))
-                using (var bin = new BinaryReader(ms))
-                {
-                    while (bin.BaseStream.Position < bin.BaseStream.Length)
+                    var entries = new RootEntry[count];
+                    var filedataIds = new int[count];
+
+                    var fileDataIndex = 0;
+                    for (var i = 0; i < count; ++i)
                     {
-                        var count = bin.ReadUInt32();
-                        var contentFlags = (ContentFlags)bin.ReadUInt32();
-                        var localeFlags = (LocaleFlags)bin.ReadUInt32();
+                        entries[i].localeFlags = localeFlags;
+                        entries[i].contentFlags = contentFlags;
 
-                        var entries = new RootEntry[count];
-                        var filedataIds = new int[count];
+                        filedataIds[i] = fileDataIndex + bin.ReadInt32();
+                        entries[i].fileDataID = (uint)filedataIds[i];
 
-                        var fileDataIndex = 0;
-                        for (var i = 0; i < count; ++i)
-                        {
-                            entries[i].localeFlags = localeFlags;
-                            entries[i].contentFlags = contentFlags;
+                        fileDataIndex = filedataIds[i] + 1;
+                    }
 
-                            filedataIds[i] = fileDataIndex + bin.ReadInt32();
-                            entries[i].fileDataID = (uint)filedataIds[i];
-
-                            fileDataIndex = filedataIds[i] + 1;
-                        }
-
-                        for (var i = 0; i < count; ++i)
-                        {
-                            entries[i].md5 = bin.ReadBytes(16);
-                            entries[i].lookup = bin.ReadUInt64();
-                            root.entries.Add(entries[i].lookup, entries[i]);
-                        }
+                    for (var i = 0; i < count; ++i)
+                    {
+                        entries[i].md5 = bin.ReadBytes(16);
+                        entries[i].lookup = bin.ReadUInt64();
+                        root.entries.Add(entries[i].lookup, entries[i]);
                     }
                 }
             }
@@ -956,25 +952,22 @@ namespace BuildBackup
         {
             var download = new DownloadFile();
 
-            using (var webClient = new WebClient())
+            byte[] content;
+            content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] parsedContent = ParseBLTEfile(content);
+
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
             {
-                byte[] content;
-                content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-                byte[] parsedContent = ParseBLTEfile(content);
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL") { throw new Exception("Error while parsing download file. Did BLTE header size change?"); }
+                download.unk = bin.ReadBytes(3); // Unk
+                download.numEntries = bin.ReadUInt32(true);
+                download.numTags = bin.ReadUInt16(true);
 
-                using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+                download.entries = new DownloadEntry[download.numEntries];
+                for (int i = 0; i < download.numEntries; i++)
                 {
-                    if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL") { throw new Exception("Error while parsing download file. Did BLTE header size change?"); }
-                    download.unk = bin.ReadBytes(3); // Unk
-                    download.numEntries = bin.ReadUInt32(true);
-                    download.numTags = bin.ReadUInt16(true);
-
-                    download.entries = new DownloadEntry[download.numEntries];
-                    for (int i = 0; i < download.numEntries; i++)
-                    {
-                        download.entries[i].hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                        bin.ReadBytes(10);
-                    }
+                    download.entries[i].hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    bin.ReadBytes(10);
                 }
             }
 
@@ -1211,15 +1204,22 @@ namespace BuildBackup
                             default:
                                 throw new Exception("Unsupported mode!");
                         }
-                    }
 
-                    var chunkres = chunkResult.ToArray();
-                    if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
-                    {
-                        throw new Exception("Decoded result is wrong size!");
-                    }
+                        if(mode == 'N' || mode == 'Z')
+                        {
+                            var chunkres = chunkResult.ToArray();
+                            if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
+                            {
+                                throw new Exception("Decoded result is wrong size!");
+                            }
 
-                    result.Write(chunkres, 0, chunkres.Length);
+                            result.Write(chunkres, 0, chunkres.Length);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Unsupported file (Encrypted?)");
+                        }
+                    }
                 }
 
                 foreach (var chunk in chunkInfos)
@@ -1246,17 +1246,23 @@ namespace BuildBackup
 
             if (redownload || !File.Exists(cacheDir + cleanname))
             {
-                using (var webClient = new WebClient())
+                try
                 {
-                    try
+                    if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
+                    using (HttpResponseMessage response = httpClient.GetAsync(url).Result)
                     {
-                        if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
-                        webClient.DownloadFile(url, cacheDir + cleanname);
+                        using (HttpContent res = response.Content)
+                        {
+                            using (var stream = res.ReadAsByteArrayAsync())
+                            {
+                                File.WriteAllBytes(cacheDir + cleanname, stream.Result);
+                            }
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
 
