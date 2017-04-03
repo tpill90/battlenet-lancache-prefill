@@ -32,6 +32,10 @@ namespace BuildBackup
         private static DownloadFile download;
         private static RootFile root;
 
+        private static bool overrideVersions;
+        private static string overrideBuildconfig;
+        private static string overrideCDNconfig;
+
         private static HttpClient httpClient;
 
         static void Main(string[] args)
@@ -342,10 +346,23 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
+                if (args[0] == "forcebuild")
+                {
+                    if(args.Length == 4)
+                    {
+                        checkPrograms = new string[] { args[1] };
+                        overrideBuildconfig = args[2];
+                        overrideCDNconfig = args[3];
+                        overrideVersions = true;
+                    }
+                }
             }
 
             // Load programs
-            checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            if(checkPrograms == null)
+            {
+                checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+            }
             //checkPrograms = new string[] { "wow" };
             backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
 
@@ -367,11 +384,27 @@ namespace BuildBackup
                     GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
                 }
 
-                buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
+                if(overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
+                {
+                    buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideBuildconfig);
+                }
+                else
+                {
+                    buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
+                }
+
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig for " + program + ", skipping!"); continue; }
                 Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
 
-                cdnConfig = GetCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
+                if (overrideVersions && !string.IsNullOrEmpty(overrideCDNconfig))
+                {
+                    cdnConfig = GetCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideCDNconfig);
+                }
+                else
+                {
+                    cdnConfig = GetCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
+                }
+
                 if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig for " + program + ", skipping!"); continue; }
 
                 if (cdnConfig.builds != null)
@@ -620,9 +653,16 @@ namespace BuildBackup
             {
                 using (HttpResponseMessage response = httpClient.GetAsync(new Uri(baseUrl + program + "/" + "cdns")).Result)
                 {
-                    using (HttpContent res = response.Content)
+                    if (response.IsSuccessStatusCode)
                     {
-                        content = res.ReadAsStringAsync().Result;
+                        using (HttpContent res = response.Content)
+                        {
+                            content = res.ReadAsStringAsync().Result;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Bad HTTP code while retrieving");
                     }
                 }
             }
@@ -1251,13 +1291,21 @@ namespace BuildBackup
                     if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
                     using (HttpResponseMessage response = httpClient.GetAsync(url).Result)
                     {
-                        using (HttpContent res = response.Content)
+                        if (response.IsSuccessStatusCode)
                         {
-                            using (var stream = res.ReadAsByteArrayAsync())
+                            using (HttpContent res = response.Content)
                             {
-                                File.WriteAllBytes(cacheDir + cleanname, stream.Result);
+                                using (var stream = res.ReadAsByteArrayAsync())
+                                {
+                                    File.WriteAllBytes(cacheDir + cleanname, stream.Result);
+                                }
                             }
                         }
+                        else
+                        {
+                            throw new Exception("Error retrieving file: HTTP status code " + response.StatusCode);
+                        }
+                        
                     }
                 }
                 catch (Exception e)
