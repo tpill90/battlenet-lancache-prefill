@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -40,7 +38,14 @@ namespace BuildBackup
 
         static void Main(string[] args)
         {
-            cacheDir = ConfigurationManager.AppSettings["cachedir"];
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                cacheDir = "H:/";
+            }
+            else
+            {
+                cacheDir = "/var/www/bnet.marlam.in/";
+            }
 
             httpClient = new HttpClient();
 
@@ -154,7 +159,7 @@ namespace BuildBackup
 
                     foreach (var entry in root.entries)
                     {
-                        foreach(var subentry in entry.Value)
+                        foreach (var subentry in entry.Value)
                         {
                             if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)) continue;
 
@@ -348,7 +353,7 @@ namespace BuildBackup
                 }
                 if (args[0] == "forcebuild")
                 {
-                    if(args.Length == 4)
+                    if (args.Length == 4)
                     {
                         checkPrograms = new string[] { args[1] };
                         overrideBuildconfig = args[2];
@@ -359,12 +364,12 @@ namespace BuildBackup
             }
 
             // Load programs
-            if(checkPrograms == null)
+            if (checkPrograms == null)
             {
-                checkPrograms = ConfigurationManager.AppSettings["checkprograms"].Split(',');
+                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = ConfigurationManager.AppSettings["backupprograms"].Split(',');
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta" };
 
             foreach (string program in checkPrograms)
             {
@@ -384,7 +389,7 @@ namespace BuildBackup
                     GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
                 }
 
-                if(overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
+                if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
                 {
                     buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideBuildconfig);
                 }
@@ -897,12 +902,11 @@ namespace BuildBackup
                     Console.WriteLine("Downloading archive " + cleanname);
                     using (HttpResponseMessage response = httpClient.GetAsync(new Uri(name)).Result)
                     {
+                        using (MemoryStream mstream = new MemoryStream())
                         using (HttpContent res = response.Content)
                         {
-                            using (var stream = res.ReadAsByteArrayAsync())
-                            {
-                                File.WriteAllBytes(cacheDir + cleanname, stream.Result);
-                            }
+                            res.CopyToAsync(mstream);
+                            File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
                         }
                     }
                 }
@@ -1245,7 +1249,7 @@ namespace BuildBackup
                                 throw new Exception("Unsupported mode!");
                         }
 
-                        if(mode == 'N' || mode == 'Z')
+                        if (mode == 'N' || mode == 'Z')
                         {
                             var chunkres = chunkResult.ToArray();
                             if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
@@ -1293,19 +1297,18 @@ namespace BuildBackup
                     {
                         if (response.IsSuccessStatusCode)
                         {
+                            using (MemoryStream mstream = new MemoryStream())
                             using (HttpContent res = response.Content)
                             {
-                                using (var stream = res.ReadAsByteArrayAsync())
-                                {
-                                    File.WriteAllBytes(cacheDir + cleanname, stream.Result);
-                                }
+                                res.CopyToAsync(mstream);
+                                File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
                             }
                         }
                         else
                         {
                             throw new Exception("Error retrieving file: HTTP status code " + response.StatusCode);
                         }
-                        
+
                     }
                 }
                 catch (Exception e)
