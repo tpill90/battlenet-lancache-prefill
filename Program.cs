@@ -513,13 +513,18 @@ namespace BuildBackup
                     continue;
                 }
 
+                Console.Write("Downloading patch files..");
+                if (!string.IsNullOrEmpty(buildConfig.patch)) GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + buildConfig.patch[0] + buildConfig.patch[1] + "/" + buildConfig.patch[2] + buildConfig.patch[3] + "/" + buildConfig.patch);
+                if (!string.IsNullOrEmpty(buildConfig.patchConfig)) GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
+                Console.Write("..done\n");
+
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
                 indexes = GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
-                Console.WriteLine("Downloading " + cdnConfig.archives.Count() + " archives..");
+                Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
                 GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
-                Console.WriteLine("..done\n");
+                Console.Write("..done\n");
 
                 Console.Write("Loading encoding..");
 
@@ -576,13 +581,12 @@ namespace BuildBackup
                     var totalPatchArchives = cdnConfig.patchArchives.Count();
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
-                        Console.WriteLine("[" + (i + 1) + "/" + totalPatchArchives + "] Downloading patch archive " + cdnConfig.patchArchives[i]);
                         GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
                         GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
                     }
                 }
 
-                Console.WriteLine("Downloading " + hashes.Count() + " unarchived files..");
+                Console.Write("Downloading " + hashes.Count() + " unarchived files..");
 
                 int h = 1;
                 var tot = hashes.Count;
@@ -593,7 +597,7 @@ namespace BuildBackup
                     h++;
                 }
 
-                Console.WriteLine("Done downloading unarchived files.");
+                Console.Write("..done\n");
 
                 GC.Collect();
             }
