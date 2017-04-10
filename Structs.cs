@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace BuildBackup
 {
@@ -124,7 +126,7 @@ namespace BuildBackup
     {
         public string name;
         public ushort type;
-        public byte[] files;
+        public BitArray files;
     }
 
     public struct InstallFileEntry
@@ -132,6 +134,7 @@ namespace BuildBackup
         public string name;
         public byte[] contentHash;
         public uint size;
+        public List<string> tags;
     }
 
     public struct DownloadFile

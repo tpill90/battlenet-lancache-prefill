@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -276,7 +277,7 @@ namespace BuildBackup
                     install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
                     foreach (var entry in install.entries)
                     {
-                        Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ")");
+                        Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ", tags: " + string.Join(",", entry.tags) + ")");
                     }
                     Environment.Exit(0);
                 }
@@ -1044,7 +1045,7 @@ namespace BuildBackup
                 {
                     install.tags[i].name = bin.ReadCString();
                     install.tags[i].type = bin.ReadUInt16(true);
-                    install.tags[i].files = bin.ReadBytes(bytesPerTag);
+                    install.tags[i].files = new BitArray(bin.ReadBytes(bytesPerTag));
                 }
 
                 install.entries = new InstallFileEntry[install.numEntries];
@@ -1054,6 +1055,14 @@ namespace BuildBackup
                     install.entries[i].name = bin.ReadCString();
                     install.entries[i].contentHash = bin.ReadBytes(install.hashSize);
                     install.entries[i].size = bin.ReadUInt32(true);
+                    install.entries[i].tags = new List<string>();
+                    for (var j = 0; j < install.numTags; j++)
+                    {
+                        if (install.tags[j].files[i] == true)
+                        {
+                            install.entries[i].tags.Add(install.tags[j].type + "=" + install.tags[j].name);
+                        }
+                    }
                 }
             }
 
