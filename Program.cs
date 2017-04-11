@@ -293,7 +293,7 @@ namespace BuildBackup
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
                     encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-
+                    Console.WriteLine(encoding.entries.Count());
                     string target = "";
 
                     foreach (var entry in encoding.entries)
@@ -360,6 +360,7 @@ namespace BuildBackup
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
                     encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+                    Console.WriteLine(encoding.entries.Count());
 
                     var basedir = args[3];
 
@@ -377,21 +378,24 @@ namespace BuildBackup
                         var contenthash = splitLine[0];
                         var filename = splitLine[1];
 
-                        string target = "";
-
-                        if(!Directory.Exists(Path.Combine(basedir, Path.GetDirectoryName(filename))))
+                        if (!Directory.Exists(Path.Combine(basedir, Path.GetDirectoryName(filename))))
                         {
                             Directory.CreateDirectory(Path.Combine(basedir, Path.GetDirectoryName(filename)));
                         }
 
+                        Console.WriteLine(filename);
+
+                        string target = "";
+
                         foreach (var entry in encoding.entries)
                         {
-                            if (entry.hash.ToLower() == contenthash) { target = entry.key.ToLower(); }
+                            if (entry.hash.ToLower() == contenthash.ToLower()) { target = entry.key.ToLower(); Console.WriteLine("Found target: " + target); break; }
                         }
 
                         if (string.IsNullOrEmpty(target))
                         {
-                            throw new Exception("File not found in encoding!");
+                            Console.WriteLine("File " + filename + " (" + contenthash + ") not found in encoding!");
+                            continue;
                         }
 
                         var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
@@ -420,9 +424,11 @@ namespace BuildBackup
                                             bin.BaseStream.Position = entry.offset;
                                             File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
                                             done = true;
+                                            break;
                                         }
                                     }
                                 }
+                                if (done) break;
                             }
                         }
 
