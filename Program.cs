@@ -352,6 +352,89 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
+                if (args[0] == "extractfilesbylist")
+                {
+                    if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
+                    var done = false;
+
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    var basedir = args[3];
+
+                    var lines = File.ReadLines(args[4]);
+                    foreach (var line in lines)
+                    {
+                        var splitLine = line.Split(',');
+                        var contenthash = splitLine[0];
+                        var filename = splitLine[1];
+
+                        string target = "";
+
+                        if(!Directory.Exists(Path.Combine(basedir, Path.GetDirectoryName(filename))))
+                        {
+                            Directory.CreateDirectory(Path.Combine(basedir, Path.GetDirectoryName(filename)));
+                        }
+
+                        foreach (var entry in encoding.entries)
+                        {
+                            if (entry.hash.ToLower() == contenthash) { target = entry.key.ToLower(); }
+                        }
+
+                        if (string.IsNullOrEmpty(target))
+                        {
+                            throw new Exception("File not found in encoding!");
+                        }
+
+                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                        if (File.Exists(unarchivedName))
+                        {
+                            Console.WriteLine("File found as unarchived!");
+                            File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                            done = true;
+                        }
+
+                        if (!done)
+                        {
+                            cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+
+                            indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                            foreach (var index in indexes)
+                            {
+                                foreach (var entry in index.archiveIndexEntries)
+                                {
+                                    if (entry.headerHash.ToLower() == target.ToLower())
+                                    {
+                                        var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                        if (!File.Exists(archiveName))
+                                        {
+                                            throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
+                                        }
+
+                                        using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
+                                        using (BinaryReader bin = new BinaryReader(ms))
+                                        {
+                                            bin.BaseStream.Position = entry.offset;
+                                            File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                            done = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!done)
+                        {
+                            // If not found here, file is unarchived. TODO!
+                            throw new Exception("Unable to find file in archives. File is not available!?");
+                        }
+                    }
+
+                    Environment.Exit(0);
+                }
                 if (args[0] == "forcebuild")
                 {
                     if (args.Length == 4)
