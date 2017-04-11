@@ -355,7 +355,6 @@ namespace BuildBackup
                 if (args[0] == "extractfilesbylist")
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
-                    var done = false;
 
                     buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
@@ -365,8 +364,15 @@ namespace BuildBackup
                     var basedir = args[3];
 
                     var lines = File.ReadLines(args[4]);
+
+                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
                     foreach (var line in lines)
                     {
+                        var done = false;
+
                         var splitLine = line.Split(',');
                         var contenthash = splitLine[0];
                         var filename = splitLine[1];
@@ -391,17 +397,12 @@ namespace BuildBackup
                         var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
                         if (File.Exists(unarchivedName))
                         {
-                            Console.WriteLine("File found as unarchived!");
                             File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
                             done = true;
                         }
 
                         if (!done)
                         {
-                            cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
-
-                            indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
-
                             foreach (var index in indexes)
                             {
                                 foreach (var entry in index.archiveIndexEntries)
@@ -414,8 +415,7 @@ namespace BuildBackup
                                             throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
                                         }
 
-                                        using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
-                                        using (BinaryReader bin = new BinaryReader(ms))
+                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
                                         {
                                             bin.BaseStream.Position = entry.offset;
                                             File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
@@ -428,7 +428,6 @@ namespace BuildBackup
 
                         if (!done)
                         {
-                            // If not found here, file is unarchived. TODO!
                             throw new Exception("Unable to find file in archives. File is not available!?");
                         }
                     }
