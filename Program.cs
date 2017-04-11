@@ -1045,7 +1045,13 @@ namespace BuildBackup
                 {
                     install.tags[i].name = bin.ReadCString();
                     install.tags[i].type = bin.ReadUInt16(true);
-                    install.tags[i].files = new BitArray(bin.ReadBytes(bytesPerTag));
+
+                    var filebits = bin.ReadBytes(bytesPerTag);
+
+                    for (int j = 0; j < bytesPerTag; j++)
+                        filebits[j] = (byte)((filebits[j] * 0x0202020202 & 0x010884422010) % 1023);
+
+                    install.tags[i].files = new BitArray(filebits);
                 }
 
                 install.entries = new InstallFileEntry[install.numEntries];
