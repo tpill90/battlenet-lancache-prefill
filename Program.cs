@@ -96,14 +96,14 @@ namespace BuildBackup
                 }
                 if (args[0] == "dumpinfo")
                 {
-                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig");
-                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (args.Length != 4) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig");
+                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[3]);
                     if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
 
-                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", args[1]), buildConfig.encoding[1]);
 
                     string rootKey = "";
                     string downloadKey = "";
@@ -119,7 +119,7 @@ namespace BuildBackup
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
 
                     foreach (var index in indexes)
                     {
@@ -273,8 +273,10 @@ namespace BuildBackup
                 }
                 if (args[0] == "dumpinstall")
                 {
-                    cdns = GetCDNs("wow");
-                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, install");
+
+                    cdns = GetCDNs(args[1]);
+                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
                     foreach (var entry in install.entries)
                     {
                         Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ", tags: " + string.Join(",", entry.tags) + ")");
@@ -283,22 +285,22 @@ namespace BuildBackup
                 }
                 if (args[0] == "extractfilebycontenthash")
                 {
-                    if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, contenthash, outname");
+                    if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
 
                     var done = false;
 
-                    args[3] = args[3].ToLower();
+                    args[4] = args[4].ToLower();
 
-                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", args[1]), buildConfig.encoding[1]);
                     Console.WriteLine(encoding.entries.Count());
                     string target = "";
 
                     foreach (var entry in encoding.entries)
                     {
-                        if (entry.hash.ToLower() == args[3]) { target = entry.key.ToLower(); }
+                        if (entry.hash.ToLower() == args[4]) { target = entry.key.ToLower(); }
                     }
 
                     if (string.IsNullOrEmpty(target))
@@ -306,19 +308,19 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                    var unarchivedName = Path.Combine(cacheDir, "tpr", args[1], "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
                     if (File.Exists(unarchivedName))
                     {
                         Console.WriteLine("File found as unarchived!");
-                        File.WriteAllBytes(args[4], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                        File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
                         done = true;
                     }
 
                     if (!done)
                     {
-                        cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+                        cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[3]);
 
-                        indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+                        indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
 
                         foreach (var index in indexes)
                         {
@@ -326,7 +328,7 @@ namespace BuildBackup
                             {
                                 if (entry.headerHash.ToLower() == target.ToLower())
                                 {
-                                    var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                    var archiveName = Path.Combine(cacheDir, "tpr", args[1], "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
                                     if (!File.Exists(archiveName))
                                     {
                                         throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
@@ -336,7 +338,7 @@ namespace BuildBackup
                                     using (BinaryReader bin = new BinaryReader(ms))
                                     {
                                         bin.BaseStream.Position = entry.offset;
-                                        File.WriteAllBytes(args[4], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                        File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
                                         done = true;
                                     }
                                 }
