@@ -452,6 +452,13 @@ namespace BuildBackup
                         overrideVersions = true;
                     }
                 }
+                if (args[0] == "forceprogram")
+                {
+                    if (args.Length == 2)
+                    {
+                        checkPrograms = new string[] { args[1] };
+                    }
+                }
             }
 
             // Load programs
