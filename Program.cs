@@ -480,6 +480,8 @@ namespace BuildBackup
                     GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
                 }
 
+                if (program == "prodev") continue;
+
                 if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
                 {
                     buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideBuildconfig);
@@ -491,6 +493,7 @@ namespace BuildBackup
 
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig for " + program + ", setting build name!"); buildConfig.buildName = "UNKNOWN"; }
                 Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
+
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideCDNconfig))
                 {
