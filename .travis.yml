@@ -3,5 +3,9 @@ mono: none
 dotnet: 1.0.1
 dist: trusty
 solution: BuildBackup.sln
+
+install:
+    - dotnet restore BuildBackup.sln
+
 script:
     - dotnet build -f netcoreapp1.1 BuildBackup.csproj
