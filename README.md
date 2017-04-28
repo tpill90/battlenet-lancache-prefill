@@ -14,6 +14,9 @@ Basic data for all [product codes](https://wowdev.wiki/CASC#NGDP_Program_Codes) 
 - World of Warcraft (wow, wowt, wow_beta)
 - Overwatch (pro, prot, proc, **not prodev**)
 
+## Configuration
+You will have to set the path where files should be saved manually in Program.cs. By default it is H:/ on Windows machines and /var/www/bnet.marlam.in/ for all other operating systems. This will be moved to a configuration file in the future.
+
 ## Thanks
 - WoWDev wiki authors
 - Blizzard
