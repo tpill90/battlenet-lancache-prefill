@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Marlamin/BuildBackup.svg?branch=master)](https://travis-ci.org/Marlamin/BuildBackup)
+
 # BuildBackup
 
 ## Description
