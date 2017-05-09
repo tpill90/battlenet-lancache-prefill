@@ -334,8 +334,7 @@ namespace BuildBackup
                                         throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
                                     }
 
-                                    using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(archiveName)))
-                                    using (BinaryReader bin = new BinaryReader(ms))
+                                    using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
                                     {
                                         bin.BaseStream.Position = entry.offset;
                                         File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
@@ -459,15 +458,50 @@ namespace BuildBackup
                         checkPrograms = new string[] { args[1] };
                     }
                 }
+                if (args[0] == "dumpusedkeys")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, cdnconfig");
+
+                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
+
+                    foreach (var index in indexes)
+                    {
+                        foreach (var entry in index.archiveIndexEntries)
+                        {
+                            var archiveName = Path.Combine(cacheDir, "tpr", args[1], "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+
+                            if (!File.Exists(archiveName))
+                            {
+                                throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
+                            }
+
+                            using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                            {
+                                bin.BaseStream.Position = entry.offset;
+                                try
+                                {
+                                    Console.WriteLine(entry.headerHash);
+                                    ParseBLTEfile(bin.ReadBytes((int)entry.size));
+                                }
+                                catch(Exception e)
+                                {
+                                    //Console.WriteLine(e.Message);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta" };
+                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta", "s1", "s1a" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1a" };
 
             foreach (string program in checkPrograms)
             {
@@ -1360,10 +1394,10 @@ namespace BuildBackup
                                     ds.CopyTo(chunkResult);
                                 }
                                 break;
-                            case 'F': // frame
                             case 'E': // encrypted
-                                Console.WriteLine("Encrypted file!");
+                                Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
                                 break;
+                            case 'F': // frame
                             default:
                                 throw new Exception("Unsupported mode!");
                         }
@@ -1377,10 +1411,6 @@ namespace BuildBackup
                             }
 
                             result.Write(chunkres, 0, chunkres.Length);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Unsupported file (Encrypted?)");
                         }
                     }
                 }
@@ -1399,6 +1429,24 @@ namespace BuildBackup
             }
 
             return result.ToArray();
+        }
+
+        private static string ReturnEncryptionKeyName(byte[] data)
+        {
+            byte keyNameSize = data[0];
+
+            if (keyNameSize == 0 || keyNameSize != 8)
+            {
+                Console.WriteLine(keyNameSize.ToString());
+                throw new Exception("keyNameSize == 0 || keyNameSize != 8");
+            }
+
+            byte[] keyNameBytes = new byte[keyNameSize];
+            Array.Copy(data, 1, keyNameBytes, 0, keyNameSize);
+
+            Array.Reverse(keyNameBytes);
+
+            return BitConverter.ToString(keyNameBytes).Replace("-", "");
         }
 
         public static byte[] GetCDNFile(string url, bool returnstream = true, bool redownload = false)
