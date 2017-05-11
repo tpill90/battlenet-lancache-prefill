@@ -441,6 +441,146 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
+                if (args[0] == "extractfilesbyfnamelist")
+                {
+                    if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
+
+                    buildConfig = GetBuildConfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[1]);
+                    if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+
+                    cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
+
+                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+
+                    var basedir = args[3];
+
+                    var lines = File.ReadLines(args[4]);
+
+                    var rootHash = "";
+
+                    foreach (var entry in encoding.entries)
+                    {
+                        if (entry.hash.ToLower() == buildConfig.root.ToLower()) { rootHash = entry.key.ToLower(); break; }
+                    }
+
+                    var hasher = new Jenkins96();
+
+                    var rootList = new Dictionary<ulong, string>();
+                    foreach (var line in lines)
+                    {
+                        var hash = hasher.ComputeHash(line);
+                        rootList.Add(hash, line);
+                    }
+
+                    root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), rootHash);
+
+                    var fileList = new Dictionary<string, List<string>>();
+
+                    foreach (var entry in root.entries)
+                    {
+                        foreach (var subentry in entry.Value)
+                        {
+                            if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)) continue;
+
+                            if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                            {
+                                continue;
+                            }
+
+                            if (rootList.ContainsKey(entry.Key))
+                            {
+                                var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
+                                if (fileList.ContainsKey(cleanContentHash))
+                                {
+                                    fileList[cleanContentHash].Add(rootList[entry.Key]);
+                                }
+                                else
+                                {
+                                    fileList.Add(cleanContentHash, new List<string>() { rootList[entry.Key] });
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    foreach (var fileEntry in fileList)
+                    {
+                        var done = false;
+
+                        var contenthash = fileEntry.Key;
+
+                        foreach (var filename in fileEntry.Value)
+                        {
+                            if (!Directory.Exists(Path.Combine(basedir, Path.GetDirectoryName(filename))))
+                            {
+                                Directory.CreateDirectory(Path.Combine(basedir, Path.GetDirectoryName(filename)));
+                            }
+                        }
+
+                        string target = "";
+                        foreach (var entry in encoding.entries)
+                        {
+                            if (entry.hash.ToLower() == contenthash.ToLower()) { target = entry.key.ToLower(); break; }
+                        }
+
+                        if (string.IsNullOrEmpty(target))
+                        {
+                            Console.WriteLine(contenthash + " not found in encoding!");
+                            continue;
+                        }
+
+                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                        if (File.Exists(unarchivedName))
+                        {
+                            foreach (var filename in fileEntry.Value)
+                            {
+                                Console.WriteLine(filename);
+                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                            }
+                            done = true;
+                        }
+
+                        if (!done)
+                        {
+                            foreach (var index in indexes)
+                            {
+                                foreach (var entry in index.archiveIndexEntries)
+                                {
+                                    if (entry.headerHash.ToLower() == target.ToLower())
+                                    {
+                                        var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                        if (!File.Exists(archiveName))
+                                        {
+                                            throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
+                                        }
+
+                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                                        {
+                                            foreach (var filename in fileEntry.Value)
+                                            {
+                                                Console.WriteLine(filename);
+                                                bin.BaseStream.Position = entry.offset;
+                                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                            }
+                                            done = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (done) break;
+                            }
+                        }
+
+                        if (!done)
+                        {
+                            throw new Exception("Unable to find file in archives. File is not available!?");
+                        }
+                    }
+
+                    Environment.Exit(0);
+                }
                 if (args[0] == "forcebuild")
                 {
                     if (args.Length == 4)
