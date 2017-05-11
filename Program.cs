@@ -474,9 +474,12 @@ namespace BuildBackup
                         rootList.Add(hash, line);
                     }
 
+                    Console.WriteLine("Looking up in root..");
+
                     root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), rootHash);
 
-                    var fileList = new Dictionary<string, List<string>>();
+                    var encodingList = new Dictionary<string, List<string>>();
+
 
                     foreach (var entry in root.entries)
                     {
@@ -492,24 +495,52 @@ namespace BuildBackup
                             if (rootList.ContainsKey(entry.Key))
                             {
                                 var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
-                                if (fileList.ContainsKey(cleanContentHash))
+
+                                if (encodingList.ContainsKey(cleanContentHash))
                                 {
-                                    fileList[cleanContentHash].Add(rootList[entry.Key]);
+                                    encodingList[cleanContentHash].Add(rootList[entry.Key]);
                                 }
                                 else
                                 {
-                                    fileList.Add(cleanContentHash, new List<string>() { rootList[entry.Key] });
+                                    encodingList.Add(cleanContentHash, new List<string>() { rootList[entry.Key] });
                                 }
-                                continue;
                             }
+
+                            continue;
                         }
                     }
                     
+                    var fileList = new Dictionary<string, List<string>>();
+
+                    Console.WriteLine("Looking up in encoding..");
+                    foreach (var encodingEntry in encoding.entries)
+                    {
+                        string target = "";
+
+                        if (encodingList.ContainsKey(encodingEntry.hash.ToLower()))
+                        {
+                            target = encodingEntry.key.ToLower();
+                            Console.WriteLine(target);
+                            foreach (var subName in encodingList[encodingEntry.hash.ToLower()])
+                            {
+                                if (fileList.ContainsKey(target))
+                                {
+                                    fileList[target].Add(subName);
+                                }
+                                else
+                                {
+                                    fileList.Add(target, new List<string>() { subName });
+                                }
+                            }
+                            encodingList.Remove(encodingEntry.hash.ToLower());
+                        }
+                    }
+
                     foreach (var fileEntry in fileList)
                     {
                         var done = false;
 
-                        var contenthash = fileEntry.Key;
+                        var target = fileEntry.Key;
 
                         foreach (var filename in fileEntry.Value)
                         {
@@ -517,18 +548,6 @@ namespace BuildBackup
                             {
                                 Directory.CreateDirectory(Path.Combine(basedir, Path.GetDirectoryName(filename)));
                             }
-                        }
-
-                        string target = "";
-                        foreach (var entry in encoding.entries)
-                        {
-                            if (entry.hash.ToLower() == contenthash.ToLower()) { target = entry.key.ToLower(); break; }
-                        }
-
-                        if (string.IsNullOrEmpty(target))
-                        {
-                            Console.WriteLine(contenthash + " not found in encoding!");
-                            continue;
                         }
 
                         var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
