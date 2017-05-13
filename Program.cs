@@ -657,10 +657,10 @@ namespace BuildBackup
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta", "s1", "s1a" };
+                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta", "s1", "s1a", "catalogs" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1a" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1a", "catalogs" };
 
             foreach (string program in checkPrograms)
             {
