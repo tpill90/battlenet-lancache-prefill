@@ -1100,6 +1100,7 @@ namespace BuildBackup
                         break;
                     case "build-num": // Agent
                     case "build-number": // Overwatch
+                    case "build-version": // Catalog
                         buildConfig.buildNumber = cols[1];
                         break;
                     case "build-attributes": // Agent
