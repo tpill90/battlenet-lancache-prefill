@@ -1127,6 +1127,7 @@ namespace BuildBackup
                     case "download-size":
                         buildConfig.downloadSize = cols[1];
                         break;
+                    case "build-partial-priority":
                     case "partial-priority":
                         buildConfig.partialPriority = cols[1];
                         break;
