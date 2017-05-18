@@ -97,13 +97,16 @@ namespace BuildBackup
                 if (args[0] == "dumpinfo")
                 {
                     if (args.Length != 4) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig");
-                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
+
+                    cdns = GetCDNs(args[1]);
+
+                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[3]);
+                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
                     if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
 
-                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", args[1]), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine(cacheDir, cdns.entries[0].path), buildConfig.encoding[1]);
 
                     string rootKey = "";
                     string downloadKey = "";
@@ -119,7 +122,7 @@ namespace BuildBackup
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
+                    indexes = GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
 
                     foreach (var index in indexes)
                     {
@@ -289,13 +292,15 @@ namespace BuildBackup
 
                     var done = false;
 
+                    cdns = GetCDNs(args[1]);
+
                     args[4] = args[4].ToLower();
 
-                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
+                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    encoding = GetEncoding(Path.Combine(cacheDir, "tpr", args[1]), buildConfig.encoding[1]);
-                    Console.WriteLine(encoding.entries.Count());
+                    encoding = GetEncoding(Path.Combine(cacheDir, cdns.entries[0].path), buildConfig.encoding[1]);
+
                     string target = "";
 
                     foreach (var entry in encoding.entries)
@@ -308,7 +313,7 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    var unarchivedName = Path.Combine(cacheDir, "tpr", args[1], "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                    var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
                     if (File.Exists(unarchivedName))
                     {
                         Console.WriteLine("File found as unarchived!");
@@ -318,9 +323,9 @@ namespace BuildBackup
 
                     if (!done)
                     {
-                        cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[3]);
+                        cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
 
-                        indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
+                        indexes = GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
 
                         foreach (var index in indexes)
                         {
@@ -328,7 +333,7 @@ namespace BuildBackup
                             {
                                 if (entry.headerHash.ToLower() == target.ToLower())
                                 {
-                                    var archiveName = Path.Combine(cacheDir, "tpr", args[1], "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                                    var archiveName = Path.Combine(cacheDir, cdns.entries[0].path, "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
                                     if (!File.Exists(archiveName))
                                     {
                                         throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
