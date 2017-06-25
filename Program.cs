@@ -1022,6 +1022,18 @@ namespace BuildBackup
                 }
             }
 
+            foreach (var cdn in cdns.entries)
+            {
+                if (cdn.name == "eu")
+                {
+                    //override cdn to always use eu if present
+                    var over = new CdnsFile();
+                    over.entries = new CdnsEntry[1];
+                    over.entries[0] = cdn;
+                    return over;
+                }
+            }
+
             return cdns;
         }
 
