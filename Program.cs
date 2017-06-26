@@ -339,7 +339,7 @@ namespace BuildBackup
                                         throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
                                     }
 
-                                    using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                                    using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
                                     {
                                         bin.BaseStream.Position = entry.offset;
                                         File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
@@ -425,7 +425,7 @@ namespace BuildBackup
                                             throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
                                         }
 
-                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
                                         {
                                             bin.BaseStream.Position = entry.offset;
                                             File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
@@ -580,7 +580,7 @@ namespace BuildBackup
                                             throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
                                         }
 
-                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
                                         {
                                             foreach (var filename in fileEntry.Value)
                                             {
