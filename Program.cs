@@ -1078,10 +1078,26 @@ namespace BuildBackup
                         buildConfig.root = cols[1];
                         break;
                     case "download":
-                        buildConfig.download = cols[1];
+                        var download = cols[1].Split(' ');
+                        if (download.Count() > 1)
+                        {
+                            buildConfig.download = download[1];
+                        }
+                        else
+                        {
+                            buildConfig.download = download[0];
+                        }
                         break;
                     case "install":
-                        buildConfig.install = cols[1];
+                        var install = cols[1].Split(' ');
+                        if(install.Count() > 1)
+                        {
+                            buildConfig.install = install[1];
+                        }
+                        else
+                        {
+                            buildConfig.install = install[0];
+                        }
                         break;
                     case "encoding":
                         var encoding = cols[1].Split(' ');
