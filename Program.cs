@@ -117,8 +117,8 @@ namespace BuildBackup
                     foreach (var entry in encoding.entries)
                     {
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
-                        if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
-                        if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
+                        if (entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
+                        if (entry.hash == buildConfig.install[0].ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
@@ -759,11 +759,21 @@ namespace BuildBackup
                 string downloadKey = "";
                 string installKey = "";
 
+                if (buildConfig.install.Length == 2)
+                {
+                    installKey = buildConfig.install[1];
+                }
+
+                if (buildConfig.download.Length == 2)
+                {
+                    downloadKey = buildConfig.download[1];
+                }
+
                 foreach (var entry in encoding.entries)
                 {
                     if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
-                    if (entry.hash == buildConfig.download.ToUpper()) { downloadKey = entry.key.ToLower(); }
-                    if (entry.hash == buildConfig.install.ToUpper()) { installKey = entry.key.ToLower(); }
+                    if (downloadKey == "" && entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key.ToLower(); }
+                    if (installKey == "" && entry.hash == buildConfig.install[0].ToUpper()) { installKey = entry.key.ToLower(); }
                     if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                 }
 
@@ -1078,32 +1088,13 @@ namespace BuildBackup
                         buildConfig.root = cols[1];
                         break;
                     case "download":
-                        var download = cols[1].Split(' ');
-                        if (download.Count() > 1)
-                        {
-                            // TODO: Special handling
-                            buildConfig.download = download[0];
-                        }
-                        else
-                        {
-                            buildConfig.download = download[0];
-                        }
+                        buildConfig.download = cols[1].Split(' ');
                         break;
                     case "install":
-                        var install = cols[1].Split(' ');
-                        if(install.Count() > 1)
-                        {
-                            // TODO: Special handling
-                            buildConfig.install = install[0];
-                        }
-                        else
-                        {
-                            buildConfig.install = install[0];
-                        }
+                        buildConfig.install = cols[1].Split(' ');
                         break;
                     case "encoding":
-                        var encoding = cols[1].Split(' ');
-                        buildConfig.encoding = encoding;
+                        buildConfig.encoding = cols[1].Split(' ');
                         break;
                     case "encoding-size":
                         var encodingSize = cols[1].Split(' ');
@@ -1157,10 +1148,10 @@ namespace BuildBackup
                         buildConfig.buildManifestVersion = cols[1];
                         break;
                     case "install-size":
-                        buildConfig.installSize = cols[1];
+                        buildConfig.installSize = cols[1].Split(' ');
                         break;
                     case "download-size":
-                        buildConfig.downloadSize = cols[1];
+                        buildConfig.downloadSize = cols[1].Split(' ');
                         break;
                     case "build-partial-priority":
                     case "partial-priority":

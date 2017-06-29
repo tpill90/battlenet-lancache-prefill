@@ -36,8 +36,10 @@ namespace BuildBackup
     public struct BuildConfigFile
     {
         public string root;
-        public string download;
-        public string install;
+        public string[] download;
+        public string[] downloadSize;
+        public string[] install;
+        public string[] installSize;
         public string[] encoding;
         public string[] encodingSize;
         public string buildName;
@@ -55,8 +57,6 @@ namespace BuildBackup
         public string patch;
         public string patchSize;
         public string patchConfig;
-        public string installSize;
-        public string downloadSize;
         public string partialPriority;
         public string partialPrioritySize;
     }
