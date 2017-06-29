@@ -1081,7 +1081,8 @@ namespace BuildBackup
                         var download = cols[1].Split(' ');
                         if (download.Count() > 1)
                         {
-                            buildConfig.download = download[1];
+                            // TODO: Special handling
+                            buildConfig.download = download[0];
                         }
                         else
                         {
@@ -1092,7 +1093,8 @@ namespace BuildBackup
                         var install = cols[1].Split(' ');
                         if(install.Count() > 1)
                         {
-                            buildConfig.install = install[1];
+                            // TODO: Special handling
+                            buildConfig.install = install[0];
                         }
                         else
                         {
