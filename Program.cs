@@ -659,6 +659,14 @@ namespace BuildBackup
                 }
             }
 
+            if (File.Exists("lockfile"))
+            {
+                Console.WriteLine("Lockfile detected, exiting.");
+                Environment.Exit(0);
+            }
+
+            File.Create("lockfile");
+
             // Load programs
             if (checkPrograms == null)
             {
@@ -827,6 +835,8 @@ namespace BuildBackup
 
                 GC.Collect();
             }
+
+            File.Delete("lockfile");
         }
 
         private static CDNConfigFile GetCDNconfig(string program, string url, string hash)
