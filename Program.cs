@@ -186,6 +186,48 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
+
+                if (args[0] == "dumproot2")
+                {
+                    if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, root");
+                    cdns = GetCDNs("wow");
+
+                    var fileNames = new Dictionary<ulong, string>();
+
+                    var hasher = new Jenkins96();
+                    foreach (var line in File.ReadLines("listfile.txt"))
+                    {
+                        fileNames.Add(hasher.ComputeHash(line), line);
+                    }
+
+                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+
+                    foreach (var entry in root.entries)
+                    {
+                        foreach (var subentry in entry.Value)
+                        {
+                            if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)) continue;
+
+                            if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                            {
+                                continue;
+                            }
+
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
+                            }
+                        }
+
+                    }
+
+                    Environment.Exit(0);
+                }
+
                 if (args[0] == "diffroot")
                 {
                     cdns = GetCDNs("wow");
