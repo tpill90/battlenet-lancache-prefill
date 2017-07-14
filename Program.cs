@@ -719,6 +719,12 @@ namespace BuildBackup
                         }
                     }
                 }
+                if (args[0] == "dumprawfile")
+                {
+                    if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, path");
+                    Console.Write(Encoding.UTF8.GetString(ParseBLTEfile(File.ReadAllBytes(args[1]))));
+                    Environment.Exit(0);
+                }
             }
 
             if (File.Exists("lockfile"))
