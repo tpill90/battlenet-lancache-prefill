@@ -186,7 +186,6 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "dumproot2")
                 {
                     if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, root");
@@ -227,7 +226,6 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "diffroot")
                 {
                     cdns = GetCDNs("wow");
@@ -307,8 +305,20 @@ namespace BuildBackup
                 }
                 if (args[0] == "calchashlistfile")
                 {
+                    string target = "";
+                    
+                    if(args.Length == 2 && File.Exists(args[1]))
+                    {
+                        target = args[1];
+                    }
+                    else
+                    {
+                        target = "listfile.txt";
+                    }
+
                     var hasher = new Jenkins96();
-                    foreach (var line in File.ReadLines("listfile.txt"))
+
+                    foreach (var line in File.ReadLines(target))
                     {
                         if (string.IsNullOrEmpty(line)) continue;
                         var hash = hasher.ComputeHash(line);
@@ -328,7 +338,7 @@ namespace BuildBackup
                     }
                     Environment.Exit(0);
                 }
-                if (args[0] == "extractfilebycontenthash")
+                if (args[0] == "extractfilebycontenthash" || args[0] == "extractrawfilebycontenthash")
                 {
                     if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
 
@@ -358,7 +368,7 @@ namespace BuildBackup
                     var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
                     if (File.Exists(unarchivedName))
                     {
-                        Console.WriteLine("File found as unarchived!");
+                        Console.WriteLine("File " + args[4] + " found as unarchived " + target + "!");
                         File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
                         done = true;
                     }
@@ -384,7 +394,17 @@ namespace BuildBackup
                                     using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
                                     {
                                         bin.BaseStream.Position = entry.offset;
-                                        File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                        Console.WriteLine("File " + args[4] + " found in web archive as " + target + "!");
+                                        if (args[0] == "extractrawfilebycontenthash")
+                                        {
+                                            Console.WriteLine("Going to write " + args[4] + " to " + unarchivedName);
+                                            Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
+                                            File.WriteAllBytes(unarchivedName, bin.ReadBytes((int)entry.size));
+                                        }
+                                        else
+                                        {
+                                            File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                        }
                                         done = true;
                                     }
                                 }
