@@ -33,6 +33,11 @@ namespace BuildBackup
         public string configPath;
     }
 
+    public struct GameBlobFile
+    {
+        public string decryptionKeyName;
+    }
+
     public struct BuildConfigFile
     {
         public string root;

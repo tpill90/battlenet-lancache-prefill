@@ -22,6 +22,8 @@ namespace BuildBackup
 
         private static VersionsFile versions;
         private static CdnsFile cdns;
+        private static GameBlobFile gameblob;
+
         private static BuildConfigFile buildConfig;
         private static BuildConfigFile[] cdnBuildConfigs;
         private static CDNConfigFile cdnConfig;
@@ -761,7 +763,15 @@ namespace BuildBackup
                     GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
                 }
 
-                if (program == "prodev") continue;
+                gameblob = GetGameBlob(program);
+
+                if(gameblob.decryptionKeyName != null)
+                {
+                    Console.WriteLine("Decryption key is set in gameblob, skipping.");
+                    continue;
+                }
+
+                //if (program == "prodev") continue;
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
                 {
@@ -1123,6 +1133,42 @@ namespace BuildBackup
             }
 
             return cdns;
+        }
+
+        private static GameBlobFile GetGameBlob(string program)
+        {
+            string content;
+
+            var gblob = new GameBlobFile();
+
+            try
+            {
+                using (HttpResponseMessage response = httpClient.GetAsync(new Uri(baseUrl + program + "/" + "blob/game")).Result)
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        using (HttpContent res = response.Content)
+                        {
+                            content = res.ReadAsStringAsync().Result;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Bad HTTP code while retrieving");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error retrieving game blob file: " + e.Message);
+                return gblob;
+            }
+            dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(content);
+            if (json.all.config.decryption_key_name != null)
+            {
+                gblob.decryptionKeyName = json.all.config.decryption_key_name.Value;
+            }
+            return gblob;
         }
 
         private static BuildConfigFile GetBuildConfig(string program, string url, string hash)
