@@ -39,6 +39,12 @@ namespace BuildBackup
 
         private static HttpClient httpClient;
 
+        private static Salsa20 salsa = new Salsa20();
+
+        private static Salsa20 SalsaInstance => salsa;
+
+        private static bool isEncrypted = false;
+
         static void Main(string[] args)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -743,7 +749,7 @@ namespace BuildBackup
                 checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3", "s1a" };
 
             foreach (string program in checkPrograms)
             {
@@ -765,13 +771,23 @@ namespace BuildBackup
 
                 gameblob = GetGameBlob(program);
 
-                if(gameblob.decryptionKeyName != null)
+                if (gameblob.decryptionKeyName != null)
                 {
-                    Console.WriteLine("Decryption key is set in gameblob, skipping.");
-                    continue;
+                    if (!File.Exists(gameblob.decryptionKeyName + ".ak"))
+                    {
+                        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
+                        isEncrypted = false;
+                        continue;
+                    }
+                    else
+                    {
+                        isEncrypted = true;
+                    }
                 }
-
-                //if (program == "prodev") continue;
+                else
+                {
+                    isEncrypted = false;
+                }
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
                 {
@@ -1356,7 +1372,14 @@ namespace BuildBackup
                         using (HttpContent res = response.Content)
                         {
                             res.CopyToAsync(mstream);
-                            File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                            if (isEncrypted)
+                            {
+                                File.WriteAllBytes(cacheDir + cleanname, DecryptFile(cleanname.Substring(cleanname.Length - 32), mstream.ToArray()));
+                            }
+                            else
+                            {
+                                File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                            }
                         }
                     }
                 }
@@ -1760,6 +1783,25 @@ namespace BuildBackup
             return BitConverter.ToString(keyNameBytes).Replace("-", "");
         }
 
+        static byte[] DecryptFile(string name, byte[] data)
+        {
+            byte[] key = new byte[16];
+
+            using (BinaryReader reader = new BinaryReader(new FileStream(gameblob.decryptionKeyName + ".ak", FileMode.Open)))
+            {
+                key = reader.ReadBytes(16);
+            }
+
+            byte[] IV = name.ToByteArray();
+
+            Array.Copy(IV, 8, IV, 0, 8);
+            Array.Resize(ref IV, 8);
+
+            ICryptoTransform decryptor = SalsaInstance.CreateDecryptor(key, IV);
+
+            return decryptor.TransformFinalBlock(data, 0, data.Length);
+        }
+
         public static byte[] GetCDNFile(string url, bool returnstream = true, bool redownload = false)
         {
             url = url.ToLower();
@@ -1779,7 +1821,20 @@ namespace BuildBackup
                             using (HttpContent res = response.Content)
                             {
                                 res.CopyToAsync(mstream);
-                                File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                                
+                                if (isEncrypted)
+                                {
+                                    var cleaned = cleanname.Replace(".index", string.Empty);
+                                    var hashOnly = cleaned.Substring(cleaned.Length - 32);
+                                    var decrypted = DecryptFile(hashOnly, mstream.ToArray());
+
+                                    File.WriteAllBytes(cacheDir + cleanname, decrypted);
+                                    return decrypted;
+                                }
+                                else
+                                {
+                                    File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                                }
                             }
                         }
                         else
