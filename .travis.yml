@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-dotnet: 1.0.1
+dotnet: 2.0.0
 dist: trusty
 solution: BuildBackup.sln
 
@@ -8,4 +8,4 @@ install:
     - dotnet restore BuildBackup.sln
 
 script:
-    - dotnet build -f netcoreapp1.1 BuildBackup.csproj
+    - dotnet build -f netcoreapp2.0 BuildBackup.csproj
