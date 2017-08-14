@@ -1824,9 +1824,8 @@ namespace BuildBackup
                                 
                                 if (isEncrypted)
                                 {
-                                    var cleaned = cleanname.Replace(".index", string.Empty);
-                                    var hashOnly = cleaned.Substring(cleaned.Length - 32);
-                                    var decrypted = DecryptFile(hashOnly, mstream.ToArray());
+                                    var cleaned = Path.GetFileNameWithoutExtension(cleanname);
+                                    var decrypted = DecryptFile(cleaned, mstream.ToArray());
 
                                     File.WriteAllBytes(cacheDir + cleanname, decrypted);
                                     return decrypted;
