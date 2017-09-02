@@ -798,6 +798,12 @@ namespace BuildBackup
                     buildConfig = GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
                 }
 
+                // Retrieve all buildconfigs
+                for(var i = 0; i < versions.entries.Count(); i++)
+                {
+                    GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[i].buildConfig);
+                }
+
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig for " + program + ", setting build name!"); buildConfig.buildName = "UNKNOWN"; }
                 Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
 
