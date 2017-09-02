@@ -852,13 +852,21 @@ namespace BuildBackup
 
                 Console.Write("Loading encoding..");
 
-                if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                try
                 {
-                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                    if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                    {
+                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                    }
+                    else
+                    {
+                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                    Console.WriteLine(e.Message);
+                    continue;
                 }
 
                 Dictionary<string, string> hashes = new Dictionary<string, string>();
@@ -1578,63 +1586,69 @@ namespace BuildBackup
                 content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
-            byte[] parsedContent = ParseBLTEfile(content);
-
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+            try
             {
-                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
-                encoding.unk1 = bin.ReadByte();
-                encoding.checksumSizeA = bin.ReadByte();
-                encoding.checksumSizeB = bin.ReadByte();
-                encoding.flagsA = bin.ReadUInt16();
-                encoding.flagsB = bin.ReadUInt16();
-                encoding.numEntriesA = bin.ReadUInt32(true);
-                encoding.numEntriesB = bin.ReadUInt32(true);
-                encoding.unk2 = bin.ReadByte();
-
-                encoding.stringBlockSize = bin.ReadInt32(true);
-
-                bin.ReadBytes(encoding.stringBlockSize);
-
-                encoding.headers = new EncodingHeaderEntry[encoding.numEntriesA];
-
-                for (int i = 0; i < encoding.numEntriesA; i++)
+                byte[] parsedContent = ParseBLTEfile(content);
+                using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
                 {
-                    encoding.headers[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                    encoding.headers[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                }
+                    if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
+                    encoding.unk1 = bin.ReadByte();
+                    encoding.checksumSizeA = bin.ReadByte();
+                    encoding.checksumSizeB = bin.ReadByte();
+                    encoding.flagsA = bin.ReadUInt16();
+                    encoding.flagsB = bin.ReadUInt16();
+                    encoding.numEntriesA = bin.ReadUInt32(true);
+                    encoding.numEntriesB = bin.ReadUInt32(true);
+                    encoding.unk2 = bin.ReadByte();
 
-                long chunkStart = bin.BaseStream.Position;
+                    encoding.stringBlockSize = bin.ReadInt32(true);
 
-                encoding.entries = new EncodingFileEntry[encoding.numEntriesA];
-                List<EncodingFileEntry> entries = new List<EncodingFileEntry>();
+                    bin.ReadBytes(encoding.stringBlockSize);
 
-                for (int i = 0; i < encoding.numEntriesA; i++)
-                {
-                    ushort keysCount;
-                    while ((keysCount = bin.ReadUInt16()) != 0)
+                    encoding.headers = new EncodingHeaderEntry[encoding.numEntriesA];
+
+                    for (int i = 0; i < encoding.numEntriesA; i++)
                     {
-                        EncodingFileEntry entry = new EncodingFileEntry()
-                        {
-                            keyCount = keysCount,
-                            size = bin.ReadUInt32(true),
-                            hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
-                            key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "")
-                        };
-
-                        for (int key = 0; key < entry.keyCount - 1; key++)
-                        {
-                            bin.ReadBytes(16);
-                        }
-
-                        entries.Add(entry);
+                        encoding.headers[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        encoding.headers[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
                     }
 
-                    long remaining = 4096 - ((bin.BaseStream.Position - chunkStart) % 4096);
-                    if (remaining > 0) { bin.BaseStream.Position += remaining; }
-                }
+                    long chunkStart = bin.BaseStream.Position;
 
-                encoding.entries = entries.ToArray();
+                    encoding.entries = new EncodingFileEntry[encoding.numEntriesA];
+                    List<EncodingFileEntry> entries = new List<EncodingFileEntry>();
+
+                    for (int i = 0; i < encoding.numEntriesA; i++)
+                    {
+                        ushort keysCount;
+                        while ((keysCount = bin.ReadUInt16()) != 0)
+                        {
+                            EncodingFileEntry entry = new EncodingFileEntry()
+                            {
+                                keyCount = keysCount,
+                                size = bin.ReadUInt32(true),
+                                hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                                key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "")
+                            };
+
+                            for (int key = 0; key < entry.keyCount - 1; key++)
+                            {
+                                bin.ReadBytes(16);
+                            }
+
+                            entries.Add(entry);
+                        }
+
+                        long remaining = 4096 - ((bin.BaseStream.Position - chunkStart) % 4096);
+                        if (remaining > 0) { bin.BaseStream.Position += remaining; }
+                    }
+
+                    encoding.entries = entries.ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error while parsing encoding: " + e.Message);
             }
 
             return encoding;
