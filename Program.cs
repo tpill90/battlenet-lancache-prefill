@@ -1714,8 +1714,10 @@ namespace BuildBackup
                     }
                 }
 
-                foreach (var chunk in chunkInfos)
+                for (var index = 0; index < chunkInfos.Count(); index++)
                 {
+                    var chunk = chunkInfos[index];
+
                     MemoryStream chunkResult = new MemoryStream();
 
                     if (chunk.inFileSize > bin.BaseStream.Length)
@@ -1733,40 +1735,15 @@ namespace BuildBackup
                         throw new Exception("MD5 checksum mismatch on BLTE chunk! Sum is " + BitConverter.ToString(md5sum).Replace("-", "") + " but is supposed to be " + BitConverter.ToString(chunk.checkSum).Replace("-", ""));
                     }
 
-                    using (BinaryReader chunkreader = new BinaryReader(new MemoryStream(chunkBuffer)))
+                    HandleDataBlock(chunkBuffer, index, chunk, chunkResult);
+
+                    var chunkres = chunkResult.ToArray();
+                    if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
                     {
-                        var mode = chunkreader.ReadChar();
-                        switch (mode)
-                        {
-                            case 'N': // none
-                                chunkResult.Write(chunkreader.ReadBytes(chunk.actualSize), 0, chunk.actualSize); //read actual size because we already read the N from chunkreader
-                                break;
-                            case 'Z': // zlib, todo
-                                using (MemoryStream stream = new MemoryStream(chunkreader.ReadBytes(chunk.inFileSize - 1), 2, chunk.inFileSize - 3))
-                                {
-                                    var ds = new DeflateStream(stream, CompressionMode.Decompress);
-                                    ds.CopyTo(chunkResult);
-                                }
-                                break;
-                            case 'E': // encrypted
-                                Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
-                                break;
-                            case 'F': // frame
-                            default:
-                                throw new Exception("Unsupported mode!");
-                        }
-
-                        if (mode == 'N' || mode == 'Z')
-                        {
-                            var chunkres = chunkResult.ToArray();
-                            if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
-                            {
-                                throw new Exception("Decoded result is wrong size!");
-                            }
-
-                            result.Write(chunkres, 0, chunkres.Length);
-                        }
+                        throw new Exception("Decoded result is wrong size!");
                     }
+
+                    result.Write(chunkres, 0, chunkres.Length);
                 }
 
                 foreach (var chunk in chunkInfos)
@@ -1785,6 +1762,35 @@ namespace BuildBackup
             return result.ToArray();
         }
 
+        private static void HandleDataBlock(byte[] chunkBuffer, int index, BLTEChunkInfo chunk, MemoryStream chunkResult)
+        {
+            using (BinaryReader chunkreader = new BinaryReader(new MemoryStream(chunkBuffer)))
+            {
+                var mode = chunkreader.ReadChar();
+                switch (mode)
+                {
+                    case 'N': // none
+                        chunkResult.Write(chunkreader.ReadBytes(chunk.actualSize), 0, chunk.actualSize); //read actual size because we already read the N from chunkreader
+                        break;
+                    case 'Z': // zlib
+                        using (MemoryStream stream = new MemoryStream(chunkreader.ReadBytes(chunk.inFileSize - 1), 2, chunk.inFileSize - 3))
+                        {
+                            var ds = new DeflateStream(stream, CompressionMode.Decompress);
+                            ds.CopyTo(chunkResult);
+                        }
+                        break;
+                    case 'E': // encrypted
+                        byte[] decrypted = Decrypt(chunkBuffer, index);
+                        HandleDataBlock(decrypted, index, chunk, chunkResult);
+                        Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
+                        break;
+                    case 'F': // frame
+                    default:
+                        throw new Exception("Unsupported mode!");
+                }
+            }
+        }
+
         private static string ReturnEncryptionKeyName(byte[] data)
         {
             byte keyNameSize = data[0];
@@ -1801,6 +1807,65 @@ namespace BuildBackup
             Array.Reverse(keyNameBytes);
 
             return BitConverter.ToString(keyNameBytes).Replace("-", "");
+        }
+        private static byte[] Decrypt(byte[] data, int index)
+        {
+            byte keyNameSize = data[1];
+
+            if (keyNameSize == 0 || keyNameSize != 8)
+                throw new Exception("keyNameSize == 0 || keyNameSize != 8");
+
+            byte[] keyNameBytes = new byte[keyNameSize];
+            Array.Copy(data, 2, keyNameBytes, 0, keyNameSize);
+
+            ulong keyName = BitConverter.ToUInt64(keyNameBytes, 0);
+
+            byte IVSize = data[keyNameSize + 2];
+
+            if (IVSize != 4 || IVSize > 0x10)
+                throw new Exception("IVSize != 4 || IVSize > 0x10");
+
+            byte[] IVpart = new byte[IVSize];
+            Array.Copy(data, keyNameSize + 3, IVpart, 0, IVSize);
+
+            if (data.Length < IVSize + keyNameSize + 4)
+                throw new Exception("data.Length < IVSize + keyNameSize + 4");
+
+            int dataOffset = keyNameSize + IVSize + 3;
+
+            byte encType = data[dataOffset];
+
+            if (encType != 'S' && encType != 'A') // 'S' or 'A'
+                throw new Exception("encType != ENCRYPTION_SALSA20 && encType != ENCRYPTION_ARC4");
+
+            dataOffset++;
+
+            // expand to 8 bytes
+            byte[] IV = new byte[8];
+            Array.Copy(IVpart, IV, IVpart.Length);
+
+            // magic
+            for (int shift = 0, i = 0; i < sizeof(int); shift += 8, i++)
+            {
+                IV[i] ^= (byte)((index >> shift) & 0xFF);
+            }
+
+            byte[] key = KeyService.GetKey(keyName);
+
+            if (key == null)
+                throw new Exception("Unknown keyname " + keyName.ToString("X16"));
+
+            if (encType == 'S')
+            {
+                ICryptoTransform decryptor = KeyService.SalsaInstance.CreateDecryptor(key, IV);
+
+                return decryptor.TransformFinalBlock(data, dataOffset, data.Length - dataOffset);
+            }
+            else
+            {
+                // ARC4 ?
+                throw new Exception("encType ENCRYPTION_ARC4 not implemented");
+            }
         }
 
         static byte[] DecryptFile(string name, byte[] data)
