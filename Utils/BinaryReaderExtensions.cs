@@ -85,6 +85,24 @@ namespace System.IO
             return reader.ReadUInt64();
         }
 
+        public static UInt64 ReadUInt40(this BinaryReader reader, bool invertEndian = false)
+        {
+            ulong b1 = reader.ReadByte();
+            ulong b2 = reader.ReadByte();
+            ulong b3 = reader.ReadByte();
+            ulong b4 = reader.ReadByte();
+            ulong b5 = reader.ReadByte();
+
+            if (invertEndian)
+            {
+                return (ulong)(b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5);
+            }
+            else
+            {
+                return (ulong)(b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
+            }
+        }
+
         private static byte[] ReadInvertedBytes(this BinaryReader reader, int byteCount)
         {
             byte[] byteArray = reader.ReadBytes(byteCount);

@@ -77,7 +77,7 @@ namespace BuildBackup
 
                     Dictionary<string, string> hashes = new Dictionary<string, string>();
 
-                    foreach (var entry in encoding.entries)
+                    foreach (var entry in encoding.aEntries)
                     {
                         if (entry.hash == buildConfig.root.ToUpper()) { root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), entry.hash.ToLower()); }
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
@@ -122,7 +122,7 @@ namespace BuildBackup
 
                     Dictionary<string, string> hashes = new Dictionary<string, string>();
 
-                    foreach (var entry in encoding.entries)
+                    foreach (var entry in encoding.aEntries)
                     {
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
                         if (entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
@@ -363,7 +363,7 @@ namespace BuildBackup
 
                     string target = "";
 
-                    foreach (var entry in encoding.entries)
+                    foreach (var entry in encoding.aEntries)
                     {
                         if (entry.hash.ToLower() == args[4]) { target = entry.key.ToLower(); }
                     }
@@ -436,7 +436,7 @@ namespace BuildBackup
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
                     encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-                    Console.WriteLine(encoding.entries.Count());
+                    Console.WriteLine(encoding.aEntries.Count());
 
                     var basedir = args[3];
 
@@ -463,7 +463,7 @@ namespace BuildBackup
 
                         string target = "";
 
-                        foreach (var entry in encoding.entries)
+                        foreach (var entry in encoding.aEntries)
                         {
                             if (entry.hash.ToLower() == contenthash.ToLower()) { target = entry.key.ToLower(); Console.WriteLine("Found target: " + target); break; }
                         }
@@ -535,7 +535,7 @@ namespace BuildBackup
 
                     var rootHash = "";
 
-                    foreach (var entry in encoding.entries)
+                    foreach (var entry in encoding.aEntries)
                     {
                         if (entry.hash.ToLower() == buildConfig.root.ToLower()) { rootHash = entry.key.ToLower(); break; }
                     }
@@ -588,7 +588,7 @@ namespace BuildBackup
                     var fileList = new Dictionary<string, List<string>>();
 
                     Console.WriteLine("Looking up in encoding..");
-                    foreach (var encodingEntry in encoding.entries)
+                    foreach (var encodingEntry in encoding.aEntries)
                     {
                         string target = "";
 
@@ -847,13 +847,11 @@ namespace BuildBackup
                 Console.Write("..done\n");
 
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
-                GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
+                //GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
                 Console.Write("Loading encoding..");
 
-                try
-                {
                     if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
                     {
                         encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
@@ -862,12 +860,6 @@ namespace BuildBackup
                     {
                         encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
                     }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    continue;
-                }
 
                 Dictionary<string, string> hashes = new Dictionary<string, string>();
 
@@ -885,7 +877,7 @@ namespace BuildBackup
                     downloadKey = buildConfig.download[1];
                 }
 
-                foreach (var entry in encoding.entries)
+                foreach (var entry in encoding.aEntries)
                 {
                     if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
                     if (downloadKey == "" && entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key.ToLower(); }
@@ -1586,69 +1578,113 @@ namespace BuildBackup
                 content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
-            try
+            byte[] parsedContent = ParseBLTEfile(content);
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
             {
-                byte[] parsedContent = ParseBLTEfile(content);
-                using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
+                encoding.unk1 = bin.ReadByte();
+                encoding.checksumSizeA = bin.ReadByte();
+                encoding.checksumSizeB = bin.ReadByte();
+                encoding.flagsA = bin.ReadUInt16();
+                encoding.flagsB = bin.ReadUInt16();
+                encoding.numEntriesA = bin.ReadUInt32(true);
+                encoding.numEntriesB = bin.ReadUInt32(true);
+                encoding.stringBlockSize = bin.ReadUInt40(true);
+
+                var headerLength = bin.BaseStream.Position;
+
+                var stringBlockEntries = new List<string>();
+
+                while((bin.BaseStream.Position - headerLength) != (long)encoding.stringBlockSize)
                 {
-                    if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
-                    encoding.unk1 = bin.ReadByte();
-                    encoding.checksumSizeA = bin.ReadByte();
-                    encoding.checksumSizeB = bin.ReadByte();
-                    encoding.flagsA = bin.ReadUInt16();
-                    encoding.flagsB = bin.ReadUInt16();
-                    encoding.numEntriesA = bin.ReadUInt32(true);
-                    encoding.numEntriesB = bin.ReadUInt32(true);
-                    encoding.unk2 = bin.ReadByte();
+                    stringBlockEntries.Add(bin.ReadCString());
+                }
 
-                    encoding.stringBlockSize = bin.ReadInt32(true);
+                encoding.stringBlockEntries = stringBlockEntries.ToArray();
 
-                    bin.ReadBytes(encoding.stringBlockSize);
+                encoding.aHeaders = new EncodingHeaderEntry[encoding.numEntriesA];
 
-                    encoding.headers = new EncodingHeaderEntry[encoding.numEntriesA];
+                for (int i = 0; i < encoding.numEntriesA; i++)
+                {
+                    encoding.aHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    encoding.aHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                }
 
-                    for (int i = 0; i < encoding.numEntriesA; i++)
+                var tableAstart = bin.BaseStream.Position;
+
+                List<EncodingFileEntry> entries = new List<EncodingFileEntry>();
+                    
+                for (int i = 0; i < encoding.numEntriesA; i++)
+                {
+                    ushort keysCount;
+                    while ((keysCount = bin.ReadUInt16()) != 0)
                     {
-                        encoding.headers[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                        encoding.headers[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                    }
-
-                    long chunkStart = bin.BaseStream.Position;
-
-                    encoding.entries = new EncodingFileEntry[encoding.numEntriesA];
-                    List<EncodingFileEntry> entries = new List<EncodingFileEntry>();
-
-                    for (int i = 0; i < encoding.numEntriesA; i++)
-                    {
-                        ushort keysCount;
-                        while ((keysCount = bin.ReadUInt16()) != 0)
+                        EncodingFileEntry entry = new EncodingFileEntry()
                         {
-                            EncodingFileEntry entry = new EncodingFileEntry()
-                            {
-                                keyCount = keysCount,
-                                size = bin.ReadUInt32(true),
-                                hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
-                                key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "")
-                            };
-
-                            for (int key = 0; key < entry.keyCount - 1; key++)
-                            {
-                                bin.ReadBytes(16);
-                            }
-
-                            entries.Add(entry);
+                            keyCount = keysCount,
+                            size = bin.ReadUInt32(true),
+                            hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                            key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "")
+                        };
+                            
+                        // @TODO add support for multiple encoding keys
+                        for (int key = 0; key < entry.keyCount - 1; key++)
+                        {
+                            bin.ReadBytes(16);
                         }
 
-                        long remaining = 4096 - ((bin.BaseStream.Position - chunkStart) % 4096);
-                        if (remaining > 0) { bin.BaseStream.Position += remaining; }
+                        entries.Add(entry);
                     }
 
-                    encoding.entries = entries.ToArray();
+                    var remaining = 4096 - ((bin.BaseStream.Position - tableAstart) % 4096);
+                    if (remaining > 0) { bin.BaseStream.Position += remaining; }
                 }
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Error while parsing encoding: " + e.Message);
+
+                encoding.aEntries = entries.ToArray();
+
+                /* Table B */
+
+                //encoding.bHeaders = new EncodingHeaderEntry[encoding.numEntriesB];
+
+                //for (int i = 0; i < encoding.numEntriesB; i++)
+                //{
+                //    encoding.bHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                //    encoding.bHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                //}
+
+                //long tableBstart = bin.BaseStream.Position;
+
+                //List<EncodingFileDescEntry> b_entries = new List<EncodingFileDescEntry>();
+
+                //for (int i = 0; (encoding.numEntriesB + 1) >= i; ++i)
+                //{
+                //    for(int j = 0; j < 163; j++)
+                //    {
+                //        EncodingFileDescEntry entry = new EncodingFileDescEntry()
+                //        {
+                //            key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                //            stringIndex = bin.ReadUInt32(true),
+                //            compressedSize = bin.ReadUInt40(true)
+                //        };
+
+                //        if(entry.key == "00000000000000000000000000000000")
+                //        {
+                //            bin.BaseStream.Position -= 16;
+                //            var remaining = 4096 - ((bin.BaseStream.Position - tableBstart) % 4096);
+                //            if (remaining > 0) {
+                //                bin.BaseStream.Position += remaining;
+                //                Console.WriteLine("Skipping ahead by " + remaining + " bytes to " + bin.BaseStream.Position);
+                //            }
+                //        }
+                //        else
+                //        {
+                //            Console.WriteLine(j + " Key: " + entry.key + ", stringblock entry " + entry.stringIndex + ": " + encoding.stringBlockEntries[entry.stringIndex] + ", compressed size: " + entry.compressedSize);
+                //            b_entries.Add(entry);
+                //        }
+                //    }
+                //}
+
+                //encoding.bEntries = b_entries.ToArray();
             }
 
             return encoding;

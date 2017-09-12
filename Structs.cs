@@ -98,10 +98,12 @@ namespace BuildBackup
         public uint numEntriesA;
         public uint numEntriesB;
         public byte unk2;
-        public int stringBlockSize;
-        public EncodingHeaderEntry[] headers;
-        public EncodingFileEntry[] entries;
-
+        public ulong stringBlockSize;
+        public string[] stringBlockEntries;
+        public EncodingHeaderEntry[] aHeaders;
+        public EncodingFileEntry[] aEntries;
+        public EncodingHeaderEntry[] bHeaders;
+        public EncodingFileDescEntry[] bEntries;
     }
 
     public struct EncodingHeaderEntry
@@ -116,6 +118,13 @@ namespace BuildBackup
         public uint size;
         public string hash;
         public string key;
+    }
+
+    public struct EncodingFileDescEntry
+    {
+        public string key;
+        public uint stringIndex;
+        public ulong compressedSize;
     }
 
     public struct InstallFile
