@@ -1553,7 +1553,7 @@ namespace BuildBackup
             return install;
         }
 
-        private static EncodingFile GetEncoding(string url, string hash, int encodingSize = 0)
+        private static EncodingFile GetEncoding(string url, string hash, int encodingSize = 0, bool checkStuff = false)
         {
             var encoding = new EncodingFile();
 
@@ -1602,12 +1602,20 @@ namespace BuildBackup
 
                 encoding.stringBlockEntries = stringBlockEntries.ToArray();
 
-                encoding.aHeaders = new EncodingHeaderEntry[encoding.numEntriesA];
-
-                for (int i = 0; i < encoding.numEntriesA; i++)
+                /* Table A */
+                if (checkStuff)
                 {
-                    encoding.aHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                    encoding.aHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    encoding.aHeaders = new EncodingHeaderEntry[encoding.numEntriesA];
+
+                    for (int i = 0; i < encoding.numEntriesA; i++)
+                    {
+                        encoding.aHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        encoding.aHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    }
+                }
+                else
+                {
+                    bin.BaseStream.Position += encoding.numEntriesA * 32;
                 }
 
                 var tableAstart = bin.BaseStream.Position;
@@ -1643,48 +1651,49 @@ namespace BuildBackup
                 encoding.aEntries = entries.ToArray();
 
                 /* Table B */
+                if (checkStuff)
+                {
+                    encoding.bHeaders = new EncodingHeaderEntry[encoding.numEntriesB];
 
-                //encoding.bHeaders = new EncodingHeaderEntry[encoding.numEntriesB];
+                    for (int i = 0; i < encoding.numEntriesB; i++)
+                    {
+                        encoding.bHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        encoding.bHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    }
+                }
+                else
+                {
+                    bin.BaseStream.Position += encoding.numEntriesB * 32;
+                }
 
-                //for (int i = 0; i < encoding.numEntriesB; i++)
-                //{
-                //    encoding.bHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                //    encoding.bHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                //}
+                var tableBstart = bin.BaseStream.Position;
 
-                //long tableBstart = bin.BaseStream.Position;
+                List<EncodingFileDescEntry> b_entries = new List<EncodingFileDescEntry>();
 
-                //List<EncodingFileDescEntry> b_entries = new List<EncodingFileDescEntry>();
+                while (bin.BaseStream.Position < tableBstart + 4096 * encoding.numEntriesB)
+                {
+                    var remaining = 4096 - (bin.BaseStream.Position - tableBstart) % 4096;
 
-                //for (int i = 0; (encoding.numEntriesB + 1) >= i; ++i)
-                //{
-                //    for(int j = 0; j < 163; j++)
-                //    {
-                //        EncodingFileDescEntry entry = new EncodingFileDescEntry()
-                //        {
-                //            key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
-                //            stringIndex = bin.ReadUInt32(true),
-                //            compressedSize = bin.ReadUInt40(true)
-                //        };
+                    if (remaining < 25)
+                    {
+                        bin.BaseStream.Position += remaining;
+                        continue;
+                    }
 
-                //        if(entry.key == "00000000000000000000000000000000")
-                //        {
-                //            bin.BaseStream.Position -= 16;
-                //            var remaining = 4096 - ((bin.BaseStream.Position - tableBstart) % 4096);
-                //            if (remaining > 0) {
-                //                bin.BaseStream.Position += remaining;
-                //                Console.WriteLine("Skipping ahead by " + remaining + " bytes to " + bin.BaseStream.Position);
-                //            }
-                //        }
-                //        else
-                //        {
-                //            Console.WriteLine(j + " Key: " + entry.key + ", stringblock entry " + entry.stringIndex + ": " + encoding.stringBlockEntries[entry.stringIndex] + ", compressed size: " + entry.compressedSize);
-                //            b_entries.Add(entry);
-                //        }
-                //    }
-                //}
+                    EncodingFileDescEntry entry = new EncodingFileDescEntry()
+                    {
+                        key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                        stringIndex = bin.ReadUInt32(true),
+                        compressedSize = bin.ReadUInt40(true)
+                    };
 
-                //encoding.bEntries = b_entries.ToArray();
+                    if(entry.stringIndex == uint.MaxValue) break;
+
+                    Console.WriteLine(entry.key + ", stringblock entry " + entry.stringIndex + ": " + encoding.stringBlockEntries[entry.stringIndex] + ", compressed size: " + entry.compressedSize);
+                    b_entries.Add(entry);
+                }
+
+                encoding.bEntries = b_entries.ToArray();
             }
 
             return encoding;
