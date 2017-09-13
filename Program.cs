@@ -692,37 +692,56 @@ namespace BuildBackup
                         checkPrograms = new string[] { args[1] };
                     }
                 }
-                if (args[0] == "dumpusedkeys")
+                if (args[0] == "dumpencrypted")
                 {
-                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, cdnconfig");
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, buildconfig");
 
-                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, "tpr", args[1]), args[2]);
-
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", args[1]), cdnConfig.archives);
-
-                    foreach (var index in indexes)
+                    if (args[1] != "wow")
                     {
-                        foreach (var entry in index.archiveIndexEntries)
+                        Console.WriteLine("Only WoW is currently supported due to root/fileDataID usage");
+                        return;
+                    }
+
+                    cdns = GetCDNs(args[1]);
+
+                    buildConfig = GetBuildConfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[2]);
+
+                    encoding = GetEncoding(Path.Combine(cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
+
+                    var encryptedKeys = new Dictionary<string, string>();
+                    foreach(var entry in encoding.bEntries)
+                    {
+                        var stringBlockEntry = encoding.stringBlockEntries[entry.stringIndex];
+                        if (stringBlockEntry.Contains("e:"))
                         {
-                            var archiveName = Path.Combine(cacheDir, "tpr", args[1], "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+                            encryptedKeys.Add(entry.key, stringBlockEntry);
+                        }
+                    }
 
-                            if (!File.Exists(archiveName))
-                            {
-                                throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
-                            }
+                    string rootKey = "";
+                    var encryptedContentHashes = new Dictionary<string, string>();
+                    foreach(var entry in encoding.aEntries)
+                    {
+                        if (encryptedKeys.ContainsKey(entry.key))
+                        {
+                            encryptedContentHashes.Add(entry.hash, encryptedKeys[entry.key]);
+                        }
 
-                            using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open)))
+                        if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
+                    }
+
+                    root = GetRoot(Path.Combine(cacheDir, cdns.entries[0].path), rootKey);
+
+                    foreach(var entry in root.entries)
+                    {
+                        foreach (var subentry in entry.Value)
+                        {
+                            if (encryptedContentHashes.ContainsKey(BitConverter.ToString(subentry.md5).Replace("-", "")))
                             {
-                                bin.BaseStream.Position = entry.offset;
-                                try
-                                {
-                                    Console.WriteLine(entry.headerHash);
-                                    ParseBLTEfile(bin.ReadBytes((int)entry.size));
-                                }
-                                catch(Exception e)
-                                {
-                                    //Console.WriteLine(e.Message);
-                                }
+                                var stringBlock = encryptedContentHashes[BitConverter.ToString(subentry.md5).Replace("-", "")];
+                                var encryptionKey = stringBlock.Substring(stringBlock.IndexOf("e:{") + 3, 16);
+                                Console.WriteLine(subentry.fileDataID + " " + encryptionKey);
+                                break;
                             }
                         }
                     }
@@ -852,14 +871,14 @@ namespace BuildBackup
 
                 Console.Write("Loading encoding..");
 
-                    if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
-                    {
-                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
-                    }
-                    else
-                    {
-                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
-                    }
+                if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                {
+                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                }
+                else
+                {
+                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                }
 
                 Dictionary<string, string> hashes = new Dictionary<string, string>();
 
@@ -1553,7 +1572,7 @@ namespace BuildBackup
             return install;
         }
 
-        private static EncodingFile GetEncoding(string url, string hash, int encodingSize = 0, bool checkStuff = false)
+        private static EncodingFile GetEncoding(string url, string hash, int encodingSize = 0, bool parseTableB = false, bool checkStuff = false)
         {
             var encoding = new EncodingFile();
 
@@ -1649,6 +1668,11 @@ namespace BuildBackup
                 }
 
                 encoding.aEntries = entries.ToArray();
+
+                if (!parseTableB)
+                {
+                    return encoding;
+                }
 
                 /* Table B */
                 if (checkStuff)
