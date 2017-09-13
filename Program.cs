@@ -745,6 +745,8 @@ namespace BuildBackup
                             }
                         }
                     }
+
+                    Environment.Exit(0);
                 }
                 if (args[0] == "dumprawfile")
                 {
