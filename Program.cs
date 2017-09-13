@@ -847,7 +847,7 @@ namespace BuildBackup
                 Console.Write("..done\n");
 
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
-                //GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
+                GetArchives("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
                 Console.Write("Loading encoding..");
@@ -1689,7 +1689,6 @@ namespace BuildBackup
 
                     if(entry.stringIndex == uint.MaxValue) break;
 
-                    Console.WriteLine(entry.key + ", stringblock entry " + entry.stringIndex + ": " + encoding.stringBlockEntries[entry.stringIndex] + ", compressed size: " + entry.compressedSize);
                     b_entries.Add(entry);
                 }
 
