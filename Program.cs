@@ -1851,8 +1851,12 @@ namespace BuildBackup
                         break;
                     case 'E': // encrypted
                         byte[] decrypted = Decrypt(chunkBuffer, index);
-                        HandleDataBlock(decrypted, index, chunk, chunkResult);
                         Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
+
+                        // Override inFileSize with decrypted length because it now differs from original encrypted chunk.inFileSize which breaks decompression
+                        chunk.inFileSize = decrypted.Length;
+
+                        HandleDataBlock(decrypted, index, chunk, chunkResult);
                         break;
                     case 'F': // frame
                     default:
