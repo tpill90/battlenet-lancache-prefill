@@ -631,7 +631,14 @@ namespace BuildBackup
                             foreach (var filename in fileEntry.Value)
                             {
                                 Console.WriteLine(filename);
-                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                                try
+                                {
+                                    File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e.Message);
+                                }
                             }
                             done = true;
                         }
