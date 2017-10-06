@@ -716,22 +716,26 @@ namespace BuildBackup
                     encoding = GetEncoding(Path.Combine(cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
 
                     var encryptedKeys = new Dictionary<string, string>();
-                    foreach(var entry in encoding.bEntries)
+                    var encryptedSizes = new Dictionary<string, ulong>();
+                    foreach (var entry in encoding.bEntries)
                     {
                         var stringBlockEntry = encoding.stringBlockEntries[entry.stringIndex];
                         if (stringBlockEntry.Contains("e:"))
                         {
                             encryptedKeys.Add(entry.key, stringBlockEntry);
+                            encryptedSizes.Add(entry.key, entry.compressedSize);
                         }
                     }
 
                     string rootKey = "";
                     var encryptedContentHashes = new Dictionary<string, string>();
-                    foreach(var entry in encoding.aEntries)
+                    var encryptedContentSizes = new Dictionary<string, ulong>();
+                    foreach (var entry in encoding.aEntries)
                     {
                         if (encryptedKeys.ContainsKey(entry.key))
                         {
                             encryptedContentHashes.Add(entry.hash, encryptedKeys[entry.key]);
+                            encryptedContentSizes.Add(entry.hash, encryptedSizes[entry.key]);
                         }
 
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
@@ -747,7 +751,7 @@ namespace BuildBackup
                             {
                                 var stringBlock = encryptedContentHashes[BitConverter.ToString(subentry.md5).Replace("-", "")];
                                 var encryptionKey = stringBlock.Substring(stringBlock.IndexOf("e:{") + 3, 16);
-                                Console.WriteLine(subentry.fileDataID + " " + encryptionKey);
+                                Console.WriteLine(subentry.fileDataID + " " + encryptionKey + " " + stringBlock + " " + encryptedContentSizes[BitConverter.ToString(subentry.md5).Replace("-", "")]);
                                 break;
                             }
                         }
@@ -1863,11 +1867,14 @@ namespace BuildBackup
                         break;
                     case 'E': // encrypted
                         byte[] decrypted = Decrypt(chunkBuffer, index);
+
                         Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
+                        Console.WriteLine("Encrypted chunk size is " + chunk.inFileSize);
 
                         // Override inFileSize with decrypted length because it now differs from original encrypted chunk.inFileSize which breaks decompression
                         chunk.inFileSize = decrypted.Length;
 
+                        Console.WriteLine("Decrypted chunk size is " + chunk.inFileSize);
                         HandleDataBlock(decrypted, index, chunk, chunkResult);
                         break;
                     case 'F': // frame
