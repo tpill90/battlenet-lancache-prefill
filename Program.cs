@@ -167,7 +167,7 @@ namespace BuildBackup
                         fileNames.Add(hasher.ComputeHash(line), line);
                     }
 
-                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
 
                     foreach (var entry in root.entries)
                     {
@@ -207,7 +207,7 @@ namespace BuildBackup
                         fileNames.Add(hasher.ComputeHash(line), line);
                     }
 
-                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
+                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
 
                     foreach (var entry in root.entries)
                     {
@@ -246,8 +246,8 @@ namespace BuildBackup
                         fileNames.Add(hasher.ComputeHash(line), line);
                     }
 
-                    var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1]);
-                    var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
+                    var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
+                    var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2], true);
 
                     var unkFilenames = new List<ulong>();
 
@@ -339,7 +339,7 @@ namespace BuildBackup
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, install");
 
                     cdns = GetCDNs(args[1]);
-                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
+                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2], true);
                     foreach (var entry in install.entries)
                     {
                         Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ", tags: " + string.Join(",", entry.tags) + ")");
@@ -551,7 +551,7 @@ namespace BuildBackup
 
                     Console.WriteLine("Looking up in root..");
 
-                    root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), rootHash);
+                    root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), rootHash, true);
 
                     var encodingList = new Dictionary<string, List<string>>();
 
@@ -737,7 +737,7 @@ namespace BuildBackup
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
                     }
 
-                    root = GetRoot(Path.Combine(cacheDir, cdns.entries[0].path), rootKey);
+                    root = GetRoot(Path.Combine(cacheDir, cdns.entries[0].path), rootKey, true);
 
                     foreach(var entry in root.entries)
                     {
@@ -1447,7 +1447,7 @@ namespace BuildBackup
             }
         }
 
-        private static RootFile GetRoot(string url, string hash)
+        private static RootFile GetRoot(string url, string hash, bool parseIt = false)
         {
             var root = new RootFile();
             root.entries = new MultiDictionary<ulong, RootEntry>();
@@ -1463,8 +1463,9 @@ namespace BuildBackup
                 content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
-            using (var ms = new MemoryStream(ParseBLTEfile(content)))
-            using (var bin = new BinaryReader(ms))
+            if (!parseIt) return root;
+
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(ParseBLTEfile(content))))
             {
                 while (bin.BaseStream.Position < bin.BaseStream.Length)
                 {
@@ -1499,15 +1500,16 @@ namespace BuildBackup
             return root;
         }
 
-        private static DownloadFile GetDownload(string url, string hash)
+        private static DownloadFile GetDownload(string url, string hash, bool parseIt = false)
         {
             var download = new DownloadFile();
 
             byte[] content;
             content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-            byte[] parsedContent = ParseBLTEfile(content);
 
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+            if (!parseIt) return download;
+
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(ParseBLTEfile(content))))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL") { throw new Exception("Error while parsing download file. Did BLTE header size change?"); }
                 download.unk = bin.ReadBytes(3); // Unk
@@ -1525,11 +1527,13 @@ namespace BuildBackup
             return download;
         }
 
-        private static InstallFile GetInstall(string url, string hash)
+        private static InstallFile GetInstall(string url, string hash, bool parseIt = false)
         {
             var install = new InstallFile();
 
             byte[] content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+
+            if (!parseIt) return install;
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(ParseBLTEfile(content))))
             {
@@ -1844,6 +1848,7 @@ namespace BuildBackup
             using (BinaryReader chunkreader = new BinaryReader(new MemoryStream(chunkBuffer)))
             {
                 var mode = chunkreader.ReadChar();
+
                 switch (mode)
                 {
                     case 'N': // none
