@@ -365,7 +365,10 @@ namespace BuildBackup
 
                     foreach (var entry in encoding.aEntries)
                     {
-                        if (entry.hash.ToLower() == args[4]) { target = entry.key.ToLower(); }
+                        if (entry.hash.ToLower() == args[4]) {
+                            target = entry.key.ToLower();
+                            break;
+                        }
                     }
 
                     if (string.IsNullOrEmpty(target))
@@ -374,9 +377,9 @@ namespace BuildBackup
                     }
 
                     var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
                     if (File.Exists(unarchivedName))
                     {
-                        Console.WriteLine("File " + args[4] + " found as unarchived " + target + "!");
                         File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
                         done = true;
                     }
@@ -394,6 +397,7 @@ namespace BuildBackup
                                 if (entry.headerHash.ToLower() == target.ToLower())
                                 {
                                     var archiveName = Path.Combine(cacheDir, cdns.entries[0].path, "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
+
                                     if (!File.Exists(archiveName))
                                     {
                                         throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
@@ -402,10 +406,8 @@ namespace BuildBackup
                                     using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
                                     {
                                         bin.BaseStream.Position = entry.offset;
-                                        Console.WriteLine("File " + args[4] + " found in web archive as " + target + "!");
                                         if (args[0] == "extractrawfilebycontenthash")
                                         {
-                                            Console.WriteLine("Going to write " + args[4] + " to " + unarchivedName);
                                             Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
                                             File.WriteAllBytes(unarchivedName, bin.ReadBytes((int)entry.size));
                                         }
@@ -414,15 +416,16 @@ namespace BuildBackup
                                             File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
                                         }
                                         done = true;
+                                        break;
                                     }
                                 }
                             }
+                            if (done) break;
                         }
                     }
 
                     if (!done)
                     {
-                        // If not found here, file is unarchived. TODO!
                         throw new Exception("Unable to find file in archives. File is not available!?");
                     }
 
@@ -1614,8 +1617,7 @@ namespace BuildBackup
                 content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
-            byte[] parsedContent = ParseBLTEfile(content);
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(parsedContent)))
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(ParseBLTEfile(content))))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
                 encoding.unk1 = bin.ReadByte();
@@ -1629,14 +1631,21 @@ namespace BuildBackup
 
                 var headerLength = bin.BaseStream.Position;
 
-                var stringBlockEntries = new List<string>();
-
-                while((bin.BaseStream.Position - headerLength) != (long)encoding.stringBlockSize)
+                if (parseTableB)
                 {
-                    stringBlockEntries.Add(bin.ReadCString());
-                }
+                    var stringBlockEntries = new List<string>();
 
-                encoding.stringBlockEntries = stringBlockEntries.ToArray();
+                    while ((bin.BaseStream.Position - headerLength) != (long)encoding.stringBlockSize)
+                    {
+                        stringBlockEntries.Add(bin.ReadCString());
+                    }
+
+                    encoding.stringBlockEntries = stringBlockEntries.ToArray();
+                }
+                else
+                {
+                    bin.BaseStream.Position += (long)encoding.stringBlockSize;
+                }
 
                 /* Table A */
                 if (checkStuff)
