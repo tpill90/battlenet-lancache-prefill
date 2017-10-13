@@ -1027,7 +1027,8 @@ namespace BuildBackup
                         cdnConfig.builds = builds;
                         break;
                     default:
-                        throw new Exception("Unknown CDNConfig variable '" + cols[0] + "'");
+                        Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
+                        break;
                 }
             }
 
@@ -1097,7 +1098,8 @@ namespace BuildBackup
                                 versions.entries[i - 1].productConfig = row[c];
                                 break;
                             default:
-                                throw new Exception("Unknown versions variable '" + friendlyName + "'");
+                                Console.WriteLine("!!!!!!!! Unknown versions variable '" + friendlyName + "'");
+                                break;
                         }
                     }
                 }
@@ -1171,7 +1173,8 @@ namespace BuildBackup
                                 cdns.entries[i - 1].configPath = row[c];
                                 break;
                             default:
-                                throw new Exception("Unknown cdns variable '" + friendlyName + "'");
+                                Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
+                                break;
                         }
                     }
                 }
@@ -1342,7 +1345,8 @@ namespace BuildBackup
                         buildConfig.partialPrioritySize = cols[1];
                         break;
                     default:
-                        throw new Exception("Unknown BuildConfig variable '" + cols[0] + "'");
+                        Console.WriteLine("!!!!!!!! Unknown buildconfig variable '" + cols[0] + "'");
+                        break;
                 }
             }
 
