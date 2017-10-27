@@ -801,7 +801,7 @@ namespace BuildBackup
                 if (!string.IsNullOrEmpty(versions.entries[0].productConfig))
                 {
                     Console.WriteLine("Productconfig detected, backing up.");
-                    GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig);
+                    GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig, false);
                 }
 
                 gameblob = GetGameBlob(program);
