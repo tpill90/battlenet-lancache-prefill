@@ -213,11 +213,16 @@ namespace BuildBackup
                     {
                         foreach (var subentry in entry.Value)
                         {
-                            if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)) continue;
-
-                            if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                            if (entry.Value.Count() > 1)
                             {
-                                continue;
+                                if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)){
+                                    continue;
+                                }
+
+                                if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                                {
+                                    continue;
+                                }
                             }
 
                             if (fileNames.ContainsKey(entry.Key))
