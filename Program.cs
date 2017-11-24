@@ -1178,7 +1178,7 @@ namespace BuildBackup
                                 cdns.entries[i - 1].configPath = row[c];
                                 break;
                             default:
-                                Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
+                                //Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
                                 break;
                         }
                     }
