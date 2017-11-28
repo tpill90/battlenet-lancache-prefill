@@ -671,7 +671,14 @@ namespace BuildBackup
                                             {
                                                 Console.WriteLine(filename);
                                                 bin.BaseStream.Position = entry.offset;
-                                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                                try
+                                                {
+                                                    File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine(e.Message);
+                                                }
                                             }
                                             done = true;
                                             break;
@@ -1178,7 +1185,7 @@ namespace BuildBackup
                                 cdns.entries[i - 1].configPath = row[c];
                                 break;
                             default:
-                                Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
+                                //Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
                                 break;
                         }
                     }
