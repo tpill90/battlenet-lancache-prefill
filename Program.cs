@@ -23,6 +23,7 @@ namespace BuildBackup
         private static VersionsFile versions;
         private static CdnsFile cdns;
         private static GameBlobFile gameblob;
+        private static GameBlobFile productConfig;
 
         private static BuildConfigFile buildConfig;
         private static BuildConfigFile[] cdnBuildConfigs;
@@ -782,21 +783,13 @@ namespace BuildBackup
                 }
             }
 
-            if (File.Exists("lockfile"))
-            {
-                Console.WriteLine("Lockfile detected, exiting.");
-                Environment.Exit(0);
-            }
-
-            File.Create("lockfile");
-
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wow_beta", "s1", "s1t", "s1a", "catalogs", "w3", "w3t" };
+                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wowdev", "wow_beta", "s1", "s1t", "s1a", "catalogs", "w3", "w3t" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3", "s1a", "w3t" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3", "s1a", "w3t", "wowdev" };
 
             foreach (string program in checkPrograms)
             {
@@ -812,28 +805,21 @@ namespace BuildBackup
 
                 if (!string.IsNullOrEmpty(versions.entries[0].productConfig))
                 {
-                    Console.WriteLine("Productconfig detected, backing up.");
-                    GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/" + versions.entries[0].productConfig[0] + versions.entries[0].productConfig[1] + "/" + versions.entries[0].productConfig[2] + versions.entries[0].productConfig[3] + "/" + versions.entries[0].productConfig, false);
+                    productConfig = GetProductConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/", versions.entries[0].productConfig);
                 }
 
                 gameblob = GetGameBlob(program);
 
+                var decryptionKeyName = "";
+
                 if (gameblob.decryptionKeyName != null && gameblob.decryptionKeyName != string.Empty)
                 {
-                    if (!File.Exists(gameblob.decryptionKeyName + ".ak"))
-                    {
-                        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
-                        isEncrypted = false;
-                        continue;
-                    }
-                    else
-                    {
-                        isEncrypted = true;
-                    }
+                    decryptionKeyName = gameblob.decryptionKeyName;
                 }
-                else
+
+                if (productConfig.decryptionKeyName != null && productConfig.decryptionKeyName != string.Empty)
                 {
-                    isEncrypted = false;
+                    decryptionKeyName = productConfig.decryptionKeyName;
                 }
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
@@ -851,9 +837,10 @@ namespace BuildBackup
                     GetBuildConfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[i].buildConfig);
                 }
 
-                if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig for " + program + ", setting build name!"); buildConfig.buildName = "UNKNOWN"; }
-                Console.WriteLine("BuildConfig for " + buildConfig.buildName + " loaded");
-
+                if (string.IsNullOrWhiteSpace(buildConfig.buildName)) {
+                    Console.WriteLine("Missing buildname in buildConfig for " + program + ", setting build name!");
+                    buildConfig.buildName = "UNKNOWN";
+                }
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideCDNconfig))
                 {
@@ -864,19 +851,39 @@ namespace BuildBackup
                     cdnConfig = GetCDNconfig(program, "http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
                 }
 
-                if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig for " + program + ", skipping!"); continue; }
-
                 if (cdnConfig.builds != null)
                 {
                     Console.WriteLine("CDNConfig loaded, " + cdnConfig.builds.Count() + " builds, " + cdnConfig.archives.Count() + " archives");
                     cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
                 }
-                else
+                else if(cdnConfig.archives != null)
                 {
                     Console.WriteLine("CDNConfig loaded, " + cdnConfig.archives.Count() + " archives");
                 }
+                else
+                {
+                    Console.WriteLine("Invalid cdnConfig for " + program + "!");
+                }
 
                 if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
+
+                if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null) // Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
+                {
+                    if (!File.Exists(decryptionKeyName + ".ak"))
+                    {
+                        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
+                        isEncrypted = false;
+                        continue;
+                    }
+                    else
+                    {
+                        isEncrypted = true;
+                    }
+                }
+                else
+                {
+                    isEncrypted = false;
+                }
 
                 if (!backupPrograms.Contains(program))
                 {
@@ -960,11 +967,13 @@ namespace BuildBackup
                 if (cdnConfig.patchArchives != null)
                 {
                     var totalPatchArchives = cdnConfig.patchArchives.Count();
+                    Console.Write("Downloading " + totalPatchArchives + " patch archives..");
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
                         GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
                         GetCDNFile("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
                     }
+                    Console.Write("..done\n");
                 }
 
                 Console.Write("Downloading " + hashes.Count() + " unarchived files..");
@@ -982,8 +991,6 @@ namespace BuildBackup
 
                 GC.Collect();
             }
-
-            File.Delete("lockfile");
         }
 
         private static CDNConfigFile GetCDNconfig(string program, string url, string hash)
@@ -1039,7 +1046,7 @@ namespace BuildBackup
                         cdnConfig.builds = builds;
                         break;
                     default:
-                        Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
+                        //Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
                         break;
                 }
             }
@@ -1190,17 +1197,19 @@ namespace BuildBackup
                         }
                     }
                 }
-            }
 
-            foreach (var cdn in cdns.entries)
-            {
-                if (cdn.name == "eu")
+                foreach (var cdn in cdns.entries)
                 {
-                    //override cdn to always use eu if present
-                    var over = new CdnsFile();
-                    over.entries = new CdnsEntry[1];
-                    over.entries[0] = cdn;
-                    return over;
+                    if (cdn.name == "eu")
+                    {
+                        //override cdn to always use eu if present
+                        var over = new CdnsFile();
+                        over.entries = new CdnsEntry[1];
+                        over.entries[0] = cdn;
+                        // Edgecast is having issues, override for now
+                        over.entries[0].hosts = new string[] { "blzddist1-a.akamaihd.net", "level3.blizzard.com" };
+                        return over;
+                    }
                 }
             }
 
@@ -1235,6 +1244,50 @@ namespace BuildBackup
                 Console.WriteLine("Error retrieving game blob file: " + e.Message);
                 return gblob;
             }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Empty gameblob :(");
+                return gblob;
+            }
+
+            dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(content);
+            if (json.all.config.decryption_key_name != null)
+            {
+                gblob.decryptionKeyName = json.all.config.decryption_key_name.Value;
+            }
+            return gblob;
+        }
+
+        private static GameBlobFile GetProductConfig(string program, string url, string hash)
+        {
+            string content;
+
+            var gblob = new GameBlobFile();
+
+            if (url.StartsWith("http"))
+            {
+                try
+                {
+                    content = Encoding.UTF8.GetString(GetCDNFile(url + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error retrieving product config: " + e.Message);
+                    return gblob;
+                }
+            }
+            else
+            {
+                content = File.ReadAllText(Path.Combine(url, "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                Console.WriteLine("Error reading product config!");
+                return gblob;
+            }
+
             dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(content);
             if (json.all.config.decryption_key_name != null)
             {
@@ -2041,7 +2094,7 @@ namespace BuildBackup
                         }
                         else
                         {
-                            throw new Exception("Error retrieving file: HTTP status code " + response.StatusCode);
+                            throw new Exception("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + url);
                         }
 
                     }
