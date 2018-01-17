@@ -242,71 +242,10 @@ namespace BuildBackup
                 }
                 if (args[0] == "diffroot")
                 {
-                    cdns = GetCDNs("wow");
+                    var from = args[1];
+                    var to = args[2];
 
-                    var fileNames = new Dictionary<ulong, string>();
-
-                    var hasher = new Jenkins96();
-                    foreach (var line in File.ReadLines("listfile.txt"))
-                    {
-                        fileNames.Add(hasher.ComputeHash(line), line);
-                    }
-
-                    var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
-                    var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2], true);
-
-                    var unkFilenames = new List<ulong>();
-
-                    foreach (var entry in root2.entries)
-                    {
-                        if (!root1.entries.ContainsKey(entry.Key))
-                        {
-                            // Added
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine("[ADDED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                            }
-                            else
-                            {
-                                Console.WriteLine("[ADDED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                unkFilenames.Add(entry.Key);
-                            }
-                        }
-                    }
-
-                    foreach (var entry in root1.entries)
-                    {
-                        if (!root2.entries.ContainsKey(entry.Key))
-                        {
-                            // Removed
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine("[REMOVED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                            }
-                            else
-                            {
-                                Console.WriteLine("[REMOVED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                unkFilenames.Add(entry.Key);
-                            }
-                        }
-                        else
-                        {
-                            var r1md5 = BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower();
-                            var r2md5 = BitConverter.ToString(root2.entries[entry.Key][0].md5).Replace("-", string.Empty).ToLower();
-                            if (r1md5 != r2md5)
-                            {
-                                if (fileNames.ContainsKey(entry.Key))
-                                {
-                                    Console.WriteLine("[MODIFIED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                }
-                                else
-                                {
-                                    Console.WriteLine("[MODIFIED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                    unkFilenames.Add(entry.Key);
-                                }
-                            }
-                        }
-                    }
+                    DiffRoot(from, to);
 
                     Environment.Exit(0);
                 }
@@ -1959,6 +1898,61 @@ namespace BuildBackup
                     default:
                         throw new Exception("Unsupported mode!");
                 }
+            }
+        }
+
+        private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
+        {
+            cdns = GetCDNs("wow");
+            var hasher = new Jenkins96();
+
+            var rootFrom = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", fromCDNRoot, true);
+            var rootTo = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", toCDNRoot, true);
+
+            var fileNames = File
+                .ReadLines("listfile.txt")
+                .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
+                .ToDictionary(key => key.Item1, value => value.Item2);
+
+            var fromEntries = rootFrom.entries.Keys.ToHashSet();
+            var toEntries = rootTo.entries.Keys.ToHashSet();
+
+            var commonEntries = fromEntries.Intersect(toEntries);
+            var removedEntries = fromEntries.Except(commonEntries);
+            var addedEntries = toEntries.Except(commonEntries);
+
+            Action<RootEntry, string> print = delegate (RootEntry entry, string action)
+            {
+                var lookup = entry.lookup.ToString("x").PadLeft(16, '0');
+                var md5 = BitConverter.ToString(entry.md5).Replace("-", string.Empty).ToLower();
+                var dataId = entry.fileDataID;
+                var fileName = fileNames.ContainsKey(entry.lookup) ? fileNames[entry.lookup] : "Unknown File: " + entry.lookup.ToString("x").PadLeft(16, '0');
+
+                Console.WriteLine("{0} <b>{1}</b> (lookup: {2}, content md5: {2}, FileData ID: {3}", action, fileName, lookup, md5, entry.fileDataID);
+            };
+
+            foreach (var id in addedEntries) {
+                var entry = rootTo.entries[id].First();
+                print(entry, "ADDED");
+            }
+
+            foreach (var id in removedEntries)
+            {
+                var entry = rootFrom.entries[id].First();
+                print(entry, "REMOVED");
+            }
+
+            foreach (var id in commonEntries)
+            {
+                var originalFile = rootFrom.entries[id].First();
+                var patchedFile = rootTo.entries[id].First();
+
+                if (originalFile.md5.SequenceEqual(patchedFile.md5))
+                {
+                    continue;
+                }
+
+                print(patchedFile, "MODIFIED");
             }
         }
 
