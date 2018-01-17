@@ -789,7 +789,7 @@ namespace BuildBackup
                 checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wowdev", "wow_beta", "s1", "s1t", "s1a", "catalogs", "w3", "w3t" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "catalogs", "w3", "s1a", "w3t", "wowdev" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "w3", "s1a", "w3t", "wowdev" };
 
             foreach (string program in checkPrograms)
             {
