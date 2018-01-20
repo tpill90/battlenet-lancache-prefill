@@ -24,7 +24,6 @@ namespace BuildBackup
         private static CdnsFile cdns;
         private static GameBlobFile gameblob;
         private static GameBlobFile productConfig;
-
         private static BuildConfigFile buildConfig;
         private static BuildConfigFile[] cdnBuildConfigs;
         private static CDNConfigFile cdnConfig;
@@ -40,7 +39,6 @@ namespace BuildBackup
         private static HttpClient httpClient;
 
         private static Salsa20 salsa = new Salsa20();
-
         private static Salsa20 SalsaInstance => salsa;
 
         private static bool isEncrypted = false;
@@ -290,8 +288,6 @@ namespace BuildBackup
                 {
                     if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
 
-                    var done = false;
-
                     cdns = GetCDNs(args[1]);
 
                     args[4] = args[4].ToLower();
@@ -316,60 +312,21 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
 
-                    if (File.Exists(unarchivedName))
+                    GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
+
+                    if (args[0] == "extractrawfilebycontenthash")
                     {
-                        try
-                        {
-                            File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                        }
-                        done = true;
+                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
+
+                        File.WriteAllBytes(unarchivedName, RetrieveFileBytes(target, true));
                     }
-
-                    if (!done)
+                    else
                     {
-                        cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
-
-                        GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
-
-                        if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
-                        {
-                            throw new Exception("Unable to find file in archives. File is not available!?");
-                        }
-
-                        var index = cdnConfig.archives[entry.index];
-
-                        var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
-                        if (!File.Exists(archiveName))
-                        {
-                            throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
-                        }
-
-                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                        {
-                            bin.BaseStream.Position = entry.offset;
-                            try
-                            {
-                                if (args[0] == "extractrawfilebycontenthash")
-                                {
-                                    Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
-                                    File.WriteAllBytes(unarchivedName, bin.ReadBytes((int)entry.size));
-                                }
-                                else
-                                {
-                                    File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message);
-                            }
-                        }
+                        File.WriteAllBytes(args[5], RetrieveFileBytes(target));
                     }
 
                     Environment.Exit(0);
@@ -382,7 +339,6 @@ namespace BuildBackup
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
                     encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-                    Console.WriteLine(encoding.aEntries.Count());
 
                     var basedir = args[3];
 
@@ -394,8 +350,6 @@ namespace BuildBackup
 
                     foreach (var line in lines)
                     {
-                        var done = false;
-
                         var splitLine = line.Split(',');
                         var contenthash = splitLine[0];
                         var filename = splitLine[1];
@@ -420,49 +374,7 @@ namespace BuildBackup
                             continue;
                         }
 
-                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
-
-                        if (File.Exists(unarchivedName))
-                        {
-                            try
-                            {
-                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message);
-                            }
-                            done = true;
-                        }
-
-                        if (!done)
-                        {
-                            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
-                            {
-                                throw new Exception("Unable to find file in archives. File is not available!?");
-                            }
-
-                            var index = cdnConfig.archives[entry.index];
-
-                            var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
-                            if (!File.Exists(archiveName))
-                            {
-                                throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
-                            }
-
-                            using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                            {
-                                bin.BaseStream.Position = entry.offset;
-                                try
-                                {
-                                    File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e.Message);
-                                }
-                            }
-                        }
+                        File.WriteAllBytes(Path.Combine(basedir, filename), RetrieveFileBytes(target));
                     }
 
                     Environment.Exit(0);
@@ -919,6 +831,60 @@ namespace BuildBackup
 
                 GC.Collect();
             }
+        }
+
+        private static byte[] RetrieveFileBytes(string target, bool raw = false)
+        {
+            var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
+            if (File.Exists(unarchivedName))
+            {
+                if (!raw)
+                {
+                    return ParseBLTEfile(File.ReadAllBytes(unarchivedName));
+                }
+                else
+                {
+                    return File.ReadAllBytes(unarchivedName);
+                }
+            }
+
+            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
+            {
+                throw new Exception("Unable to find file in archives. File is not available!?");
+            }
+            else
+            {
+                var index = cdnConfig.archives[entry.index];
+
+                var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
+                if (!File.Exists(archiveName))
+                {
+                    throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
+                }
+
+                using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
+                {
+                    bin.BaseStream.Position = entry.offset;
+                    try
+                    {
+                        if (!raw)
+                        {
+                            return ParseBLTEfile(bin.ReadBytes((int)entry.size));
+                        }
+                        else
+                        {
+                            return bin.ReadBytes((int)entry.size);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            }
+
+            return new byte[0];
         }
 
         private static CDNConfigFile GetCDNconfig(string program, string url, string hash)
@@ -1385,7 +1351,6 @@ namespace BuildBackup
                         bin.ReadBytes(16);
                     }
                 }
-
             }
         }
 
@@ -1448,8 +1413,10 @@ namespace BuildBackup
 
         private static RootFile GetRoot(string url, string hash, bool parseIt = false)
         {
-            var root = new RootFile();
-            root.entries = new MultiDictionary<ulong, RootEntry>();
+            var root = new RootFile
+            {
+                entries = new MultiDictionary<ulong, RootEntry>()
+            };
 
             byte[] content;
 
