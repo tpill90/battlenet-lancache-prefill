@@ -75,15 +75,9 @@ namespace BuildBackup
         public string[] builds;
     }
 
-    public struct ArchiveIndex
-    {
-        public string name;
-        public ArchiveIndexEntry[] archiveIndexEntries;
-    }
-
     public struct ArchiveIndexEntry
     {
-        public string headerHash;
+        public short index;
         public uint offset;
         public uint size;
     }
