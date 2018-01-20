@@ -320,7 +320,14 @@ namespace BuildBackup
 
                     if (File.Exists(unarchivedName))
                     {
-                        File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                        try
+                        {
+                            File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         done = true;
                     }
 
@@ -414,9 +421,17 @@ namespace BuildBackup
                         }
 
                         var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
                         if (File.Exists(unarchivedName))
                         {
-                            File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                            try
+                            {
+                                File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
                             done = true;
                         }
 
