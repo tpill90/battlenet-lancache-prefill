@@ -1879,7 +1879,7 @@ namespace BuildBackup
                 var dataId = entry.fileDataID;
                 var fileName = fileNames.ContainsKey(entry.lookup) ? fileNames[entry.lookup] : "Unknown File: " + entry.lookup.ToString("x").PadLeft(16, '0');
 
-                Console.WriteLine("[{0}] <b>{1}</b> (lookup: {2}, content md5: {2}, FileData ID: {3})", action, fileName, lookup, md5, entry.fileDataID);
+                Console.WriteLine("[{0}] <b>{1}</b> (lookup: {2}, content md5: {3}, FileData ID: {4})", action, fileName, lookup, md5, entry.fileDataID);
             };
 
             foreach (var id in addedEntries) {
