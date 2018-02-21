@@ -318,15 +318,15 @@ namespace BuildBackup
 
                     if (args[0] == "extractrawfilebycontenthash")
                     {
-                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                        var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
 
                         Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
 
-                        File.WriteAllBytes(unarchivedName, RetrieveFileBytes(target, true));
+                        File.WriteAllBytes(unarchivedName, RetrieveFileBytes(target, true, cdns.entries[0].path));
                     }
                     else
                     {
-                        File.WriteAllBytes(args[5], RetrieveFileBytes(target));
+                        File.WriteAllBytes(args[5], RetrieveFileBytes(target, false, cdns.entries[0].path));
                     }
 
                     Environment.Exit(0);
@@ -833,9 +833,9 @@ namespace BuildBackup
             }
         }
 
-        private static byte[] RetrieveFileBytes(string target, bool raw = false)
+        private static byte[] RetrieveFileBytes(string target, bool raw = false, string cdndir = "tpr/wow")
         {
-            var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+            var unarchivedName = Path.Combine(cacheDir, cdndir, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
 
             if (File.Exists(unarchivedName))
             {
@@ -857,7 +857,7 @@ namespace BuildBackup
             {
                 var index = cdnConfig.archives[entry.index];
 
-                var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
+                var archiveName = Path.Combine(cacheDir, cdndir, "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
                 if (!File.Exists(archiveName))
                 {
                     throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
