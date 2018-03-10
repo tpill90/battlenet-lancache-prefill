@@ -205,6 +205,8 @@ namespace BuildBackup
 
                     foreach (var entry in root.entries)
                     {
+                        var matched = false;
+
                         foreach (var subentry in entry.Value)
                         {
                             if (entry.Value.Count() > 1)
@@ -227,8 +229,21 @@ namespace BuildBackup
                             {
                                 Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
                             }
+
+                            matched = true;
                         }
 
+                        if (!matched)
+                        {
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
+                            }
+                        }
                     }
 
                     Environment.Exit(0);
