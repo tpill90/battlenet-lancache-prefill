@@ -24,11 +24,9 @@ namespace BuildBackup
         private static CdnsFile cdns;
         private static GameBlobFile gameblob;
         private static GameBlobFile productConfig;
-
         private static BuildConfigFile buildConfig;
         private static BuildConfigFile[] cdnBuildConfigs;
         private static CDNConfigFile cdnConfig;
-        private static ArchiveIndex[] indexes;
         private static EncodingFile encoding;
         private static InstallFile install;
         private static DownloadFile download;
@@ -41,10 +39,11 @@ namespace BuildBackup
         private static HttpClient httpClient;
 
         private static Salsa20 salsa = new Salsa20();
-
         private static Salsa20 SalsaInstance => salsa;
 
         private static bool isEncrypted = false;
+
+        private static Dictionary<string, ArchiveIndexEntry> indexDictionary = new Dictionary<string, ArchiveIndexEntry>();
 
         static void Main(string[] args)
         {
@@ -84,20 +83,7 @@ namespace BuildBackup
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
-
-                    foreach (var index in indexes)
-                    {
-                        // If respective archive does not exist, add to separate list
-
-
-
-                        // Remove from list as usual
-                        foreach (var entry in index.archiveIndexEntries)
-                        {
-                            hashes.Remove(entry.headerHash);
-                        }
-                    }
+                    GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
 
                     // Run through root to see which file hashes belong to which missing file and put those in a list
                     // Run through listfile to see if files are known
@@ -121,26 +107,33 @@ namespace BuildBackup
                     string downloadKey = "";
                     string installKey = "";
 
+                    if(buildConfig.download.Length == 2)
+                    {
+                        downloadKey = buildConfig.download[1];
+                        Console.WriteLine("download = " + downloadKey.ToLower());
+                    }
+
+                    if(buildConfig.install.Length == 2)
+                    {
+                        installKey = buildConfig.install[1];
+                        Console.WriteLine("install = " + installKey.ToLower());
+                    }
+
                     Dictionary<string, string> hashes = new Dictionary<string, string>();
 
                     foreach (var entry in encoding.aEntries)
                     {
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key; Console.WriteLine("root = " + entry.key.ToLower()); }
-                        if (entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
-                        if (entry.hash == buildConfig.install[0].ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
+                        if (string.IsNullOrEmpty(downloadKey) && entry.hash == buildConfig.download[0].ToUpper()) { downloadKey = entry.key; Console.WriteLine("download = " + entry.key.ToLower()); }
+                        if (string.IsNullOrEmpty(installKey) && entry.hash == buildConfig.install[0].ToUpper()) { installKey = entry.key; Console.WriteLine("install = " + entry.key.ToLower()); }
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
+                    GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
 
-                    foreach (var index in indexes)
+                    foreach (var entry in indexDictionary)
                     {
-                        //Console.WriteLine("Checking " + index.name + " " + index.archiveIndexEntries.Count() + " entries");
-                        foreach (var entry in index.archiveIndexEntries)
-                        {
-                            hashes.Remove(entry.headerHash);
-                            //Console.WriteLine("Removing " + entry.headerHash.ToLower() + " from list");
-                        }
+                        hashes.Remove(entry.Key.ToUpper());
                     }
 
                     int h = 1;
@@ -212,6 +205,8 @@ namespace BuildBackup
 
                     foreach (var entry in root.entries)
                     {
+                        var matched = false;
+
                         foreach (var subentry in entry.Value)
                         {
                             if (entry.Value.Count() > 1)
@@ -234,79 +229,31 @@ namespace BuildBackup
                             {
                                 Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
                             }
+
+                            matched = true;
                         }
 
+                        if (!matched)
+                        {
+                            if (fileNames.ContainsKey(entry.Key))
+                            {
+                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
+                            }
+                        }
                     }
 
                     Environment.Exit(0);
                 }
                 if (args[0] == "diffroot")
                 {
-                    cdns = GetCDNs("wow");
+                    var from = args[1];
+                    var to = args[2];
 
-                    var fileNames = new Dictionary<ulong, string>();
-
-                    var hasher = new Jenkins96();
-                    foreach (var line in File.ReadLines("listfile.txt"))
-                    {
-                        fileNames.Add(hasher.ComputeHash(line), line);
-                    }
-
-                    var root1 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
-                    var root2 = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2], true);
-
-                    var unkFilenames = new List<ulong>();
-
-                    foreach (var entry in root2.entries)
-                    {
-                        if (!root1.entries.ContainsKey(entry.Key))
-                        {
-                            // Added
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine("[ADDED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                            }
-                            else
-                            {
-                                Console.WriteLine("[ADDED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                unkFilenames.Add(entry.Key);
-                            }
-                        }
-                    }
-
-                    foreach (var entry in root1.entries)
-                    {
-                        if (!root2.entries.ContainsKey(entry.Key))
-                        {
-                            // Removed
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine("[REMOVED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                            }
-                            else
-                            {
-                                Console.WriteLine("[REMOVED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                unkFilenames.Add(entry.Key);
-                            }
-                        }
-                        else
-                        {
-                            var r1md5 = BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower();
-                            var r2md5 = BitConverter.ToString(root2.entries[entry.Key][0].md5).Replace("-", string.Empty).ToLower();
-                            if (r1md5 != r2md5)
-                            {
-                                if (fileNames.ContainsKey(entry.Key))
-                                {
-                                    Console.WriteLine("[MODIFIED] <b>" + fileNames[entry.Key] + "</b> (lookup: " + entry.Key.ToString("x").PadLeft(16, '0') + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                }
-                                else
-                                {
-                                    Console.WriteLine("[MODIFIED] <b>Unknown filename: " + entry.Key.ToString("x").PadLeft(16, '0') + "</b> (content md5: " + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower() + ", FileData ID: " + entry.Value[0].fileDataID + ")");
-                                    unkFilenames.Add(entry.Key);
-                                }
-                            }
-                        }
-                    }
+                    DiffRoot(from, to);
 
                     Environment.Exit(0);
                 }
@@ -356,8 +303,6 @@ namespace BuildBackup
                 {
                     if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
 
-                    var done = false;
-
                     cdns = GetCDNs(args[1]);
 
                     args[4] = args[4].ToLower();
@@ -382,57 +327,21 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+                    cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
 
-                    if (File.Exists(unarchivedName))
+                    GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
+
+                    if (args[0] == "extractrawfilebycontenthash")
                     {
-                        File.WriteAllBytes(args[5], ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
-                        done = true;
+                        var unarchivedName = Path.Combine(cacheDir, cdns.entries[0].path, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
+
+                        File.WriteAllBytes(unarchivedName, RetrieveFileBytes(target, true, cdns.entries[0].path));
                     }
-
-                    if (!done)
+                    else
                     {
-                        cdnConfig = GetCDNconfig(args[1], Path.Combine(cacheDir, cdns.entries[0].path), args[3]);
-
-                        indexes = GetIndexes(Path.Combine(cacheDir, cdns.entries[0].path), cdnConfig.archives);
-
-                        foreach (var index in indexes)
-                        {
-                            foreach (var entry in index.archiveIndexEntries)
-                            {
-                                if (entry.headerHash.ToLower() == target.ToLower())
-                                {
-                                    var archiveName = Path.Combine(cacheDir, cdns.entries[0].path, "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
-
-                                    if (!File.Exists(archiveName))
-                                    {
-                                        throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
-                                    }
-
-                                    using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                                    {
-                                        bin.BaseStream.Position = entry.offset;
-                                        if (args[0] == "extractrawfilebycontenthash")
-                                        {
-                                            Directory.CreateDirectory(Path.GetDirectoryName(unarchivedName));
-                                            File.WriteAllBytes(unarchivedName, bin.ReadBytes((int)entry.size));
-                                        }
-                                        else
-                                        {
-                                            File.WriteAllBytes(args[5], ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                        }
-                                        done = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (done) break;
-                        }
-                    }
-
-                    if (!done)
-                    {
-                        throw new Exception("Unable to find file in archives. File is not available!?");
+                        File.WriteAllBytes(args[5], RetrieveFileBytes(target, false, cdns.entries[0].path));
                     }
 
                     Environment.Exit(0);
@@ -445,7 +354,6 @@ namespace BuildBackup
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
                     encoding = GetEncoding(Path.Combine(cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
-                    Console.WriteLine(encoding.aEntries.Count());
 
                     var basedir = args[3];
 
@@ -453,12 +361,10 @@ namespace BuildBackup
 
                     cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
 
                     foreach (var line in lines)
                     {
-                        var done = false;
-
                         var splitLine = line.Split(',');
                         var contenthash = splitLine[0];
                         var filename = splitLine[1];
@@ -483,44 +389,7 @@ namespace BuildBackup
                             continue;
                         }
 
-                        var unarchivedName = Path.Combine(cacheDir, "tpr", "wow", "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
-                        if (File.Exists(unarchivedName))
-                        {
-                            File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(File.ReadAllBytes(unarchivedName)));
-                            done = true;
-                        }
-
-                        if (!done)
-                        {
-                            foreach (var index in indexes)
-                            {
-                                foreach (var entry in index.archiveIndexEntries)
-                                {
-                                    if (entry.headerHash.ToLower() == target.ToLower())
-                                    {
-                                        var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
-                                        if (!File.Exists(archiveName))
-                                        {
-                                            throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
-                                        }
-
-                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                                        {
-                                            bin.BaseStream.Position = entry.offset;
-                                            File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                            done = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (done) break;
-                            }
-                        }
-
-                        if (!done)
-                        {
-                            throw new Exception("Unable to find file in archives. File is not available!?");
-                        }
+                        File.WriteAllBytes(Path.Combine(basedir, filename), RetrieveFileBytes(target));
                     }
 
                     Environment.Exit(0);
@@ -536,7 +405,7 @@ namespace BuildBackup
 
                     cdnConfig = GetCDNconfig("wow", Path.Combine(cacheDir, "tpr", "wow"), args[2]);
 
-                    indexes = GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    GetIndexes(Path.Combine(cacheDir, "tpr", "wow"), cdnConfig.archives);
 
                     var basedir = args[3];
 
@@ -563,7 +432,6 @@ namespace BuildBackup
                     root = GetRoot(Path.Combine(cacheDir, "tpr", "wow"), rootHash, true);
 
                     var encodingList = new Dictionary<string, List<string>>();
-
 
                     foreach (var entry in root.entries)
                     {
@@ -654,45 +522,35 @@ namespace BuildBackup
 
                         if (!done)
                         {
-                            foreach (var index in indexes)
+                            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
                             {
-                                foreach (var entry in index.archiveIndexEntries)
-                                {
-                                    if (entry.headerHash.ToLower() == target.ToLower())
-                                    {
-                                        var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index.name[0] + "" + index.name[1], index.name[2] + "" + index.name[3], index.name);
-                                        if (!File.Exists(archiveName))
-                                        {
-                                            throw new FileNotFoundException("Unable to find archive " + index.name + " on disk!");
-                                        }
+                                throw new Exception("Unable to find file in archives. File is not available!?");
+                            }
 
-                                        using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                                        {
-                                            foreach (var filename in fileEntry.Value)
-                                            {
-                                                Console.WriteLine(filename);
-                                                bin.BaseStream.Position = entry.offset;
-                                                try
-                                                {
-                                                    File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
-                                                }
-                                                catch (Exception e)
-                                                {
-                                                    Console.WriteLine(e.Message);
-                                                }
-                                            }
-                                            done = true;
-                                            break;
-                                        }
+                            var index = cdnConfig.archives[entry.index];
+
+                            var archiveName = Path.Combine(cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
+                            if (!File.Exists(archiveName))
+                            {
+                                throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
+                            }
+
+                            using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
+                            {
+                                foreach (var filename in fileEntry.Value)
+                                {
+                                    Console.WriteLine(filename);
+                                    bin.BaseStream.Position = entry.offset;
+                                    try
+                                    {
+                                        File.WriteAllBytes(Path.Combine(basedir, filename), ParseBLTEfile(bin.ReadBytes((int)entry.size)));
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e.Message);
                                     }
                                 }
-                                if (done) break;
                             }
-                        }
-
-                        if (!done)
-                        {
-                            throw new Exception("Unable to find file in archives. File is not available!?");
                         }
                     }
 
@@ -786,10 +644,10 @@ namespace BuildBackup
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wowdev", "wow_beta", "s1", "s1t", "s1a", "catalogs", "w3", "w3t" };
+                checkPrograms = new string[] { "agent", "bna", "bnt", "clnt", "d3", "d3cn", "d3t", "demo", "hero", "herot", "hsb", "hst", "pro", "proc", "prot", "prodev", "sc2", "s2", "s2t", "s2b", "test", "storm", "war3", "wow", "wowt", "wowdev", "wow_beta", "s1", "s1t", "s1a", "catalogs", "w3", "w3t", "wowz" };
             }
             //checkPrograms = new string[] { "wow" };
-            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "w3", "s1a", "w3t", "wowdev" };
+            backupPrograms = new string[] { "agent", "bna", "pro", "prot", "proc", "wow", "wowt", "wow_beta", "s1", "s1t", "w3", "s1a", "w3t", "wowdev", "wowz" };
 
             foreach (string program in checkPrograms)
             {
@@ -897,7 +755,7 @@ namespace BuildBackup
                 Console.Write("..done\n");
 
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
-                indexes = GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
+                GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
@@ -956,12 +814,9 @@ namespace BuildBackup
                     Console.Write("..done\n");
                 }
 
-                foreach (var index in indexes)
+                foreach(var entry in indexDictionary)
                 {
-                    foreach (var entry in index.archiveIndexEntries)
-                    {
-                        hashes.Remove(entry.headerHash);
-                    }
+                    hashes.Remove(entry.Key.ToUpper());
                 }
 
                 if (cdnConfig.patchArchives != null)
@@ -991,6 +846,60 @@ namespace BuildBackup
 
                 GC.Collect();
             }
+        }
+
+        private static byte[] RetrieveFileBytes(string target, bool raw = false, string cdndir = "tpr/wow")
+        {
+            var unarchivedName = Path.Combine(cacheDir, cdndir, "data", target[0] + "" + target[1], target[2] + "" + target[3], target);
+
+            if (File.Exists(unarchivedName))
+            {
+                if (!raw)
+                {
+                    return ParseBLTEfile(File.ReadAllBytes(unarchivedName));
+                }
+                else
+                {
+                    return File.ReadAllBytes(unarchivedName);
+                }
+            }
+
+            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
+            {
+                throw new Exception("Unable to find file in archives. File is not available!?");
+            }
+            else
+            {
+                var index = cdnConfig.archives[entry.index];
+
+                var archiveName = Path.Combine(cacheDir, cdndir, "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
+                if (!File.Exists(archiveName))
+                {
+                    throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
+                }
+
+                using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
+                {
+                    bin.BaseStream.Position = entry.offset;
+                    try
+                    {
+                        if (!raw)
+                        {
+                            return ParseBLTEfile(bin.ReadBytes((int)entry.size));
+                        }
+                        else
+                        {
+                            return bin.ReadBytes((int)entry.size);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            }
+
+            return new byte[0];
         }
 
         private static CDNConfigFile GetCDNconfig(string program, string url, string hash)
@@ -1418,13 +1327,10 @@ namespace BuildBackup
             return buildConfig;
         }
 
-        private static ArchiveIndex[] GetIndexes(string url, string[] archives)
+        private static void GetIndexes(string url, string[] archives)
         {
-            var indexes = new ArchiveIndex[archives.Count()];
             for (int i = 0; i < archives.Count(); i++)
             {
-                indexes[i].name = archives[i];
-
                 byte[] indexContent;
                 if (url.StartsWith("http"))
                 {
@@ -1439,37 +1345,34 @@ namespace BuildBackup
                 {
                     int indexEntries = indexContent.Length / 4096;
 
-                    var entries = new List<ArchiveIndexEntry>();
-
-                    for (int b = 0; b < indexEntries; b++)
+                    for (var b = 0; b < indexEntries; b++)
                     {
-                        for (int bi = 0; bi < 170; bi++)
+                        for (var bi = 0; bi < 170; bi++)
                         {
+                            var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+
                             var entry = new ArchiveIndexEntry()
                             {
-                                headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
+                                index = (short)i,
                                 size = bin.ReadUInt32(true),
                                 offset = bin.ReadUInt32(true)
                             };
-                            //Console.WriteLine(entry.headerHash + " " + entry.size + " " + entry.offset);
-                            entries.Add(entry);
+
+                            if (!indexDictionary.ContainsKey(headerHash))
+                            {
+                                indexDictionary.Add(headerHash, entry);
+                            }
                         }
                         bin.ReadBytes(16);
                     }
-
-                    indexes[i].archiveIndexEntries = entries.ToArray();
                 }
-
             }
-            return indexes;
         }
 
         private static void GetArchives(string url, string[] archives)
         {
-            var indexes = new ArchiveIndex[archives.Count()];
             for (int i = 0; i < archives.Count(); i++)
             {
-                indexes[i].name = archives[i];
                 string name = url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i];
                 string cleanname = name.Replace("http://" + cdns.entries[0].hosts[0], "");
 
@@ -1525,8 +1428,10 @@ namespace BuildBackup
 
         private static RootFile GetRoot(string url, string hash, bool parseIt = false)
         {
-            var root = new RootFile();
-            root.entries = new MultiDictionary<ulong, RootEntry>();
+            var root = new RootFile
+            {
+                entries = new MultiDictionary<ulong, RootEntry>()
+            };
 
             byte[] content;
 
@@ -1959,6 +1864,61 @@ namespace BuildBackup
                     default:
                         throw new Exception("Unsupported mode!");
                 }
+            }
+        }
+
+        private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
+        {
+            cdns = GetCDNs("wow");
+            var hasher = new Jenkins96();
+
+            var rootFrom = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", fromCDNRoot, true);
+            var rootTo = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", toCDNRoot, true);
+
+            var fileNames = File
+                .ReadLines("listfile.txt")
+                .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
+                .ToDictionary(key => key.Item1, value => value.Item2);
+
+            var fromEntries = rootFrom.entries.Keys.ToHashSet();
+            var toEntries = rootTo.entries.Keys.ToHashSet();
+
+            var commonEntries = fromEntries.Intersect(toEntries);
+            var removedEntries = fromEntries.Except(commonEntries);
+            var addedEntries = toEntries.Except(commonEntries);
+
+            Action<RootEntry, string> print = delegate (RootEntry entry, string action)
+            {
+                var lookup = entry.lookup.ToString("x").PadLeft(16, '0');
+                var md5 = BitConverter.ToString(entry.md5).Replace("-", string.Empty).ToLower();
+                var dataId = entry.fileDataID;
+                var fileName = fileNames.ContainsKey(entry.lookup) ? fileNames[entry.lookup] : "Unknown File: " + entry.lookup.ToString("x").PadLeft(16, '0');
+
+                Console.WriteLine("[{0}] <b>{1}</b> (lookup: {2}, content md5: {3}, FileData ID: {4})", action, fileName, lookup, md5, entry.fileDataID);
+            };
+
+            foreach (var id in addedEntries) {
+                var entry = rootTo.entries[id].First();
+                print(entry, "ADDED");
+            }
+
+            foreach (var id in removedEntries)
+            {
+                var entry = rootFrom.entries[id].First();
+                print(entry, "REMOVED");
+            }
+
+            foreach (var id in commonEntries)
+            {
+                var originalFile = rootFrom.entries[id].First();
+                var patchedFile = rootTo.entries[id].First();
+
+                if (originalFile.md5.SequenceEqual(patchedFile.md5))
+                {
+                    continue;
+                }
+
+                print(patchedFile, "MODIFIED");
             }
         }
 
