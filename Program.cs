@@ -193,57 +193,32 @@ namespace BuildBackup
                     if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, root");
                     cdns = GetCDNs("wow");
 
-                    var fileNames = new Dictionary<ulong, string>();
-
                     var hasher = new Jenkins96();
-                    foreach (var line in File.ReadLines("listfile.txt"))
-                    {
-                        fileNames.Add(hasher.ComputeHash(line), line);
-                    }
+
+                    var hashes = File
+                        .ReadLines("listfile.txt")
+                        .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
+                        .ToDictionary(key => key.Item1, value => value.Item2);
 
                     var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
 
+                    Action<RootEntry> print = delegate (RootEntry entry)
+                    {
+                        var lookup = entry.lookup.ToString("x").PadLeft(16, '0');
+                        var md5 = BitConverter.ToString(entry.md5).Replace("-", string.Empty).ToLower();
+                        var dataId = entry.fileDataID;
+                        var fileName = hashes.ContainsKey(entry.lookup) ? hashes[entry.lookup] : "";
+                        Console.WriteLine("{0};{1};{2};{3}", fileName, lookup, dataId, md5);
+                    };
+
                     foreach (var entry in root.entries)
                     {
-                        var matched = false;
+                        RootEntry? prioritizedEntry = entry.Value.FirstOrDefault(subentry =>
+                            subentry.contentFlags.HasFlag(ContentFlags.LowViolence) == false && (subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) || subentry.localeFlags.HasFlag(LocaleFlags.enUS))
+                        );
 
-                        foreach (var subentry in entry.Value)
-                        {
-                            if (entry.Value.Count() > 1)
-                            {
-                                if (subentry.contentFlags.HasFlag(ContentFlags.LowViolence)){
-                                    continue;
-                                }
-
-                                if (!subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) && !subentry.localeFlags.HasFlag(LocaleFlags.enUS))
-                                {
-                                    continue;
-                                }
-                            }
-
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
-                            }
-                            else
-                            {
-                                Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
-                            }
-
-                            matched = true;
-                        }
-
-                        if (!matched)
-                        {
-                            if (fileNames.ContainsKey(entry.Key))
-                            {
-                                Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
-                            }
-                            else
-                            {
-                                Console.WriteLine(";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + entry.Value[0].fileDataID + ";" + BitConverter.ToString(entry.Value[0].md5).Replace("-", string.Empty).ToLower());
-                            }
-                        }
+                        var selectedEntry = (prioritizedEntry.Value.md5 != null) ? prioritizedEntry.Value : entry.Value.First();
+                        print(selectedEntry);
                     }
 
                     Environment.Exit(0);
