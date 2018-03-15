@@ -213,11 +213,11 @@ namespace BuildBackup
 
                     foreach (var entry in root.entries)
                     {
-                        RootEntry? prioritizedEntry = entry.Value.First(subentry =>
+                        RootEntry? prioritizedEntry = entry.Value.FirstOrDefault(subentry =>
                             subentry.contentFlags.HasFlag(ContentFlags.LowViolence) == false && (subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) || subentry.localeFlags.HasFlag(LocaleFlags.enUS))
                         );
 
-                        var selectedEntry = prioritizedEntry ?? entry.Value.First();
+                        var selectedEntry = (prioritizedEntry.Value.md5 != null) ? prioritizedEntry.Value : entry.Value.First();
                         print(selectedEntry);
                     }
 
