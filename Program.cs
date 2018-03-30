@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -8,6 +9,8 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BuildBackup
 {
@@ -44,6 +47,7 @@ namespace BuildBackup
         private static bool isEncrypted = false;
 
         private static Dictionary<string, ArchiveIndexEntry> indexDictionary = new Dictionary<string, ArchiveIndexEntry>();
+        private static ReaderWriterLockSlim cacheLock = new ReaderWriterLockSlim();
 
         static void Main(string[] args)
         {
@@ -1304,7 +1308,7 @@ namespace BuildBackup
 
         private static void GetIndexes(string url, string[] archives)
         {
-            for (int i = 0; i < archives.Count(); i++)
+            Parallel.ForEach(archives, (archive, state, i) =>
             {
                 byte[] indexContent;
                 if (url.StartsWith("http"))
@@ -1333,15 +1337,31 @@ namespace BuildBackup
                                 offset = bin.ReadUInt32(true)
                             };
 
-                            if (!indexDictionary.ContainsKey(headerHash))
+                            cacheLock.EnterUpgradeableReadLock();
+                            try
                             {
-                                indexDictionary.Add(headerHash, entry);
+                                if (!indexDictionary.ContainsKey(headerHash))
+                                {
+                                    cacheLock.EnterWriteLock();
+                                    try
+                                    {
+                                        indexDictionary.Add(headerHash, entry);
+                                    }
+                                    finally
+                                    {
+                                        cacheLock.ExitWriteLock();
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                cacheLock.ExitUpgradeableReadLock();
                             }
                         }
                         bin.ReadBytes(16);
                     }
                 }
-            }
+            });
         }
 
         private static void GetArchives(string url, string[] archives)
@@ -1547,11 +1567,11 @@ namespace BuildBackup
 
             byte[] content;
 
-            if (url.StartsWith("http:"))
+            if (url.Substring(0, 4) == "http")
             {
                 content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
-                if (encodingSize != content.Length)
+                if (encodingSize != 0 && encodingSize != content.Length)
                 {
                     content = GetCDNFile(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
 
