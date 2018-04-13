@@ -908,7 +908,7 @@ namespace BuildBackup
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
             {
-                if (cdnConfigLines[i].StartsWith("# CDN") || cdnConfigLines[i].Length == 0) { continue; }
+                if (cdnConfigLines[i].StartsWith("#") || cdnConfigLines[i].Length == 0) { continue; }
                 var cols = cdnConfigLines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
@@ -1217,7 +1217,7 @@ namespace BuildBackup
 
             for (var i = 0; i < lines.Count(); i++)
             {
-                if (lines[i].StartsWith("# Build") || lines[i].Length == 0) { continue; }
+                if (lines[i].StartsWith("#") || lines[i].Length == 0) { continue; }
                 var cols = lines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
