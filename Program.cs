@@ -965,6 +965,18 @@ namespace BuildBackup
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
+            var lineList = new List<string>();
+
+            for (var i = 0; i < lines.Count(); i++)
+            {
+                if (lines[i][0] != '#')
+                {
+                    lineList.Add(lines[i]);
+                }
+            }
+
+            lines = lineList.ToArray();
+
             if (lines.Count() > 0)
             {
                 versions.entries = new VersionsEntry[lines.Count() - 1];
@@ -1045,6 +1057,18 @@ namespace BuildBackup
             }
 
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var lineList = new List<string>();
+
+            for (var i = 0; i < lines.Count(); i++)
+            {
+                if (lines[i][0] != '#')
+                {
+                    lineList.Add(lines[i]);
+                }
+            }
+
+            lines = lineList.ToArray();
 
             if (lines.Count() > 0)
             {
