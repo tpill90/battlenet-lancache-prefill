@@ -653,16 +653,16 @@ namespace BuildBackup
 
                 if (cdnConfig.builds != null)
                 {
-                    Console.WriteLine("CDNConfig loaded, " + cdnConfig.builds.Count() + " builds, " + cdnConfig.archives.Count() + " archives");
                     cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
                 }
                 else if(cdnConfig.archives != null)
                 {
-                    Console.WriteLine("CDNConfig loaded, " + cdnConfig.archives.Count() + " archives");
+                    //Console.WriteLine("CDNConfig loaded, " + cdnConfig.archives.Count() + " archives");
                 }
                 else
                 {
                     Console.WriteLine("Invalid cdnConfig for " + program + "!");
+                    continue;
                 }
 
                 if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);

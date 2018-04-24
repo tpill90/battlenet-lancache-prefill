@@ -22,6 +22,7 @@ namespace BuildBackup
                 try
                 {
                     if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
+                    Console.Write("\nDownloading " + cleanname);
                     using (HttpResponseMessage response = client.GetAsync(uri).Result)
                     {
                         if (response.IsSuccessStatusCode)
