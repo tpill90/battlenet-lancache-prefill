@@ -331,7 +331,14 @@ namespace BuildBackup
                             continue;
                         }
 
-                        File.WriteAllBytes(Path.Combine(basedir, filename), RetrieveFileBytes(target));
+                        try
+                        {
+                            File.WriteAllBytes(Path.Combine(basedir, filename), RetrieveFileBytes(target));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                     }
 
                     Environment.Exit(0);
@@ -551,7 +558,7 @@ namespace BuildBackup
                         if (encryptedKeys.ContainsKey(entry.key))
                         {
                             encryptedContentHashes.Add(entry.hash, encryptedKeys[entry.key]);
-                            encryptedContentSizes.Add(entry.hash, encryptedSizes[entry.key]);
+                            encryptedContentSizes.Add(entry.hash, entry.size);
                         }
 
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
@@ -581,15 +588,21 @@ namespace BuildBackup
                     Console.Write(Encoding.UTF8.GetString(BLTE.Parse(File.ReadAllBytes(args[1]))));
                     Environment.Exit(0);
                 }
+                if (args[0] == "dumprawfiletofile")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, path, outfile");
+                    File.WriteAllBytes(args[2], BLTE.Parse(File.ReadAllBytes(args[1])));
+                    Environment.Exit(0);
+                }
             }
 
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "wow", "wowt", "wowdev", "wow_beta", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "catalogs" };
+                checkPrograms = new string[] { "agent", "wow", "wowt", "wowdev", "wow_beta", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "catalogs" };
             }
 
-            backupPrograms = new string[] { "wow", "wowt", "wow_beta", "wowdev", "wowe1", "wowe2", "wowe3", "wowv", "wowz" };
+            backupPrograms = new string[] { "agent", "wow", "wowt", "wow_beta", "wowdev", "wowe1", "wowe2", "wowe3", "wowv", "wowz" };
 
             foreach (string program in checkPrograms)
             {
