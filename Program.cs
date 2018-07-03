@@ -29,12 +29,14 @@ namespace BuildBackup
         private static InstallFile install;
         private static DownloadFile download;
         private static RootFile root;
+        private static PatchFile patch;
 
         private static bool overrideVersions;
         private static string overrideBuildconfig;
         private static string overrideCDNconfig;
 
         private static Dictionary<string, ArchiveIndexEntry> indexDictionary = new Dictionary<string, ArchiveIndexEntry>();
+        private static Dictionary<string, ArchiveIndexEntry> patchIndexDictionary = new Dictionary<string, ArchiveIndexEntry>();
         private static ReaderWriterLockSlim cacheLock = new ReaderWriterLockSlim();
 
         private static CDN cdn = new CDN();
@@ -705,7 +707,7 @@ namespace BuildBackup
                 }
 
                 Console.Write("Downloading patch files..");
-                if (!string.IsNullOrEmpty(buildConfig.patch)) cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + buildConfig.patch[0] + buildConfig.patch[1] + "/" + buildConfig.patch[2] + buildConfig.patch[3] + "/" + buildConfig.patch);
+                if (!string.IsNullOrEmpty(buildConfig.patch)) patch = GetPatch("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.patch, true);
                 if (!string.IsNullOrEmpty(buildConfig.patchConfig)) cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
                 Console.Write("..done\n");
 
@@ -772,35 +774,60 @@ namespace BuildBackup
                     Console.Write("..done\n");
                 }
 
-                foreach(var entry in indexDictionary)
+                foreach (var entry in indexDictionary)
                 {
                     hashes.Remove(entry.Key.ToUpper());
                 }
 
-                if (cdnConfig.patchArchives != null)
-                {
-                    var totalPatchArchives = cdnConfig.patchArchives.Count();
-                    Console.Write("Downloading " + totalPatchArchives + " patch archives..");
-                    for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
-                    {
-                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
-                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i] + ".index", false);
-                    }
-                    Console.Write("..done\n");
-                }
-
                 Console.Write("Downloading " + hashes.Count() + " unarchived files..");
-
-                int h = 1;
-                var tot = hashes.Count;
 
                 foreach (var entry in hashes)
                 {
                     cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
-                    h++;
                 }
 
                 Console.Write("..done\n");
+                if (cdnConfig.patchArchives != null)
+                {
+                    Console.Write("Downloading " + cdnConfig.patchArchives.Count() + " patch archives..");
+                    for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
+                    {
+                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
+                    }
+                    Console.Write("..done\n");
+
+                    Console.Write("Downloading " + cdnConfig.patchArchives.Count() + " patch archive indexes..");
+                    GetPatchIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.patchArchives);
+                    Console.Write("..done\n");
+
+                    var unarchivedPatchKeyList = new List<string>();
+                    foreach(var block in patch.blocks)
+                    {
+                        foreach(var fileBlock in block.files)
+                        {
+                            foreach(var patch in fileBlock.patches)
+                            {
+                                var pKey = BitConverter.ToString(patch.patchEncodingKey).Replace("-", "");
+                                if (!patchIndexDictionary.ContainsKey(pKey))
+                                {
+                                    unarchivedPatchKeyList.Add(pKey);
+                                }
+                            }
+                        }
+                    }
+
+                    if(unarchivedPatchKeyList.Count > 0)
+                    {
+                        Console.Write("Downloading " + unarchivedPatchKeyList.Count + " unarchived patch files..");
+
+                        foreach (var entry in unarchivedPatchKeyList)
+                        {
+                            cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                        }
+
+                        Console.Write("..done\n");
+                    }
+                }
 
                 GC.Collect();
             }
@@ -1366,6 +1393,63 @@ namespace BuildBackup
                 }
             });
         }
+        private static void GetPatchIndexes(string url, string[] archives)
+        {
+            Parallel.ForEach(archives, (archive, state, i) =>
+            {
+                byte[] indexContent;
+                if (url.StartsWith("http"))
+                {
+                    indexContent = cdn.Get(url + "patch/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+                }
+                else
+                {
+                    indexContent = File.ReadAllBytes(Path.Combine(url, "patch", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
+                }
+
+                using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
+                {
+                    int indexEntries = indexContent.Length / 4096;
+
+                    for (var b = 0; b < indexEntries; b++)
+                    {
+                        for (var bi = 0; bi < 170; bi++)
+                        {
+                            var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+
+                            var entry = new ArchiveIndexEntry()
+                            {
+                                index = (short)i,
+                                size = bin.ReadUInt32(true),
+                                offset = bin.ReadUInt32(true)
+                            };
+
+                            cacheLock.EnterUpgradeableReadLock();
+                            try
+                            {
+                                if (!patchIndexDictionary.ContainsKey(headerHash))
+                                {
+                                    cacheLock.EnterWriteLock();
+                                    try
+                                    {
+                                        patchIndexDictionary.Add(headerHash, entry);
+                                    }
+                                    finally
+                                    {
+                                        cacheLock.ExitWriteLock();
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                cacheLock.ExitUpgradeableReadLock();
+                            }
+                        }
+                        bin.ReadBytes(16);
+                    }
+                }
+            });
+        }
 
         private static RootFile GetRoot(string url, string hash, bool parseIt = false)
         {
@@ -1661,6 +1745,79 @@ namespace BuildBackup
             }
 
             return encoding;
+        }
+
+        private static PatchFile GetPatch(string url, string hash, bool parseIt = false)
+        {
+            var patchFile = new PatchFile();
+
+            byte[] content = cdn.Get(url + "patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+
+            if (!parseIt) return patchFile;
+
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
+            {
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "PA") { throw new Exception("Error while parsing patch file!"); }
+
+                patchFile.version = bin.ReadByte();
+                patchFile.fileKeySize = bin.ReadByte();
+                patchFile.sizeB = bin.ReadByte();
+                patchFile.patchKeySize = bin.ReadByte();
+                patchFile.blockSizeBits = bin.ReadByte();
+                patchFile.blockCount = bin.ReadUInt16(true);
+                patchFile.flags = bin.ReadByte();
+                patchFile.encodingContentKey = bin.ReadBytes(16);
+                patchFile.encodingEncodingKey = bin.ReadBytes(16);
+                patchFile.decodedSize = bin.ReadUInt32(true);
+                patchFile.encodedSize = bin.ReadUInt32(true);
+                patchFile.especLength = bin.ReadByte();
+                patchFile.encodingSpec = new string(bin.ReadChars(patchFile.especLength));
+
+                patchFile.blocks = new PatchBlock[patchFile.blockCount];
+                for(var i = 0; i < patchFile.blockCount; i++)
+                {
+                    patchFile.blocks[i].lastFileContentKey = bin.ReadBytes(patchFile.fileKeySize);
+                    patchFile.blocks[i].blockMD5 = bin.ReadBytes(16);
+                    patchFile.blocks[i].blockOffset = bin.ReadUInt32(true);
+
+                    var prevPos = bin.BaseStream.Position;
+
+                    var files = new List<BlockFile>();
+
+                    bin.BaseStream.Position = patchFile.blocks[i].blockOffset;
+                    while (bin.BaseStream.Position <= patchFile.blocks[i].blockOffset + 0x10000)
+                    {
+                        var file = new BlockFile();
+
+                        file.numPatches = bin.ReadByte();
+                        if (file.numPatches == 0) break;
+                        file.targetFileContentKey = bin.ReadBytes(patchFile.fileKeySize);
+                        file.decodedSize = bin.ReadUInt40(true);
+
+                        var filePatches = new List<FilePatch>();
+
+                        for(var j = 0; j < file.numPatches; j++)
+                        {
+                            var filePatch = new FilePatch();
+                            filePatch.sourceFileEncodingKey = bin.ReadBytes(patchFile.fileKeySize);
+                            filePatch.decodedSize = bin.ReadUInt40(true);
+                            filePatch.patchEncodingKey = bin.ReadBytes(patchFile.patchKeySize);
+                            filePatch.patchSize = bin.ReadUInt32(true);
+                            filePatch.patchIndex = bin.ReadByte();
+                            filePatches.Add(filePatch);
+                        }
+
+                        file.patches = filePatches.ToArray();
+
+                        files.Add(file);
+                    }
+
+                    patchFile.blocks[i].files = files.ToArray();
+                    bin.BaseStream.Position = prevPos;
+                }
+            }
+
+            return patchFile;
         }
 
         private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
