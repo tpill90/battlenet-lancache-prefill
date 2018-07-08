@@ -46,9 +46,14 @@ namespace BuildBackup
                                 }
                             }
                         }
+                        else if(response.StatusCode == System.Net.HttpStatusCode.NotFound && !url.StartsWith("http://client04"))
+                        {
+                            Console.WriteLine("Not found on primary mirror, retrying on secondary mirror...");
+                            return Get("http://client04.pdl.wow.battlenet.com.cn/" + cleanname, returnstream, redownload);
+                        }
                         else
                         {
-                            throw new Exception("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + url);
+                            throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + url);
                         }
 
                     }
