@@ -73,6 +73,10 @@ namespace BuildBackup
         public string[] patchArchives;
         public string patchArchiveGroup;
         public string[] builds;
+        public string fileIndex;
+        public string fileIndexSize;
+        public string patchFileIndex;
+        public string patchFileIndexSize;
     }
 
     public struct ArchiveIndexEntry
