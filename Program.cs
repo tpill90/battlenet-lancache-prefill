@@ -35,10 +35,10 @@ namespace BuildBackup
         private static string overrideBuildconfig;
         private static string overrideCDNconfig;
 
-        private static Dictionary<string, ArchiveIndexEntry> indexDictionary = new Dictionary<string, ArchiveIndexEntry>();
-        private static Dictionary<string, ArchiveIndexEntry> patchIndexDictionary = new Dictionary<string, ArchiveIndexEntry>();
-        private static List<string> fileIndexList = new List<string>();
-        private static List<string> patchFileIndexList = new List<string>();
+        private static Dictionary<string, IndexEntry> indexDictionary = new Dictionary<string, IndexEntry>();
+        private static Dictionary<string, IndexEntry> patchIndexDictionary = new Dictionary<string, IndexEntry>();
+        private static Dictionary<string, IndexEntry> fileIndexList = new Dictionary<string, IndexEntry>();
+        private static Dictionary<string, IndexEntry> patchFileIndexList = new Dictionary<string, IndexEntry>();
         private static ReaderWriterLockSlim cacheLock = new ReaderWriterLockSlim();
 
         private static CDN cdn = new CDN();
@@ -475,7 +475,7 @@ namespace BuildBackup
 
                         if (!done)
                         {
-                            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
+                            if (!indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
                             {
                                 throw new Exception("Unable to find file in archives. File is not available!?");
                             }
@@ -759,19 +759,22 @@ namespace BuildBackup
                     if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                 }
 
+                Console.Write("..done\n");
+
                 if (!string.IsNullOrEmpty(cdnConfig.fileIndex))
                 {
-                    Console.WriteLine("Parsing file index..");
-                    fileIndexList = ParseFileIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.fileIndex);
+                    Console.Write("Parsing file index..");
+                    fileIndexList = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.fileIndex);
+                    Console.Write("..done\n");
+
                 }
 
                 if (!string.IsNullOrEmpty(cdnConfig.patchFileIndex))
                 {
-                    Console.WriteLine("Parsing patch file index..");
-                    patchFileIndexList = ParsePatchFileIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.patchFileIndex);
+                    Console.Write("Parsing patch file index..");
+                    patchFileIndexList = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.patchFileIndex, "patch");
+                    Console.Write("..done\n");
                 }
-
-                Console.Write("..done\n");
 
                 if (program == "wow" || program == "wowt" || program == "wow_beta") // Only these are supported right now
                 {
@@ -793,23 +796,29 @@ namespace BuildBackup
                     hashes.Remove(entry.Key.ToUpper());
                 }
 
-                Console.Write("Downloading " + fileIndexList.Count + " unarchived files from file index..");
-
-                foreach (var entry in fileIndexList)
+                if (!string.IsNullOrEmpty(cdnConfig.fileIndex))
                 {
-                    cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                    Console.Write("Downloading " + fileIndexList.Count + " unarchived files from file index..");
+
+                    foreach (var entry in fileIndexList.Keys)
+                    {
+                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                    }
+
+                    Console.Write("..done\n");
                 }
 
-                Console.Write("..done\n");
-
-                Console.Write("Downloading " + patchFileIndexList.Count + " unarchived patch files from patch file index..");
-
-                foreach (var entry in patchFileIndexList)
+                if (!string.IsNullOrEmpty(cdnConfig.patchFileIndex))
                 {
-                    cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
-                }
+                    Console.Write("Downloading " + patchFileIndexList.Count + " unarchived patch files from patch file index..");
 
-                Console.Write("..done\n");
+                    foreach (var entry in patchFileIndexList.Keys)
+                    {
+                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                    }
+
+                    Console.Write("..done\n");
+                }
 
                 Console.Write("Downloading " + hashes.Count() + " unarchived files..");
 
@@ -882,7 +891,7 @@ namespace BuildBackup
                 }
             }
 
-            if (!indexDictionary.TryGetValue(target.ToUpper(), out ArchiveIndexEntry entry))
+            if (!indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
             {
                 throw new Exception("Unable to find file in archives. File is not available!?");
             }
@@ -1381,40 +1390,99 @@ namespace BuildBackup
             return buildConfig;
         }
 
-        private static List<string> ParseFileIndex(string url, string hash)
+        private static Dictionary<string, IndexEntry> ParseIndex(string url, string hash, string folder = "data")
         {
             byte[] indexContent;
 
             if (url.StartsWith("http"))
             {
-                indexContent = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
+                indexContent = cdn.Get(url + folder + "/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
             }
             else
             {
-                indexContent = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash + ".index"));
+                indexContent = File.ReadAllBytes(Path.Combine(url, folder, "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash + ".index"));
             }
 
-            var list = new List<string>();
+            var returnDict = new Dictionary<string, IndexEntry>();
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
             {
-                int indexEntries = indexContent.Length / 4096;
+                bin.BaseStream.Position = bin.BaseStream.Length - 28;
+
+                var footer = new IndexFooter
+                {
+                    tocHash = bin.ReadBytes(8),
+                    version = bin.ReadByte(),
+                    unk0 = bin.ReadByte(),
+                    unk1 = bin.ReadByte(),
+                    blockSizeKB = bin.ReadByte(),
+                    offsetBytes = bin.ReadByte(),
+                    sizeBytes = bin.ReadByte(),
+                    keySizeInBytes = bin.ReadByte(),
+                    checksumSize = bin.ReadByte(),
+                    numElements = bin.ReadUInt32()
+                };
+
+                footer.footerChecksum = bin.ReadBytes(footer.checksumSize);
+
+                // TODO: Read numElements as BE if it is wrong as LE
+                if((footer.numElements & 0xff000000) != 0)
+                {
+                    bin.BaseStream.Position -= footer.checksumSize + 4;
+                    footer.numElements = bin.ReadUInt32(true);
+                }
+
+                bin.BaseStream.Position = 0;
+
+                var indexBlockSize = 1024 * footer.blockSizeKB;
+
+                int indexEntries = indexContent.Length / indexBlockSize;
+                var recordSize = footer.keySizeInBytes + footer.sizeBytes + footer.offsetBytes;
+                var recordsPerBlock = indexBlockSize / recordSize;
+                var blockPadding = indexBlockSize - (recordsPerBlock * recordSize);
 
                 for (var b = 0; b < indexEntries; b++)
                 {
-                    for (var bi = 0; bi < 170; bi++)
+                    for (var bi = 0; bi < recordsPerBlock; bi++)
                     {
-                        var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        var headerHash = BitConverter.ToString(bin.ReadBytes(footer.keySizeInBytes)).Replace("-", "");
+                        var entry = new IndexEntry();
 
-                        var size = bin.ReadUInt32(true);
+                        if (footer.sizeBytes == 4)
+                        {
+                            entry.size = bin.ReadUInt32(true);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException("Index size reading other than 4 is not implemented!");
+                        }
 
-                        list.Add(headerHash);
+                        if (footer.offsetBytes == 4)
+                        {
+                            // Archive index
+                            entry.offset = bin.ReadUInt32(true);
+                        }
+                        else if(footer.offsetBytes == 6)
+                        {
+                            // Group index
+                            throw new NotImplementedException("Group index reading is not implemented!");
+                        }
+                        else
+                        {
+                            // File index
+                        }
+
+                        if(entry.size != 0)
+                        {
+                            returnDict.Add(headerHash, entry);
+                        }
                     }
-                    bin.ReadBytes(16);
+
+                    bin.ReadBytes(blockPadding);
                 }
             }
 
-            return list;
+            return returnDict;
         }
 
         private static List<string> ParsePatchFileIndex(string url, string hash)
@@ -1477,7 +1545,7 @@ namespace BuildBackup
                         {
                             var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
 
-                            var entry = new ArchiveIndexEntry()
+                            var entry = new IndexEntry()
                             {
                                 index = (short)i,
                                 size = bin.ReadUInt32(true),
@@ -1534,7 +1602,7 @@ namespace BuildBackup
                         {
                             var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
 
-                            var entry = new ArchiveIndexEntry()
+                            var entry = new IndexEntry()
                             {
                                 index = (short)i,
                                 size = bin.ReadUInt32(true),

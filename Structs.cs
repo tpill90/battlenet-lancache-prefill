@@ -79,11 +79,26 @@ namespace BuildBackup
         public string patchFileIndexSize;
     }
 
-    public struct ArchiveIndexEntry
+    public struct IndexEntry
     {
         public short index;
         public uint offset;
         public uint size;
+    }
+
+    public struct IndexFooter
+    {
+        public byte[] tocHash;
+        public byte version;
+        public byte unk0;
+        public byte unk1;
+        public byte blockSizeKB;
+        public byte offsetBytes;
+        public byte sizeBytes;
+        public byte keySizeInBytes;
+        public byte checksumSize;
+        public uint numElements;
+        public byte[] footerChecksum;
     }
 
     public struct EncodingFile
