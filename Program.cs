@@ -598,6 +598,19 @@ namespace BuildBackup
                     File.WriteAllBytes(args[2], BLTE.Parse(File.ReadAllBytes(args[1])));
                     Environment.Exit(0);
                 }
+                if (args[0] == "dumpindex")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, hash");
+
+                    cdns = GetCDNs(args[1]);
+
+                    var index = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
+                    foreach(var entry in index)
+                    {
+                        Console.WriteLine(entry.Key + " " + entry.Value.size);
+                    }
+                    Environment.Exit(0);
+                }
             }
 
             // Load programs

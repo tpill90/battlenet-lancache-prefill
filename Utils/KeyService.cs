@@ -104,6 +104,12 @@ namespace BuildBackup
             [0x6FA0420E902B4FBE] = "27B750184E5329C4E4455CBD3E1FD5AB".ToByteArray(), // TactKeyId 119
             [0xC1E5D7408A7D4484] = "A7D88E52749FA5459D644523F8359651".ToByteArray(), // TactKeyId 226
             [0xE46276EB9E1A9854] = "CCCA36E302F9459B1D60526A31BE77C8".ToByteArray(), // TactKeyId 227
+            [0xD245B671DD78648C] = "19DCB4D45A658B54351DB7DDC81DE79E".ToByteArray(), // TactKeyId 228
+            [0x4C596E12D36DDFC3] = "B8731926389499CBD4ADBF5006CA0391".ToByteArray(), // TactKeyId 229
+            [0x0C9ABD5081C06411] = "25A77CD800197EE6A32DD63F04E115FA".ToByteArray(), // TactKeyId 230
+            // [0x3C6243057F3D9B24] = "????????????????????????????????".ToByteArray(), // TactKeyId 231
+            [0x7827FBE24427E27D] = "34A432042073CD0B51627068D2E0BD3E".ToByteArray(), // TactKeyId 232
+            // [0x5DD92EE32BBF9ABD] = "????????????????????????????????".ToByteArray(), // TactKeyId 234
             // BNA 1.5.0 Alpha
             [0x2C547F26A2613E01] = "37C50C102D4C9E3A5AC069F072B1417D".ToByteArray(),
         };
