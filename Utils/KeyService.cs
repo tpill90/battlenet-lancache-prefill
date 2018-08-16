@@ -107,7 +107,7 @@ namespace BuildBackup
             [0xD245B671DD78648C] = "19DCB4D45A658B54351DB7DDC81DE79E".ToByteArray(), // TactKeyId 228
             [0x4C596E12D36DDFC3] = "B8731926389499CBD4ADBF5006CA0391".ToByteArray(), // TactKeyId 229
             [0x0C9ABD5081C06411] = "25A77CD800197EE6A32DD63F04E115FA".ToByteArray(), // TactKeyId 230
-            // [0x3C6243057F3D9B24] = "????????????????????????????????".ToByteArray(), // TactKeyId 231
+            [0x3C6243057F3D9B24] = "58AE3E064210E3EDF9C1259CDE914C5D".ToByteArray(), // TactKeyId 231
             [0x7827FBE24427E27D] = "34A432042073CD0B51627068D2E0BD3E".ToByteArray(), // TactKeyId 232
             // [0x5DD92EE32BBF9ABD] = "????????????????????????????????".ToByteArray(), // TactKeyId 234
             // BNA 1.5.0 Alpha
