@@ -47,6 +47,8 @@ namespace BuildBackup
         public string[] installSize;
         public string[] encoding;
         public string[] encodingSize;
+        public string[] size;
+        public string[] sizeSize;
         public string buildName;
         public string buildPlaybuildInstaller;
         public string buildProduct;

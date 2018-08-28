@@ -1334,6 +1334,12 @@ namespace BuildBackup
                         var encodingSize = cols[1].Split(' ');
                         buildConfig.encodingSize = encodingSize;
                         break;
+                    case "size":
+                        buildConfig.size = cols[1].Split(' ');
+                        break;
+                    case "size-size":
+                        buildConfig.sizeSize = cols[1].Split(' ');
+                        break;
                     case "build-name":
                         buildConfig.buildName = cols[1];
                         break;
