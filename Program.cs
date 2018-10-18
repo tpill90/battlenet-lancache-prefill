@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Ribbit.Constants;
+using Ribbit.Protocol;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -616,10 +618,10 @@ namespace BuildBackup
             // Load programs
             if (checkPrograms == null)
             {
-                checkPrograms = new string[] { "agent", "wow", "wowt", "wowdev", "wow_beta", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "catalogs", "wowdemo" };
+                checkPrograms = new string[] { "agent", "wow", "wowt", "wowdev", "wow_beta", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "catalogs", "wowdemo", "wow_classic"};
             }
 
-            backupPrograms = new string[] { "agent", "wow", "wowt", "wow_beta", "wowdev", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "wowdemo" };
+            backupPrograms = new string[] { "agent", "wow", "wowt", "wow_beta", "wowdev", "wowe1", "wowe2", "wowe3", "wowv", "wowz", "wowdemo", "wow_classic" };
 
             foreach (string program in checkPrograms)
             {
@@ -1024,9 +1026,27 @@ namespace BuildBackup
             {
                 using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "versions")).Result)
                 {
-                    using (HttpContent res = response.Content)
+                    if (response.IsSuccessStatusCode)
                     {
-                        content = res.ReadAsStringAsync().Result;
+                        using (HttpContent res = response.Content)
+                        {
+                            content = res.ReadAsStringAsync().Result;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Bad HTTP code while retrieving, trying Ribbit...");
+                        try
+                        {
+                            var client = new Client(Region.US);
+                            var request = client.Request("v1/products/" + program + "/versions");
+                            content = request.ToString();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Error during retrieving Ribbit versions: " + e.Message);
+                            return versions;
+                        }
                     }
                 }
             }
@@ -1119,7 +1139,18 @@ namespace BuildBackup
                     }
                     else
                     {
-                        throw new Exception("Bad HTTP code while retrieving");
+                        Console.WriteLine("Bad HTTP code while retrieving, trying Ribbit...");
+                        try
+                        {
+                            var client = new Client(Region.US);
+                            var request = client.Request("v1/products/" + program + "/cdns");
+                            content = request.ToString();
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine("Error during retrieving Ribbit cdns: " + e.Message);
+                            return cdns;
+                        }
                     }
                 }
             }
