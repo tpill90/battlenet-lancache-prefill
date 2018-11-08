@@ -791,7 +791,7 @@ namespace BuildBackup
                     Console.Write("..done\n");
                 }
 
-                if (program == "wow" || program == "wowt" || program == "wow_beta") // Only these are supported right now
+                if (program == "wow" || program == "wowt" || program == "wow_beta" || program == "wow_classic") // Only these are supported right now
                 {
                     Console.Write("Loading root..");
                     if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey); }
