@@ -11,8 +11,9 @@ In addition to the backup functionality there are also several utilities impleme
 
 ## Supported products
 Basic data for all [product codes](https://wowdev.wiki/CASC#NGDP_Program_Codes) is supported (when available on CDN), but BuildBackup currently supports full data backups for the following applications:
-- World of Warcraft (wow, wowt, wow_beta)
-- Overwatch (pro, prot, proc, **not prodev**)
+- World of Warcraft
+- Battle.net Agent
+- Battle.net App
 
 ## Configuration
 You will have to set the path where files should be saved manually in Program.cs. By default it is H:/ on Windows machines and /var/www/bnet.marlam.in/ for all other operating systems. This will be moved to a configuration file in the future.
