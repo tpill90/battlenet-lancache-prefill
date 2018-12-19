@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-dotnet: 2.1.6
+dotnet: 2.1
 dist: xenial
 solution: BuildBackup.sln
 
