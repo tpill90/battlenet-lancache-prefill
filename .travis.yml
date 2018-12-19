@@ -8,4 +8,4 @@ install:
     - dotnet restore BuildBackup.sln
 
 script:
-    - dotnet build -f netcoreapp2.0 BuildBackup.csproj
+    - dotnet build -f netcoreapp2.1 BuildBackup.csproj
