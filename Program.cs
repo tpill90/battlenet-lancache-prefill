@@ -802,8 +802,18 @@ namespace BuildBackup
                     Console.Write("..done\n");
 
                     Console.Write("Loading install..");
-                    if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", installKey); }
                     Console.Write("..done\n");
+
+                    try
+                    {
+                        if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", installKey); }
+
+                    }catch(Exception e)
+                    {
+                        Console.WriteLine("Error loading install: " + e.Message);
+                    }
+
+
                 }
 
                 foreach (var entry in indexDictionary)
