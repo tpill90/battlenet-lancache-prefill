@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <Reference Include="Ribbit.NET">
-      <HintPath>..\Ribbit.NET\Ribbit.NET\bin\Debug\netcoreapp2.1\Ribbit.NET.dll</HintPath>
+      <HintPath>..\..\..\GitHub\Ribbit.NET\Ribbit.NET\bin\Debug\netcoreapp2.1\Ribbit.NET.dll</HintPath>
     </Reference>
   </ItemGroup>
 
