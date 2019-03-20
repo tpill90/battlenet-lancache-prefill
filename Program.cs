@@ -47,15 +47,7 @@ namespace BuildBackup
 
         static void Main(string[] args)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                cdn.cacheDir = "H:/";
-            }
-            else
-            {
-                cdn.cacheDir = "/var/www/bnet.marlam.in/";
-            }
-
+            cdn.cacheDir = SettingsManager.cacheDir;
             cdn.client = new HttpClient();
 
             // Check if cache/backup directory exists
