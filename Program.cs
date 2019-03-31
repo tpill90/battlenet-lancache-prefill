@@ -1026,35 +1026,36 @@ namespace BuildBackup
 
             try
             {
-                using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "versions")).Result)
+                var client = new Client(Region.US);
+                var request = client.Request("v1/products/" + program + "/versions");
+                content = request.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error during retrieving Ribbit versions: " + e.Message + ", trying HTTP..");
+                try
                 {
-                    if (response.IsSuccessStatusCode)
+                    using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "versions")).Result)
                     {
-                        using (HttpContent res = response.Content)
+                        if (response.IsSuccessStatusCode)
                         {
-                            content = res.ReadAsStringAsync().Result;
+                            using (HttpContent res = response.Content)
+                            {
+                                content = res.ReadAsStringAsync().Result;
+                            }
                         }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Bad HTTP code while retrieving, trying Ribbit...");
-                        try
+                        else
                         {
-                            var client = new Client(Region.US);
-                            var request = client.Request("v1/products/" + program + "/versions");
-                            content = request.ToString();
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("Error during retrieving Ribbit versions: " + e.Message);
+                            Console.WriteLine("Error during retrieving HTTP versions: Received bad HTTP code " + response.StatusCode);
                             return versions;
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error retrieving versions: " + e.Message);
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error retrieving versions: " + ex.Message);
+                    return versions;
+                }
                 return versions;
             }
 
@@ -1130,36 +1131,36 @@ namespace BuildBackup
 
             try
             {
-                using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "cdns")).Result)
+                var client = new Client(Region.US);
+                var request = client.Request("v1/products/" + program + "/cdns");
+                content = request.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error during retrieving Ribbit cdns: " + e.Message + ", trying HTTP..");
+                try
                 {
-                    if (response.IsSuccessStatusCode)
+                    using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "cdns")).Result)
                     {
-                        using (HttpContent res = response.Content)
+                        if (response.IsSuccessStatusCode)
                         {
-                            content = res.ReadAsStringAsync().Result;
+                            using (HttpContent res = response.Content)
+                            {
+                                content = res.ReadAsStringAsync().Result;
+                            }
                         }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Bad HTTP code while retrieving, trying Ribbit...");
-                        try
+                        else
                         {
-                            var client = new Client(Region.US);
-                            var request = client.Request("v1/products/" + program + "/cdns");
-                            content = request.ToString();
-                        }
-                        catch(Exception e)
-                        {
-                            Console.WriteLine("Error during retrieving Ribbit cdns: " + e.Message);
+                            Console.WriteLine("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
                             return cdns;
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error retrieving CDNs file: " + e.Message);
-                return cdns;
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error retrieving CDNs file: " + ex.Message);
+                    return cdns;
+                }
             }
 
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
