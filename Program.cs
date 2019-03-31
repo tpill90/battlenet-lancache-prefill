@@ -1059,6 +1059,7 @@ namespace BuildBackup
                 return versions;
             }
 
+            content = content.Replace("\0", "");
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             var lineList = new List<string>();
