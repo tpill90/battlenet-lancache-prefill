@@ -119,7 +119,7 @@ namespace BuildBackup
                     cdns = GetCDNs("wow");
 
                     var fileNames = new Dictionary<ulong, string>();
-
+                    UpdateListfile();
                     var hasher = new Jenkins96();
                     foreach (var line in File.ReadLines("listfile.txt"))
                     {
@@ -159,7 +159,7 @@ namespace BuildBackup
                     cdns = GetCDNs("wow");
 
                     var hasher = new Jenkins96();
-
+                    UpdateListfile();
                     var hashes = File
                         .ReadLines("listfile.txt")
                         .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
@@ -214,6 +214,7 @@ namespace BuildBackup
                     }
                     else
                     {
+                        UpdateListfile();
                         target = "listfile.txt";
                     }
 
@@ -2058,6 +2059,22 @@ namespace BuildBackup
 
             return patchFile;
         }
+        private static void UpdateListfile()
+        {
+            if (!File.Exists("listfile.txt") || DateTime.Now.AddHours(-1) > File.GetLastWriteTime("listfile.txt"))
+            {
+                using (var client = new System.Net.WebClient())
+                using (var stream = new MemoryStream())
+                {
+                    client.Headers[System.Net.HttpRequestHeader.AcceptEncoding] = "gzip";
+                    using (var responseStream = new System.IO.Compression.GZipStream(client.OpenRead("https://wow.tools/casc/listfile/download"), System.IO.Compression.CompressionMode.Decompress))
+                    {
+                        responseStream.CopyTo(stream);
+                        File.WriteAllBytes("listfile.txt", stream.ToArray());
+                    }
+                }
+            }
+        }
 
         private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
         {
@@ -2066,6 +2083,8 @@ namespace BuildBackup
 
             var rootFrom = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", fromCDNRoot, true);
             var rootTo = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", toCDNRoot, true);
+
+            UpdateListfile();
 
             var fileNames = File
                 .ReadLines("listfile.txt")
