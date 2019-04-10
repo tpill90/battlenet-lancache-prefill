@@ -620,11 +620,26 @@ namespace BuildBackup
             {
                 Console.WriteLine("Using program " + program);
 
-                versions = GetVersions(program);
+                try
+                {
+                    versions = GetVersions(program);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error parsing versions: " + e.Message);
+                }
+
                 if (versions.entries == null || versions.entries.Count() == 0) { Console.WriteLine("Invalid versions file for " + program + ", skipping!"); continue; }
                 Console.WriteLine("Loaded " + versions.entries.Count() + " versions");
 
-                cdns = GetCDNs(program);
+                try
+                {
+                    cdns = GetCDNs(program);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error parsing CDNs: " + e.Message);
+                }
                 if (cdns.entries == null || cdns.entries.Count() == 0) { Console.WriteLine("Invalid CDNs file for " + program + ", skipping!"); continue; }
                 Console.WriteLine("Loaded " + cdns.entries.Count() + " cdns");
 
