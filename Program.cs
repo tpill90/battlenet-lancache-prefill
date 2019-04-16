@@ -1726,8 +1726,23 @@ namespace BuildBackup
 
             if (!parseIt) return root;
 
+            var hasher = new Jenkins96();
+
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
+                var header = bin.ReadUInt32();
+                uint totalFiles = 0;
+                uint namedFiles = 0;
+                if(header == 1296454484)
+                {
+                    totalFiles = bin.ReadUInt32();
+                    namedFiles = bin.ReadUInt32();
+                }
+                else
+                {
+                    bin.BaseStream.Position = 0;
+                }
+
                 while (bin.BaseStream.Position < bin.BaseStream.Length)
                 {
                     var count = bin.ReadUInt32();
@@ -1745,14 +1760,20 @@ namespace BuildBackup
 
                         filedataIds[i] = fileDataIndex + bin.ReadInt32();
                         entries[i].fileDataID = (uint)filedataIds[i];
-
                         fileDataIndex = filedataIds[i] + 1;
                     }
 
                     for (var i = 0; i < count; ++i)
                     {
                         entries[i].md5 = bin.ReadBytes(16);
-                        entries[i].lookup = bin.ReadUInt64();
+                        if (contentFlags.HasFlag(ContentFlags.NoNames))
+                        {
+                            entries[i].lookup = hasher.ComputeHash("BY_FDID_" + entries[i].fileDataID);
+                        }
+                        else
+                        {
+                            entries[i].lookup = bin.ReadUInt64();
+                        }
                         root.entries.Add(entries[i].lookup, entries[i]);
                     }
                 }

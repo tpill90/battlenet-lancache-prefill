@@ -282,7 +282,7 @@ namespace BuildBackup
         F00000008 = 0x8, // added in 7.2.0.23436
         F00000010 = 0x10, // added in 7.2.0.23436
         LowViolence = 0x80, // many models have this flag
-        F10000000 = 0x10000000,
+        NoNames = 0x10000000,
         F20000000 = 0x20000000, // added in 21737
         Bundle = 0x40000000,
         NoCompression = 0x80000000 // sounds have this flag
