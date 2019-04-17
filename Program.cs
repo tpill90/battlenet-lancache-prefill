@@ -1732,6 +1732,7 @@ namespace BuildBackup
             var unnamedCount = 0;
             uint totalFiles = 0;
             uint namedFiles = 0;
+            var newRoot = false;
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
                 var header = bin.ReadUInt32();
@@ -1740,6 +1741,7 @@ namespace BuildBackup
                 {
                     totalFiles = bin.ReadUInt32();
                     namedFiles = bin.ReadUInt32();
+                    newRoot = true;
                 }
                 else
                 {
@@ -1766,25 +1768,37 @@ namespace BuildBackup
                         fileDataIndex = filedataIds[i] + 1;
                     }
 
-                    for (var i = 0; i < count; ++i)
+                    if (!newRoot)
                     {
-                        entries[i].md5 = bin.ReadBytes(16);
-                    }
-
-                    for (var i = 0; i < count; ++i)
-                    {
-                        if (contentFlags.HasFlag(ContentFlags.NoNames))
+                        for (var i = 0; i < count; ++i)
                         {
-                            entries[i].lookup = hasher.ComputeHash("BY_FDID_" + entries[i].fileDataID);
-                            unnamedCount++;
-                        }
-                        else
-                        {
+                            entries[i].md5 = bin.ReadBytes(16);
                             entries[i].lookup = bin.ReadUInt64();
-                            namedCount++;
+                            root.entries.Add(entries[i].lookup, entries[i]);
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < count; ++i)
+                        {
+                            entries[i].md5 = bin.ReadBytes(16);
                         }
 
-                        root.entries.Add(entries[i].lookup, entries[i]);
+                        for (var i = 0; i < count; ++i)
+                        {
+                            if (contentFlags.HasFlag(ContentFlags.NoNames))
+                            {
+                                entries[i].lookup = hasher.ComputeHash("BY_FDID_" + entries[i].fileDataID);
+                                unnamedCount++;
+                            }
+                            else
+                            {
+                                entries[i].lookup = bin.ReadUInt64();
+                                namedCount++;
+                            }
+
+                            root.entries.Add(entries[i].lookup, entries[i]);
+                        }
                     }
                 }
             }
@@ -2130,11 +2144,12 @@ namespace BuildBackup
 
         private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
         {
-            cdns = GetCDNs("wow");
+           // cdns = GetCDNs("wow");
             var hasher = new Jenkins96();
 
-            var rootFrom = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", fromCDNRoot, true);
-            var rootTo = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", toCDNRoot, true);
+            var rootFrom = GetRoot("http://cdn.blizzard.com/tpr/wow/", fromCDNRoot, true);
+          
+            var rootTo = GetRoot("http://cdn.blizzard.com/tpr/wow/", toCDNRoot, true);
 
             UpdateListfile();
 
