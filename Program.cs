@@ -1789,10 +1789,10 @@ namespace BuildBackup
                 }
             }
 
-            if (namedFiles != namedCount)
+            if ((namedFiles > 0) && namedFiles != namedCount)
                 throw new Exception("Didn't read correct amount of named files! Read " + namedCount + " but expected " + namedFiles);
 
-            if (totalFiles != (namedCount + unnamedCount))
+            if ((totalFiles > 0) && totalFiles != (namedCount + unnamedCount))
                 throw new Exception("Didn't read correct amount of total files! Read " + (namedCount + unnamedCount) + " but expected " + totalFiles);
 
             return root;
