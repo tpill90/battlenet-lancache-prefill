@@ -342,7 +342,7 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
-                if (args[0] == "extractfilesbyfnamelist")
+                if (args[0] == "extractfilesbyfnamelist" || args[0] == "extractfilesbyfdidlist")
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
 
@@ -367,14 +367,28 @@ namespace BuildBackup
                     }
 
                     var hasher = new Jenkins96();
+                    var nameList = new Dictionary<ulong, string>();
+                    var fdidList = new Dictionary<uint, string>();
 
-                    var rootList = new Dictionary<ulong, string>();
-                    foreach (var line in lines)
+                    if (args[0] == "extractfilesbyfnamelist")
                     {
-                        var hash = hasher.ComputeHash(line);
-                        rootList.Add(hash, line);
-                    }
+                        foreach (var line in lines)
+                        {
+                            var hash = hasher.ComputeHash(line);
+                            nameList.Add(hash, line);
+                        }
+                    }else if(args[0] == "extractfilesbyfdidlist")
+                    {
+                        foreach (var line in lines)
+                        {
+                            if (string.IsNullOrEmpty(line))
+                                continue;
 
+                            var expl = line.Split(';');
+                            fdidList.Add(uint.Parse(expl[0]), expl[1]);
+                        }
+                    }
+                    
                     Console.WriteLine("Looking up in root..");
 
                     root = GetRoot(Path.Combine(cdn.cacheDir, "tpr", "wow"), rootHash, true);
@@ -392,17 +406,36 @@ namespace BuildBackup
                                 continue;
                             }
 
-                            if (rootList.ContainsKey(entry.Key))
+                            if (args[0] == "extractfilesbyfnamelist")
                             {
-                                var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
+                                if (nameList.ContainsKey(entry.Key))
+                                {
+                                    var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
 
-                                if (encodingList.ContainsKey(cleanContentHash))
-                                {
-                                    encodingList[cleanContentHash].Add(rootList[entry.Key]);
+                                    if (encodingList.ContainsKey(cleanContentHash))
+                                    {
+                                        encodingList[cleanContentHash].Add(nameList[entry.Key]);
+                                    }
+                                    else
+                                    {
+                                        encodingList.Add(cleanContentHash, new List<string>() { nameList[entry.Key] });
+                                    }
                                 }
-                                else
+                            }
+                            else if (args[0] == "extractfilesbyfdidlist")
+                            {
+                                if (fdidList.ContainsKey(entry.Value[0].fileDataID))
                                 {
-                                    encodingList.Add(cleanContentHash, new List<string>() { rootList[entry.Key] });
+                                    var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
+
+                                    if (encodingList.ContainsKey(cleanContentHash))
+                                    {
+                                        encodingList[cleanContentHash].Add(fdidList[entry.Value[0].fileDataID]);
+                                    }
+                                    else
+                                    {
+                                        encodingList.Add(cleanContentHash, new List<string>() { fdidList[entry.Value[0].fileDataID] });
+                                    }
                                 }
                             }
 
