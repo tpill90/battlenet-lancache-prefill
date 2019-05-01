@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,7 +127,7 @@ namespace BuildBackup
 
                     var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
 
-                    foreach (var entry in root.entries)
+                    foreach (var entry in root.entriesFDID)
                     {
                         foreach (var subentry in entry.Value)
                         {
@@ -139,7 +138,7 @@ namespace BuildBackup
                                 continue;
                             }
 
-                            if (fileNames.ContainsKey(entry.Key))
+                            if (entry.Key > 0 && fileNames.ContainsKey(entry.Key))
                             {
                                 Console.WriteLine(fileNames[entry.Key] + ";" + entry.Key.ToString("x").PadLeft(16, '0') + ";" + subentry.fileDataID + ";" + BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower());
                             }
@@ -169,14 +168,21 @@ namespace BuildBackup
 
                     Action<RootEntry> print = delegate (RootEntry entry)
                     {
-                        var lookup = entry.lookup.ToString("x").PadLeft(16, '0');
+                        var lookup = "";
+                        var fileName = "";
+
+                        if(entry.lookup > 0)
+                        {
+                            lookup = entry.lookup.ToString("x").PadLeft(16, '0');
+                            fileName = hashes.ContainsKey(entry.lookup) ? hashes[entry.lookup] : "";
+                        }
+
                         var md5 = BitConverter.ToString(entry.md5).Replace("-", string.Empty).ToLower();
                         var dataId = entry.fileDataID;
-                        var fileName = hashes.ContainsKey(entry.lookup) ? hashes[entry.lookup] : "";
                         Console.WriteLine("{0};{1};{2};{3}", fileName, lookup, dataId, md5);
                     };
 
-                    foreach (var entry in root.entries)
+                    foreach (var entry in root.entriesFDID)
                     {
                         RootEntry? prioritizedEntry = entry.Value.FirstOrDefault(subentry =>
                             subentry.contentFlags.HasFlag(ContentFlags.LowViolence) == false && (subentry.localeFlags.HasFlag(LocaleFlags.All_WoW) || subentry.localeFlags.HasFlag(LocaleFlags.enUS))
@@ -185,15 +191,6 @@ namespace BuildBackup
                         var selectedEntry = (prioritizedEntry.Value.md5 != null) ? prioritizedEntry.Value : entry.Value.First();
                         print(selectedEntry);
                     }
-
-                    Environment.Exit(0);
-                }
-                if (args[0] == "diffroot")
-                {
-                    var from = args[1];
-                    var to = args[2];
-
-                    DiffRoot(from, to);
 
                     Environment.Exit(0);
                 }
@@ -395,7 +392,7 @@ namespace BuildBackup
 
                     var encodingList = new Dictionary<string, List<string>>();
 
-                    foreach (var entry in root.entries)
+                    foreach (var entry in root.entriesFDID)
                     {
                         foreach (var subentry in entry.Value)
                         {
@@ -408,33 +405,33 @@ namespace BuildBackup
 
                             if (args[0] == "extractfilesbyfnamelist")
                             {
-                                if (nameList.ContainsKey(entry.Key))
+                                if (nameList.ContainsKey(subentry.lookup))
                                 {
                                     var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
 
                                     if (encodingList.ContainsKey(cleanContentHash))
                                     {
-                                        encodingList[cleanContentHash].Add(nameList[entry.Key]);
+                                        encodingList[cleanContentHash].Add(nameList[subentry.lookup]);
                                     }
                                     else
                                     {
-                                        encodingList.Add(cleanContentHash, new List<string>() { nameList[entry.Key] });
+                                        encodingList.Add(cleanContentHash, new List<string>() { nameList[subentry.lookup] });
                                     }
                                 }
                             }
                             else if (args[0] == "extractfilesbyfdidlist")
                             {
-                                if (fdidList.ContainsKey(entry.Value[0].fileDataID))
+                                if (fdidList.ContainsKey(subentry.fileDataID))
                                 {
                                     var cleanContentHash = BitConverter.ToString(subentry.md5).Replace("-", string.Empty).ToLower();
 
                                     if (encodingList.ContainsKey(cleanContentHash))
                                     {
-                                        encodingList[cleanContentHash].Add(fdidList[entry.Value[0].fileDataID]);
+                                        encodingList[cleanContentHash].Add(fdidList[subentry.fileDataID]);
                                     }
                                     else
                                     {
-                                        encodingList.Add(cleanContentHash, new List<string>() { fdidList[entry.Value[0].fileDataID] });
+                                        encodingList.Add(cleanContentHash, new List<string>() { fdidList[subentry.fileDataID] });
                                     }
                                 }
                             }
@@ -598,7 +595,7 @@ namespace BuildBackup
 
                     root = GetRoot(Path.Combine(cdn.cacheDir, cdns.entries[0].path), rootKey, true);
 
-                    foreach(var entry in root.entries)
+                    foreach(var entry in root.entriesFDID)
                     {
                         foreach (var subentry in entry.Value)
                         {
@@ -1743,7 +1740,8 @@ namespace BuildBackup
         {
             var root = new RootFile
             {
-                entries = new MultiDictionary<ulong, RootEntry>()
+                entriesLookup = new MultiDictionary<ulong, RootEntry>(),
+                entriesFDID = new MultiDictionary<uint, RootEntry>()
             };
 
             byte[] content;
@@ -1807,7 +1805,8 @@ namespace BuildBackup
                         {
                             entries[i].md5 = bin.ReadBytes(16);
                             entries[i].lookup = bin.ReadUInt64();
-                            root.entries.Add(entries[i].lookup, entries[i]);
+                            root.entriesLookup.Add(entries[i].lookup, entries[i]);
+                            root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
                         }
                     }
                     else
@@ -1821,16 +1820,17 @@ namespace BuildBackup
                         {
                             if (contentFlags.HasFlag(ContentFlags.NoNames))
                             {
-                                entries[i].lookup = hasher.ComputeHash("BY_FDID_" + entries[i].fileDataID);
+                                entries[i].lookup = 0;
                                 unnamedCount++;
                             }
                             else
                             {
                                 entries[i].lookup = bin.ReadUInt64();
+                                root.entriesLookup.Add(entries[i].lookup, entries[i]);
                                 namedCount++;
                             }
 
-                            root.entries.Add(entries[i].lookup, entries[i]);
+                            root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
                         }
                     }
                 }
@@ -2174,64 +2174,5 @@ namespace BuildBackup
                 }
             }
         }
-
-        private static void DiffRoot(String fromCDNRoot, String toCDNRoot)
-        {
-           // cdns = GetCDNs("wow");
-            var hasher = new Jenkins96();
-
-            var rootFrom = GetRoot("http://cdn.blizzard.com/tpr/wow/", fromCDNRoot, true);
-          
-            var rootTo = GetRoot("http://cdn.blizzard.com/tpr/wow/", toCDNRoot, true);
-
-            UpdateListfile();
-
-            var fileNames = File
-                .ReadLines("listfile.txt")
-                .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
-                .ToDictionary(key => key.Item1, value => value.Item2);
-
-            var fromEntries = rootFrom.entries.Keys.ToHashSet();
-            var toEntries = rootTo.entries.Keys.ToHashSet();
-
-            var commonEntries = fromEntries.Intersect(toEntries);
-            var removedEntries = fromEntries.Except(commonEntries);
-            var addedEntries = toEntries.Except(commonEntries);
-
-            Action<RootEntry, string> print = delegate (RootEntry entry, string action)
-            {
-                var lookup = entry.lookup.ToString("x").PadLeft(16, '0');
-                var md5 = BitConverter.ToString(entry.md5).Replace("-", string.Empty).ToLower();
-                var dataId = entry.fileDataID;
-                var fileName = fileNames.ContainsKey(entry.lookup) ? fileNames[entry.lookup] : "Unknown File: " + entry.lookup.ToString("x").PadLeft(16, '0');
-
-                Console.WriteLine("[{0}] <b>{1}</b> (lookup: {2}, content md5: {3}, FileData ID: {4})", action, fileName, lookup, md5, entry.fileDataID);
-            };
-
-            foreach (var id in addedEntries) {
-                var entry = rootTo.entries[id].First();
-                print(entry, "ADDED");
-            }
-
-            foreach (var id in removedEntries)
-            {
-                var entry = rootFrom.entries[id].First();
-                print(entry, "REMOVED");
-            }
-
-            foreach (var id in commonEntries)
-            {
-                var originalFile = rootFrom.entries[id].First();
-                var patchedFile = rootTo.entries[id].First();
-
-                if (originalFile.md5.SequenceEqual(patchedFile.md5))
-                {
-                    continue;
-                }
-
-                print(patchedFile, "MODIFIED");
-            }
-        }
-
     }
 }
