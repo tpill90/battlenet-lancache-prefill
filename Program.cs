@@ -1273,7 +1273,7 @@ namespace BuildBackup
                         over.entries = new CdnsEntry[1];
                         over.entries[0] = cdn;
                         // Edgecast is having issues, override for now
-                        over.entries[0].hosts = new string[] { "blzddist1-a.akamaihd.net", "level3.blizzard.com" };
+                        over.entries[0].hosts = new string[] { "cdn.blizzard.com", "blzddist1-a.akamaihd.net", "level3.blizzard.com" };
                         return over;
                     }
                 }
@@ -1779,12 +1779,15 @@ namespace BuildBackup
                     bin.BaseStream.Position = 0;
                 }
 
+                var blockCount = 0;
+
                 while (bin.BaseStream.Position < bin.BaseStream.Length)
                 {
                     var count = bin.ReadUInt32();
                     var contentFlags = (ContentFlags)bin.ReadUInt32();
                     var localeFlags = (LocaleFlags)bin.ReadUInt32();
 
+                    //Console.WriteLine("[Block " + blockCount + "] " + count + " entries. Content flags: " + contentFlags.ToString() + ", Locale flags: " + localeFlags.ToString());
                     var entries = new RootEntry[count];
                     var filedataIds = new int[count];
 
@@ -1799,6 +1802,7 @@ namespace BuildBackup
                         fileDataIndex = filedataIds[i] + 1;
                     }
 
+                    var blockFdids = new List<string>();
                     if (!newRoot)
                     {
                         for (var i = 0; i < count; ++i)
@@ -1807,6 +1811,7 @@ namespace BuildBackup
                             entries[i].lookup = bin.ReadUInt64();
                             root.entriesLookup.Add(entries[i].lookup, entries[i]);
                             root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
+                            blockFdids.Add(entries[i].fileDataID.ToString());
                         }
                     }
                     else
@@ -1831,8 +1836,12 @@ namespace BuildBackup
                             }
 
                             root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
+                            blockFdids.Add(entries[i].fileDataID.ToString());
                         }
                     }
+
+                    //File.WriteAllLinesAsync("blocks/Block" + blockCount + ".txt", blockFdids);
+                    blockCount++;
                 }
             }
 

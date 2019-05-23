@@ -60,7 +60,8 @@ namespace BuildBackup
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
+                    File.AppendAllText("failedfiles.txt", url);
                 }
             }
 
