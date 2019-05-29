@@ -13,7 +13,10 @@ namespace BuildBackup
 
         public byte[] Get(string url, bool returnstream = true, bool redownload = false)
         {
-            var uri = new Uri(url.ToLower());
+            client.Timeout = new TimeSpan(0, 0, 5);
+
+            url = url.ToLower();
+            var uri = new Uri(url);
 
             string cleanname = uri.AbsolutePath;
 
@@ -61,7 +64,7 @@ namespace BuildBackup
                 catch (Exception e)
                 {
                     Console.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
-                    File.AppendAllText("failedfiles.txt", url);
+                    File.AppendAllText("failedfiles.txt", url + "\n");
                 }
             }
 
