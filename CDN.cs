@@ -13,8 +13,6 @@ namespace BuildBackup
 
         public byte[] Get(string url, bool returnstream = true, bool redownload = false)
         {
-            client.Timeout = new TimeSpan(0, 0, 5);
-
             url = url.ToLower();
             var uri = new Uri(url);
 
