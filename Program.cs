@@ -780,13 +780,20 @@ namespace BuildBackup
 
                 Console.Write("Loading encoding..");
 
-                if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                try
                 {
-                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
-                }
-                else
+                    if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+                    {
+                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                    }
+                    else
+                    {
+                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                    }
+                }catch(Exception e)
                 {
-                    encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                    Console.WriteLine("Fatal error occured during encoding parsing: " + e.Message);
+                    continue;
                 }
 
                 Dictionary<string, string> hashes = new Dictionary<string, string>();
@@ -1274,7 +1281,7 @@ namespace BuildBackup
                         over.entries = new CdnsEntry[1];
                         over.entries[0] = cdn;
                         // Edgecast is having issues, override for now
-                        over.entries[0].hosts = new string[] { "cdn.blizzard.com", "blzddist1-a.akamaihd.net", "level3.blizzard.com" };
+                        over.entries[0].hosts = new string[] { "blzddist1-a.akamaihd.net", "eu.cdn.blizzard.com", "cdn.blizzard.com", "us.cdn.blizzard.com", "level3.blizzard.com" };
                         return over;
                     }
                 }
