@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace BuildBackup
 {
@@ -59,10 +60,16 @@ namespace BuildBackup
 
                     }
                 }
+                catch (TaskCanceledException e)
+                {
+                    if (!e.CancellationToken.IsCancellationRequested)
+                    {
+                        Logger.WriteLine("!!! Timeout while retrieving file " + url);
+                    }
+                }
                 catch (Exception e)
                 {
-                    Console.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
-                    File.AppendAllText("failedfiles.txt", url + "\n");
+                    Logger.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
                 }
             }
 
