@@ -753,7 +753,7 @@ namespace BuildBackup
                     continue;
                 }
 
-                if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) cdn.Get(cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
+                if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) cdn.Get(cdns.entries[0].path + "/config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
 
                 if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null) // Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
                 {
@@ -781,7 +781,7 @@ namespace BuildBackup
 
                 Console.Write("Downloading patch files..");
                 if (!string.IsNullOrEmpty(buildConfig.patch)) patch = GetPatch(cdns.entries[0].path + "/", buildConfig.patch, true);
-                if (!string.IsNullOrEmpty(buildConfig.patchConfig)) cdn.Get(cdns.entries[0].path + "/" + "config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
+                if (!string.IsNullOrEmpty(buildConfig.patchConfig)) cdn.Get(cdns.entries[0].path + "/config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
                 Console.Write("..done\n");
 
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
@@ -890,7 +890,7 @@ namespace BuildBackup
 
                     Parallel.ForEach(fileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
                     {
-                        cdn.Get(cdns.entries[0].path + "/" + "data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                        cdn.Get(cdns.entries[0].path + "/data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                     });
 
                     Console.Write("..done\n");
@@ -902,7 +902,7 @@ namespace BuildBackup
 
                     Parallel.ForEach(patchFileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
                     {
-                        cdn.Get(cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                        cdn.Get(cdns.entries[0].path + "/patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                     });
 
                     Console.Write("..done\n");
@@ -912,7 +912,7 @@ namespace BuildBackup
 
                 foreach (var entry in hashes)
                 {
-                    cdn.Get(cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
+                    cdn.Get(cdns.entries[0].path + "/data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
                 }
 
                 Console.Write("..done\n");
@@ -922,7 +922,7 @@ namespace BuildBackup
                     Console.Write("Downloading " + cdnConfig.patchArchives.Count() + " patch archives..");
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
-                        cdn.Get(cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
+                        cdn.Get(cdns.entries[0].path + "/patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
                     }
                     Console.Write("..done\n");
 
@@ -952,7 +952,7 @@ namespace BuildBackup
 
                         foreach (var entry in unarchivedPatchKeyList)
                         {
-                            cdn.Get(cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                            cdn.Get(cdns.entries[0].path + "/patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                         }
 
                         Console.Write("..done\n");
@@ -1578,7 +1578,7 @@ namespace BuildBackup
 
         private static List<string> ParsePatchFileIndex(string url, string hash)
         {
-            byte[] indexContent = cdn.Get(url + "patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
+            byte[] indexContent = cdn.Get(url + "/patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
 
             var list = new List<string>();
 
@@ -1607,7 +1607,7 @@ namespace BuildBackup
         {
             Parallel.ForEach(archives, (archive, state, i) =>
             {
-                byte[] indexContent = cdn.Get(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+                byte[] indexContent = cdn.Get(url + "/data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                 {
@@ -1656,7 +1656,7 @@ namespace BuildBackup
         {
             Parallel.ForEach(archives, (archive, state, i) =>
             {
-                byte[] indexContent = cdn.Get(url + "patch/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
+                byte[] indexContent = cdn.Get(url + "/patch/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                 {
@@ -1710,7 +1710,7 @@ namespace BuildBackup
                 entriesFDID = new MultiDictionary<uint, RootEntry>()
             };
 
-            byte[] content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return root;
 
@@ -1815,7 +1815,7 @@ namespace BuildBackup
         {
             var download = new DownloadFile();
 
-            byte[] content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return download;
 
@@ -1841,7 +1841,7 @@ namespace BuildBackup
         {
             var install = new InstallFile();
 
-            byte[] content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return install;
 
@@ -1901,11 +1901,11 @@ namespace BuildBackup
 
             byte[] content;
 
-            content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
+                content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {
@@ -2048,7 +2048,7 @@ namespace BuildBackup
         {
             var patchFile = new PatchFile();
 
-            byte[] content = cdn.Get(url + "patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] content = cdn.Get(url + "/patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return patchFile;
 
