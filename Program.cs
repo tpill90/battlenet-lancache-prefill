@@ -49,6 +49,20 @@ namespace BuildBackup
             cdn.cacheDir = SettingsManager.cacheDir;
             cdn.client = new HttpClient();
             cdn.client.Timeout = Timeout.InfiniteTimeSpan;
+            cdn.cdnList = new List<string> {
+                "blzddist1-a.akamaihd.net", // Akamai first
+                "eu.cdn.blizzard.com",      // Official EU CDN
+                "level3.blizzard.com",      // Level3
+                "cdn.blizzard.com",         // Official regionless CDN
+                "us.cdn.blizzard.com",      // Official US CDN
+                "client01.pdl.wow.battlenet.com.cn", // China 1
+                "client02.pdl.wow.battlenet.com.cn", // China 2
+                "client03.pdl.wow.battlenet.com.cn", // China 3
+                "client04.pdl.wow.battlenet.com.cn", // China 4
+                "client04.pdl.wow.battlenet.com.cn", // China 5
+                "blizzard.nefficient.co.kr", // Korea 
+            };
+
             // Check if cache/backup directory exists
             if (!Directory.Exists(cdn.cacheDir)) { Directory.CreateDirectory(cdn.cacheDir); }
 
@@ -125,7 +139,7 @@ namespace BuildBackup
                         fileNames.Add(hasher.ComputeHash(line), line);
                     }
 
-                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
+                    var root = GetRoot(cdns.entries[0].path + "/", args[1], true);
 
                     foreach (var entry in root.entriesFDID)
                     {
@@ -164,7 +178,7 @@ namespace BuildBackup
                         .Select<string, Tuple<ulong, string>>(fileName => new Tuple<ulong, string>(hasher.ComputeHash(fileName), fileName))
                         .ToDictionary(key => key.Item1, value => value.Item2);
 
-                    var root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[1], true);
+                    var root = GetRoot(cdns.entries[0].path + "/", args[1], true);
 
                     Action<RootEntry> print = delegate (RootEntry entry)
                     {
@@ -230,7 +244,7 @@ namespace BuildBackup
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, install");
 
                     cdns = GetCDNs(args[1]);
-                    install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2], true);
+                    install = GetInstall(cdns.entries[0].path + "/", args[2], true);
                     foreach (var entry in install.entries)
                     {
                         Console.WriteLine(entry.name + " (size: " + entry.size + ", md5: " + BitConverter.ToString(entry.contentHash).Replace("-", string.Empty).ToLower() + ", tags: " + string.Join(",", entry.tags) + ")");
@@ -631,7 +645,7 @@ namespace BuildBackup
 
                     cdns = GetCDNs(args[1]);
 
-                    var index = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", args[2]);
+                    var index = ParseIndex(cdns.entries[0].path + "/", args[2]);
                     foreach (var entry in index)
                     {
                         Console.WriteLine(entry.Key + " " + entry.Value.size);
@@ -672,12 +686,13 @@ namespace BuildBackup
                 {
                     Console.WriteLine("Error parsing CDNs: " + e.Message);
                 }
+
                 if (cdns.entries == null || cdns.entries.Count() == 0) { Console.WriteLine("Invalid CDNs file for " + program + ", skipping!"); continue; }
                 Console.WriteLine("Loaded " + cdns.entries.Count() + " cdns");
 
                 if (!string.IsNullOrEmpty(versions.entries[0].productConfig))
                 {
-                    productConfig = GetProductConfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].configPath + "/", versions.entries[0].productConfig);
+                    productConfig = GetProductConfig(cdns.entries[0].configPath + "/", versions.entries[0].productConfig);
                 }
 
                 gameblob = GetGameBlob(program);
@@ -696,17 +711,17 @@ namespace BuildBackup
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideBuildconfig))
                 {
-                    buildConfig = GetBuildConfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideBuildconfig);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path + "/", overrideBuildconfig);
                 }
                 else
                 {
-                    buildConfig = GetBuildConfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].buildConfig);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path + "/", versions.entries[0].buildConfig);
                 }
 
                 // Retrieve all buildconfigs
                 for (var i = 0; i < versions.entries.Count(); i++)
                 {
-                    GetBuildConfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[i].buildConfig);
+                    GetBuildConfig(cdns.entries[0].path + "/", versions.entries[i].buildConfig);
                 }
 
                 if (string.IsNullOrWhiteSpace(buildConfig.buildName))
@@ -717,11 +732,11 @@ namespace BuildBackup
 
                 if (overrideVersions && !string.IsNullOrEmpty(overrideCDNconfig))
                 {
-                    cdnConfig = GetCDNconfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", overrideCDNconfig);
+                    cdnConfig = GetCDNconfig(cdns.entries[0].path + "/", overrideCDNconfig);
                 }
                 else
                 {
-                    cdnConfig = GetCDNconfig("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
+                    cdnConfig = GetCDNconfig(cdns.entries[0].path + "/", versions.entries[0].cdnConfig);
                 }
 
                 if (cdnConfig.builds != null)
@@ -738,7 +753,7 @@ namespace BuildBackup
                     continue;
                 }
 
-                if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
+                if (!string.IsNullOrEmpty(versions.entries[0].keyRing)) cdn.Get(cdns.entries[0].path + "/" + "config/" + versions.entries[0].keyRing[0] + versions.entries[0].keyRing[1] + "/" + versions.entries[0].keyRing[2] + versions.entries[0].keyRing[3] + "/" + versions.entries[0].keyRing);
 
                 if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null) // Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
                 {
@@ -765,18 +780,18 @@ namespace BuildBackup
                 }
 
                 Console.Write("Downloading patch files..");
-                if (!string.IsNullOrEmpty(buildConfig.patch)) patch = GetPatch("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.patch, true);
-                if (!string.IsNullOrEmpty(buildConfig.patchConfig)) cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
+                if (!string.IsNullOrEmpty(buildConfig.patch)) patch = GetPatch(cdns.entries[0].path + "/", buildConfig.patch, true);
+                if (!string.IsNullOrEmpty(buildConfig.patchConfig)) cdn.Get(cdns.entries[0].path + "/" + "config/" + buildConfig.patchConfig[0] + buildConfig.patchConfig[1] + "/" + buildConfig.patchConfig[2] + buildConfig.patchConfig[3] + "/" + buildConfig.patchConfig);
                 Console.Write("..done\n");
 
                 Console.Write("Loading " + cdnConfig.archives.Count() + " indexes..");
-                GetIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.archives);
+                GetIndexes(cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
                 Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
                 foreach (var archive in cdnConfig.archives)
                 {
-                    cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/data/" + archive[0] + archive[1] + "/" + archive[2] + archive[3] + "/" + archive, false);
+                    cdn.Get(cdns.entries[0].path + "/data/" + archive[0] + archive[1] + "/" + archive[2] + archive[3] + "/" + archive, false);
                 }
                 Console.Write("..done\n");
 
@@ -786,11 +801,11 @@ namespace BuildBackup
                 {
                     if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
                     {
-                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
+                        encoding = GetEncoding(cdns.entries[0].path + "/", buildConfig.encoding[1], 0);
                     }
                     else
                     {
-                        encoding = GetEncoding("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                        encoding = GetEncoding(cdns.entries[0].path + "/", buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
                     }
                 }
                 catch (Exception e)
@@ -828,7 +843,7 @@ namespace BuildBackup
                 if (!string.IsNullOrEmpty(cdnConfig.fileIndex))
                 {
                     Console.Write("Parsing file index..");
-                    fileIndexList = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.fileIndex);
+                    fileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.fileIndex);
                     Console.Write("..done\n");
 
                 }
@@ -836,18 +851,18 @@ namespace BuildBackup
                 if (!string.IsNullOrEmpty(cdnConfig.patchFileIndex))
                 {
                     Console.Write("Parsing patch file index..");
-                    patchFileIndexList = ParseIndex("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.patchFileIndex, "patch");
+                    patchFileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.patchFileIndex, "patch");
                     Console.Write("..done\n");
                 }
 
                 if (program == "wow" || program == "wowt" || program == "wow_beta" || program == "wow_classic") // Only these are supported right now
                 {
                     Console.Write("Loading root..");
-                    if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { root = GetRoot("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", rootKey); }
+                    if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { root = GetRoot(cdns.entries[0].path + "/", rootKey); }
                     Console.Write("..done\n");
 
                     Console.Write("Loading download..");
-                    if (downloadKey == "") { Console.WriteLine("Unable to find download key in encoding!"); } else { download = GetDownload("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", downloadKey); }
+                    if (downloadKey == "") { Console.WriteLine("Unable to find download key in encoding!"); } else { download = GetDownload(cdns.entries[0].path + "/", downloadKey); }
                     Console.Write("..done\n");
 
                     Console.Write("Loading install..");
@@ -855,7 +870,7 @@ namespace BuildBackup
 
                     try
                     {
-                        if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { install = GetInstall("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", installKey); }
+                        if (installKey == "") { Console.WriteLine("Unable to find install key in encoding!"); } else { install = GetInstall(cdns.entries[0].path + "/", installKey); }
 
                     }
                     catch (Exception e)
@@ -875,7 +890,7 @@ namespace BuildBackup
 
                     Parallel.ForEach(fileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
                     {
-                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                        cdn.Get(cdns.entries[0].path + "/" + "data/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                     });
 
                     Console.Write("..done\n");
@@ -887,7 +902,7 @@ namespace BuildBackup
 
                     Parallel.ForEach(patchFileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
                     {
-                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                        cdn.Get(cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                     });
 
                     Console.Write("..done\n");
@@ -897,7 +912,7 @@ namespace BuildBackup
 
                 foreach (var entry in hashes)
                 {
-                    cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
+                    cdn.Get(cdns.entries[0].path + "/" + "data/" + entry.Key[0] + entry.Key[1] + "/" + entry.Key[2] + entry.Key[3] + "/" + entry.Key, false);
                 }
 
                 Console.Write("..done\n");
@@ -907,12 +922,12 @@ namespace BuildBackup
                     Console.Write("Downloading " + cdnConfig.patchArchives.Count() + " patch archives..");
                     for (var i = 0; i < cdnConfig.patchArchives.Count(); i++)
                     {
-                        cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
+                        cdn.Get(cdns.entries[0].path + "/" + "patch/" + cdnConfig.patchArchives[i][0] + cdnConfig.patchArchives[i][1] + "/" + cdnConfig.patchArchives[i][2] + cdnConfig.patchArchives[i][3] + "/" + cdnConfig.patchArchives[i], false);
                     }
                     Console.Write("..done\n");
 
                     Console.Write("Downloading " + cdnConfig.patchArchives.Count() + " patch archive indexes..");
-                    GetPatchIndexes("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/", cdnConfig.patchArchives);
+                    GetPatchIndexes(cdns.entries[0].path + "/", cdnConfig.patchArchives);
                     Console.Write("..done\n");
 
                     var unarchivedPatchKeyList = new List<string>();
@@ -937,7 +952,7 @@ namespace BuildBackup
 
                         foreach (var entry in unarchivedPatchKeyList)
                         {
-                            cdn.Get("http://" + cdns.entries[0].hosts[0] + "/" + cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                            cdn.Get(cdns.entries[0].path + "/" + "patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
                         }
 
                         Console.Write("..done\n");
@@ -1007,23 +1022,15 @@ namespace BuildBackup
             string content;
             var cdnConfig = new CDNConfigFile();
 
-            if (url.StartsWith("http"))
+            try
             {
-                try
-                {
-                    content = Encoding.UTF8.GetString(cdn.Get(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error retrieving CDN config: " + e.Message);
-                    return cdnConfig;
-                }
+                content = Encoding.UTF8.GetString(cdn.Get(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
             }
-            else
+            catch (Exception e)
             {
-                content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+                Console.WriteLine("Error retrieving CDN config: " + e.Message);
+                return cdnConfig;
             }
-
 
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -1274,17 +1281,14 @@ namespace BuildBackup
                     }
                 }
 
-                foreach (var cdn in cdns.entries)
+                foreach (var subcdn in cdns.entries)
                 {
-                    if (cdn.name == "eu")
+                    foreach(var cdnHost in subcdn.hosts)
                     {
-                        //override cdn to always use eu if present
-                        var over = new CdnsFile();
-                        over.entries = new CdnsEntry[1];
-                        over.entries[0] = cdn;
-                        // Edgecast is having issues, override for now
-                        over.entries[0].hosts = new string[] { "blzddist1-a.akamaihd.net", "eu.cdn.blizzard.com", "level3.blizzard.com", "cdn.blizzard.com", "us.cdn.blizzard.com" };
-                        return over;
+                        if (!cdn.cdnList.Contains(cdnHost))
+                        {
+                            cdn.cdnList.Add(cdnHost);
+                        }
                     }
                 }
             }
@@ -1341,21 +1345,14 @@ namespace BuildBackup
 
             var gblob = new GameBlobFile();
 
-            if (url.StartsWith("http"))
+            try
             {
-                try
-                {
-                    content = Encoding.UTF8.GetString(cdn.Get(url + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error retrieving product config: " + e.Message);
-                    return gblob;
-                }
+                content = Encoding.UTF8.GetString(cdn.Get(url + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
             }
-            else
+            catch (Exception e)
             {
-                content = File.ReadAllText(Path.Combine(url, "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+                Console.WriteLine("Error retrieving product config: " + e.Message);
+                return gblob;
             }
 
             if (string.IsNullOrEmpty(content))
@@ -1378,23 +1375,16 @@ namespace BuildBackup
 
             var buildConfig = new BuildConfigFile();
 
-            if (url.StartsWith("http"))
+            try
             {
-                try
-                {
-                    content = Encoding.UTF8.GetString(cdn.Get(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error retrieving build config: " + e.Message);
-                    return buildConfig;
-                }
+                content = Encoding.UTF8.GetString(cdn.Get(url + "/config/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash));
             }
-            else
+            catch (Exception e)
             {
-                content = File.ReadAllText(Path.Combine(url, "config", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
+                Console.WriteLine("Error retrieving build config: " + e.Message);
+                return buildConfig;
             }
-
+           
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
                 Console.WriteLine("Error reading build config!");
@@ -1502,16 +1492,7 @@ namespace BuildBackup
 
         private static Dictionary<string, IndexEntry> ParseIndex(string url, string hash, string folder = "data")
         {
-            byte[] indexContent;
-
-            if (url.StartsWith("http"))
-            {
-                indexContent = cdn.Get(url + folder + "/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
-            }
-            else
-            {
-                indexContent = File.ReadAllBytes(Path.Combine(url, folder, "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash + ".index"));
-            }
+            byte[] indexContent = cdn.Get(url + folder + "/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
 
             var returnDict = new Dictionary<string, IndexEntry>();
 
@@ -1597,16 +1578,7 @@ namespace BuildBackup
 
         private static List<string> ParsePatchFileIndex(string url, string hash)
         {
-            byte[] indexContent;
-
-            if (url.StartsWith("http"))
-            {
-                indexContent = cdn.Get(url + "patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
-            }
-            else
-            {
-                indexContent = File.ReadAllBytes(Path.Combine(url, "patch", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash + ".index"));
-            }
+            byte[] indexContent = cdn.Get(url + "patch/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash + ".index");
 
             var list = new List<string>();
 
@@ -1635,15 +1607,7 @@ namespace BuildBackup
         {
             Parallel.ForEach(archives, (archive, state, i) =>
             {
-                byte[] indexContent;
-                if (url.StartsWith("http"))
-                {
-                    indexContent = cdn.Get(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
-                }
-                else
-                {
-                    indexContent = File.ReadAllBytes(Path.Combine(url, "data", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
-                }
+                byte[] indexContent = cdn.Get(url + "data/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                 {
@@ -1692,15 +1656,7 @@ namespace BuildBackup
         {
             Parallel.ForEach(archives, (archive, state, i) =>
             {
-                byte[] indexContent;
-                if (url.StartsWith("http"))
-                {
-                    indexContent = cdn.Get(url + "patch/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
-                }
-                else
-                {
-                    indexContent = File.ReadAllBytes(Path.Combine(url, "patch", "" + archives[i][0] + archives[i][1], "" + archives[i][2] + archives[i][3], archives[i] + ".index"));
-                }
+                byte[] indexContent = cdn.Get(url + "patch/" + archives[i][0] + archives[i][1] + "/" + archives[i][2] + archives[i][3] + "/" + archives[i] + ".index");
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                 {
@@ -1754,16 +1710,7 @@ namespace BuildBackup
                 entriesFDID = new MultiDictionary<uint, RootEntry>()
             };
 
-            byte[] content;
-
-            if (url.StartsWith("http:"))
-            {
-                content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-            }
-            else
-            {
-                content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
-            }
+            byte[] content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return root;
 
@@ -1868,8 +1815,7 @@ namespace BuildBackup
         {
             var download = new DownloadFile();
 
-            byte[] content;
-            content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            byte[] content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
             if (!parseIt) return download;
 
@@ -1955,23 +1901,16 @@ namespace BuildBackup
 
             byte[] content;
 
-            if (url.Substring(0, 4) == "http")
-            {
-                content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
+            content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
 
-                if (encodingSize != 0 && encodingSize != content.Length)
+            if (encodingSize != 0 && encodingSize != content.Length)
+            {
+                content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
+
+                if (encodingSize != content.Length && encodingSize != 0)
                 {
-                    content = cdn.Get(url + "data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash, true);
-
-                    if (encodingSize != content.Length && encodingSize != 0)
-                    {
-                        throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
-                    }
+                    throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
                 }
-            }
-            else
-            {
-                content = File.ReadAllBytes(Path.Combine(url, "data", "" + hash[0] + hash[1], "" + hash[2] + hash[3], hash));
             }
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))

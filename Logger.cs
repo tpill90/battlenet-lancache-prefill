@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BuildBackup
 {
@@ -11,9 +12,13 @@ namespace BuildBackup
             writer = new StreamWriter(File.Open("errors.txt", FileMode.OpenOrCreate, FileAccess.Write)) { AutoFlush = true };
         }
 
-        public static void WriteLine(string line)
+        public static void WriteLine(string line, bool output = false)
         {
             writer.WriteLine(line);
+            if (output)
+            {
+                Console.WriteLine(line);
+            }
         }
     }
 }

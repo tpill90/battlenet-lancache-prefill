@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -11,71 +12,82 @@ namespace BuildBackup
         public string cacheDir;
         public bool isEncrypted = false;
         public string decryptionKeyName = "";
+        public List<string> cdnList;
 
-        public byte[] Get(string url, bool returnstream = true, bool redownload = false)
+        public byte[] Get(string path, bool returnstream = true, bool redownload = false)
         {
-            url = url.ToLower();
-            var uri = new Uri(url);
-
-            string cleanname = uri.AbsolutePath;
-
-            if (redownload || !File.Exists(cacheDir + cleanname))
+            if (redownload || !File.Exists(Path.Combine(cacheDir, path)))
             {
-                try
+                var found = false;
+
+                foreach(var cdn in cdnList)
                 {
-                    if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
-                    //Console.Write("\nDownloading " + cleanname);
-                    using (HttpResponseMessage response = client.GetAsync(uri).Result)
+                    if (found) continue;
+
+                    var url = "http://" + cdn + "/" + path.ToLower();
+                    var uri = new Uri(url);
+                    string cleanname = uri.AbsolutePath;
+
+                    try
                     {
-                        if (response.IsSuccessStatusCode)
+                        if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }
+                        using (HttpResponseMessage response = client.GetAsync(uri).Result)
                         {
-                            using (MemoryStream mstream = new MemoryStream())
-                            using (HttpContent res = response.Content)
+                            if (response.IsSuccessStatusCode)
                             {
-                                res.CopyToAsync(mstream);
-
-                                if (isEncrypted)
+                                using (MemoryStream mstream = new MemoryStream())
+                                using (HttpContent res = response.Content)
                                 {
-                                    var cleaned = Path.GetFileNameWithoutExtension(cleanname);
-                                    var decrypted = BLTE.DecryptFile(cleaned, mstream.ToArray(), decryptionKeyName);
+                                    res.CopyToAsync(mstream);
 
-                                    File.WriteAllBytes(cacheDir + cleanname, decrypted);
-                                    return decrypted;
-                                }
-                                else
-                                {
-                                    File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                                    found = true;
+
+                                    if (isEncrypted)
+                                    {
+                                        var cleaned = Path.GetFileNameWithoutExtension(cleanname);
+                                        var decrypted = BLTE.DecryptFile(cleaned, mstream.ToArray(), decryptionKeyName);
+
+                                        File.WriteAllBytes(cacheDir + cleanname, decrypted);
+                                        return decrypted;
+                                    }
+                                    else
+                                    {
+                                        File.WriteAllBytes(cacheDir + cleanname, mstream.ToArray());
+                                    }
                                 }
                             }
+                            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                            {
+                                Logger.WriteLine("File not found on CDN " + cdn + " trying next CDN (if available)..");
+                            }
+                            else
+                            {
+                                throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + url);
+                            }
                         }
-                        else if(response.StatusCode == System.Net.HttpStatusCode.NotFound && !url.StartsWith("http://client04"))
-                        {
-                            Console.WriteLine("Not found on primary mirror, retrying on secondary mirror...");
-                            return Get("http://client04.pdl.wow.battlenet.com.cn/" + cleanname, returnstream, redownload);
-                        }
-                        else
-                        {
-                            throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + url);
-                        }
-
                     }
-                }
-                catch (TaskCanceledException e)
-                {
-                    if (!e.CancellationToken.IsCancellationRequested)
+                    catch (TaskCanceledException e)
                     {
-                        Logger.WriteLine("!!! Timeout while retrieving file " + url);
+                        if (!e.CancellationToken.IsCancellationRequested)
+                        {
+                            Logger.WriteLine("!!! Timeout while retrieving file " + url);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
                     }
                 }
-                catch (Exception e)
+
+                if (!found)
                 {
-                    Logger.WriteLine("!!! Error retrieving file " + url + ": " + e.Message);
+                    Logger.WriteLine("Exhausted all CDNs looking for file " + Path.GetFileNameWithoutExtension(path) + ", cannot retrieve it!", true);
                 }
             }
 
             if (returnstream)
             {
-                return File.ReadAllBytes(cacheDir + cleanname);
+                return File.ReadAllBytes(Path.Combine(cacheDir, path));
             }
             else
             {

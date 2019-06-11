@@ -3,4 +3,4 @@ obj
 .vs
 *.ak
 lockfile
-*.json
+Properties
