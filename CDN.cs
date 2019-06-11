@@ -16,6 +16,8 @@ namespace BuildBackup
 
         public byte[] Get(string path, bool returnstream = true, bool redownload = false)
         {
+            path = path.ToLower();
+
             if (redownload || !File.Exists(Path.Combine(cacheDir, path)))
             {
                 var found = false;
