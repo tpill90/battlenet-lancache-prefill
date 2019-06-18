@@ -930,32 +930,35 @@ namespace BuildBackup
                     GetPatchIndexes(cdns.entries[0].path + "/", cdnConfig.patchArchives);
                     Console.Write("..done\n");
 
-                    var unarchivedPatchKeyList = new List<string>();
-                    foreach (var block in patch.blocks)
+                    if(patch.blocks != null)
                     {
-                        foreach (var fileBlock in block.files)
+                        var unarchivedPatchKeyList = new List<string>();
+                        foreach (var block in patch.blocks)
                         {
-                            foreach (var patch in fileBlock.patches)
+                            foreach (var fileBlock in block.files)
                             {
-                                var pKey = BitConverter.ToString(patch.patchEncodingKey).Replace("-", "");
-                                if (!patchIndexDictionary.ContainsKey(pKey))
+                                foreach (var patch in fileBlock.patches)
                                 {
-                                    unarchivedPatchKeyList.Add(pKey);
+                                    var pKey = BitConverter.ToString(patch.patchEncodingKey).Replace("-", "");
+                                    if (!patchIndexDictionary.ContainsKey(pKey))
+                                    {
+                                        unarchivedPatchKeyList.Add(pKey);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (unarchivedPatchKeyList.Count > 0)
-                    {
-                        Console.Write("Downloading " + unarchivedPatchKeyList.Count + " unarchived patch files..");
-
-                        foreach (var entry in unarchivedPatchKeyList)
+                        if (unarchivedPatchKeyList.Count > 0)
                         {
-                            cdn.Get(cdns.entries[0].path + "/patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
-                        }
+                            Console.Write("Downloading " + unarchivedPatchKeyList.Count + " unarchived patch files..");
 
-                        Console.Write("..done\n");
+                            foreach (var entry in unarchivedPatchKeyList)
+                            {
+                                cdn.Get(cdns.entries[0].path + "/patch/" + entry[0] + entry[1] + "/" + entry[2] + entry[3] + "/" + entry, false);
+                            }
+
+                            Console.Write("..done\n");
+                        }
                     }
                 }
 
