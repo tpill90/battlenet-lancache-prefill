@@ -618,8 +618,19 @@ namespace BuildBackup
                             if (encryptedContentHashes.ContainsKey(BitConverter.ToString(subentry.md5).Replace("-", "")))
                             {
                                 var stringBlock = encryptedContentHashes[BitConverter.ToString(subentry.md5).Replace("-", "")];
-                                var encryptionKey = stringBlock.Substring(stringBlock.IndexOf("e:{") + 3, 16);
-                                Console.WriteLine(subentry.fileDataID + " " + encryptionKey + " " + stringBlock + " " + encryptedContentSizes[BitConverter.ToString(subentry.md5).Replace("-", "")]);
+                                var rawStringBlock = stringBlock;
+                                var keyList = new List<string>();
+                                while (stringBlock.Contains("e:"))
+                                {
+                                    var keyName = stringBlock.Substring(stringBlock.IndexOf("e:{") + 3, 16);
+                                    if (!keyList.Contains(keyName))
+                                    {
+                                        keyList.Add(keyName);
+                                    }
+                                    stringBlock = stringBlock.Remove(stringBlock.IndexOf("e:{"), 19);
+                                }
+
+                                Console.WriteLine(subentry.fileDataID + " " + string.Join(',', keyList) + " " + rawStringBlock + " " + encryptedContentSizes[BitConverter.ToString(subentry.md5).Replace("-", "")]);
                                 break;
                             }
                         }
