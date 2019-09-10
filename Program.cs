@@ -48,7 +48,7 @@ namespace BuildBackup
         {
             cdn.cacheDir = SettingsManager.cacheDir;
             cdn.client = new HttpClient();
-            cdn.client.Timeout = Timeout.InfiniteTimeSpan;
+            cdn.client.Timeout = new TimeSpan(0, 15, 0);
             cdn.cdnList = new List<string> {
                 "blzddist1-a.akamaihd.net", // Akamai first
                 "eu.cdn.blizzard.com",      // Official EU CDN
@@ -634,6 +634,29 @@ namespace BuildBackup
                                 break;
                             }
                         }
+                    }
+
+                    Environment.Exit(0);
+                }
+                if (args[0] == "dumpsizes")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, buildconfig");
+
+                    if (args[1] != "wow")
+                    {
+                        Console.WriteLine("Only WoW is currently supported due to root/fileDataID usage");
+                        return;
+                    }
+
+                    cdns = GetCDNs(args[1]);
+
+                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
+
+                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
+                    
+                    foreach (var entry in encoding.aEntries)
+                    {
+                        Console.WriteLine(entry.hash.ToLower() + " " + entry.size);
                     }
 
                     Environment.Exit(0);
