@@ -16,7 +16,14 @@ Basic data for all [product codes](https://wowdev.wiki/CASC#NGDP_Program_Codes) 
 - Battle.net App
 
 ## Configuration
-You will have to set the path where files should be saved manually in Program.cs. By default it is H:/ on Windows machines and /var/www/bnet.marlam.in/ for all other operating systems. This will be moved to a configuration file in the future.
+Files will be saved in the path specified in a ```config.json``` file like :
+```
+{
+	"config":{
+		"cacheDir":"/var/www/bnet.marlam.in/"
+	}
+}
+```
 
 ## Thanks
 - WoWDev wiki authors
