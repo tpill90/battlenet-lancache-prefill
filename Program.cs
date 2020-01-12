@@ -257,11 +257,13 @@ namespace BuildBackup
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, encoding");
 
                     cdns = GetCDNs(args[1]);
-                    encoding = GetEncoding(cdns.entries[0].path + "/", args[2]);
+                    encoding = GetEncoding(cdns.entries[0].path + "/", args[2], 0, true);
                     foreach (var entry in encoding.aEntries)
                     {
-                        Console.WriteLine(entry.hash.ToLower() + " " + entry.key.ToLower() + " " + entry.keyCount + " " + entry.size);
+                        var table2Entry = encoding.bEntries[entry.key];
+                        Console.WriteLine(entry.hash.ToLower() + " " + entry.key.ToLower() + " " + entry.keyCount + " " + entry.size + " " + encoding.stringBlockEntries[table2Entry.stringIndex]);
                     }
+                    Console.WriteLine("ENCODINGESPEC " + encoding.encodingESpec);
                     Environment.Exit(0);
                 }
 
@@ -601,11 +603,11 @@ namespace BuildBackup
                     var encryptedSizes = new Dictionary<string, ulong>();
                     foreach (var entry in encoding.bEntries)
                     {
-                        var stringBlockEntry = encoding.stringBlockEntries[entry.stringIndex];
+                        var stringBlockEntry = encoding.stringBlockEntries[entry.Value.stringIndex];
                         if (stringBlockEntry.Contains("e:"))
                         {
-                            encryptedKeys.Add(entry.key, stringBlockEntry);
-                            encryptedSizes.Add(entry.key, entry.compressedSize);
+                            encryptedKeys.Add(entry.Key, stringBlockEntry);
+                            encryptedSizes.Add(entry.Key, entry.Value.compressedSize);
                         }
                     }
 
@@ -675,6 +677,7 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
+
                 if (args[0] == "dumprawfile")
                 {
                     if (args.Length < 2) throw new Exception("Not enough arguments. Need mode, path, (numbytes)");
@@ -697,11 +700,19 @@ namespace BuildBackup
                 }
                 if (args[0] == "dumpindex")
                 {
-                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, hash");
+                    if (args.Length < 3) throw new Exception("Not enough arguments. Need mode, product, hash, (folder)");
 
                     cdns = GetCDNs(args[1]);
 
-                    var index = ParseIndex(cdns.entries[0].path + "/", args[2]);
+                    var folder = "data";
+
+                    if(args.Length == 4)
+                    {
+                        folder = args[3];
+                    }
+                    
+                    var index = ParseIndex(cdns.entries[0].path + "/", args[2], folder);
+
                     foreach (var entry in index)
                     {
                         Console.WriteLine(entry.Key + " " + entry.Value.size);
@@ -1146,6 +1157,7 @@ namespace BuildBackup
             string content;
             var versions = new VersionsFile();
 
+            /*
             try
             {
                 var client = new Client(Region.US);
@@ -1252,6 +1264,22 @@ namespace BuildBackup
 
             var cdns = new CdnsFile();
 
+            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "cdns")).Result)
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    using (HttpContent res = response.Content)
+                    {
+                        content = res.ReadAsStringAsync().Result;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
+                    return cdns;
+                }
+            }
+            /*
             try
             {
                 var client = new Client(Region.US);
@@ -1770,7 +1798,6 @@ namespace BuildBackup
             };
 
             byte[] content = cdn.Get(url + "/data/" + hash[0] + hash[1] + "/" + hash[2] + hash[3] + "/" + hash);
-
             if (!parseIt) return root;
 
             var hasher = new Jenkins96();
@@ -1978,18 +2005,18 @@ namespace BuildBackup
                 encoding.unk1 = bin.ReadByte();
                 encoding.checksumSizeA = bin.ReadByte();
                 encoding.checksumSizeB = bin.ReadByte();
-                encoding.flagsA = bin.ReadUInt16();
-                encoding.flagsB = bin.ReadUInt16();
+                encoding.sizeA = bin.ReadUInt16(true);
+                encoding.sizeB = bin.ReadUInt16(true);
                 encoding.numEntriesA = bin.ReadUInt32(true);
                 encoding.numEntriesB = bin.ReadUInt32(true);
-                encoding.stringBlockSize = bin.ReadUInt40(true);
+                bin.ReadByte(); // unk
+                encoding.stringBlockSize = bin.ReadUInt32(true);
 
                 var headerLength = bin.BaseStream.Position;
+                var stringBlockEntries = new List<string>();
 
                 if (parseTableB)
                 {
-                    var stringBlockEntries = new List<string>();
-
                     while ((bin.BaseStream.Position - headerLength) != (long)encoding.stringBlockSize)
                     {
                         stringBlockEntries.Add(bin.ReadCString());
@@ -2073,7 +2100,7 @@ namespace BuildBackup
 
                 var tableBstart = bin.BaseStream.Position;
 
-                List<EncodingFileDescEntry> b_entries = new List<EncodingFileDescEntry>();
+                encoding.bEntries = new Dictionary<string, EncodingFileDescEntry>();
 
                 while (bin.BaseStream.Position < tableBstart + 4096 * encoding.numEntriesB)
                 {
@@ -2085,19 +2112,28 @@ namespace BuildBackup
                         continue;
                     }
 
+                    var key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
                     EncodingFileDescEntry entry = new EncodingFileDescEntry()
                     {
-                        key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
                         stringIndex = bin.ReadUInt32(true),
                         compressedSize = bin.ReadUInt40(true)
                     };
 
                     if (entry.stringIndex == uint.MaxValue) break;
 
-                    b_entries.Add(entry);
+                    encoding.bEntries.Add(key, entry);
                 }
 
-                encoding.bEntries = b_entries.ToArray();
+                // Go to the end until we hit a non-NUL byte
+                while (bin.BaseStream.Position < bin.BaseStream.Length)
+                {
+                    if (bin.ReadByte() != 0)
+                        break;
+                }
+
+                bin.BaseStream.Position -= 1;
+                var eespecSize = bin.BaseStream.Length - bin.BaseStream.Position;
+                encoding.encodingESpec = new string(bin.ReadChars(int.Parse(eespecSize.ToString())));
             }
 
             return encoding;

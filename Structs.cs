@@ -108,8 +108,8 @@ namespace BuildBackup
         public byte unk1;
         public byte checksumSizeA;
         public byte checksumSizeB;
-        public ushort flagsA;
-        public ushort flagsB;
+        public ushort sizeA;
+        public ushort sizeB;
         public uint numEntriesA;
         public uint numEntriesB;
         public byte unk2;
@@ -118,7 +118,8 @@ namespace BuildBackup
         public EncodingHeaderEntry[] aHeaders;
         public EncodingFileEntry[] aEntries;
         public EncodingHeaderEntry[] bHeaders;
-        public EncodingFileDescEntry[] bEntries;
+        public Dictionary<string, EncodingFileDescEntry> bEntries;
+        public string encodingESpec;
     }
 
     public struct EncodingHeaderEntry
