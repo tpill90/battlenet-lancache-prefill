@@ -251,6 +251,20 @@ namespace BuildBackup
                     }
                     Environment.Exit(0);
                 }
+
+                if (args[0] == "dumpencoding")
+                {
+                    if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, encoding");
+
+                    cdns = GetCDNs(args[1]);
+                    encoding = GetEncoding(cdns.entries[0].path + "/", args[2]);
+                    foreach (var entry in encoding.aEntries)
+                    {
+                        Console.WriteLine(entry.hash.ToLower() + " " + entry.key.ToLower() + " " + entry.keyCount + " " + entry.size);
+                    }
+                    Environment.Exit(0);
+                }
+
                 if (args[0] == "extractfilebycontenthash" || args[0] == "extractrawfilebycontenthash")
                 {
                     if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
@@ -663,8 +677,16 @@ namespace BuildBackup
                 }
                 if (args[0] == "dumprawfile")
                 {
-                    if (args.Length != 2) throw new Exception("Not enough arguments. Need mode, path");
-                    Console.Write(Encoding.UTF8.GetString(BLTE.Parse(File.ReadAllBytes(args[1]))));
+                    if (args.Length < 2) throw new Exception("Not enough arguments. Need mode, path, (numbytes)");
+                    
+                    var file = BLTE.Parse(File.ReadAllBytes(args[1]));
+
+                    if (args.Length == 3)
+                    {
+                        file = file.Take(int.Parse(args[2])).ToArray();
+                    }
+
+                    Console.Write(Encoding.UTF8.GetString(file));
                     Environment.Exit(0);
                 }
                 if (args[0] == "dumprawfiletofile")
