@@ -48,7 +48,7 @@ namespace BuildBackup
         {
             cdn.cacheDir = SettingsManager.cacheDir;
             cdn.client = new HttpClient();
-            cdn.client.Timeout = new TimeSpan(0, 15, 0);
+            cdn.client.Timeout = new TimeSpan(0, 5, 0);
             cdn.cdnList = new List<string> {
                 "blzddist1-a.akamaihd.net", // Akamai first
                 "eu.cdn.blizzard.com",      // Official EU CDN
@@ -1157,10 +1157,26 @@ namespace BuildBackup
             string content;
             var versions = new VersionsFile();
 
+            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(baseUrl + program + "/" + "versions")).Result)
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    using (HttpContent res = response.Content)
+                    {
+                        content = res.ReadAsStringAsync().Result;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error during retrieving HTTP versions: Received bad HTTP code " + response.StatusCode);
+                    return versions;
+                }
+            }
+
             /*
             try
             {
-                var client = new Client(Region.US);
+                var client = new Client(Region.EU);
                 var request = client.Request("v1/products/" + program + "/versions");
                 content = request.ToString();
             }
@@ -1192,7 +1208,7 @@ namespace BuildBackup
                 }
                 return versions;
             }
-
+            */
             content = content.Replace("\0", "");
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -1313,7 +1329,7 @@ namespace BuildBackup
                     return cdns;
                 }
             }
-
+            */
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 
             var lineList = new List<string>();
