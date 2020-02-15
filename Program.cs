@@ -586,30 +586,35 @@ namespace BuildBackup
                                     }
                                 }
 
-                                if (!indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
+                                if (indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
                                 {
-                                    throw new Exception("Unable to find file in archives. File is not available!?");
-                                }
-
-                                foreach (var filename in fileEntry.Value)
-                                {
-                                    try
+                                    foreach (var filename in fileEntry.Value)
                                     {
-                                        stream.Seek(entry.offset, SeekOrigin.Begin);
+                                        if (File.Exists(Path.Combine(basedir, filename)))
+                                            continue;
 
-                                        if (entry.offset > stream.Length || entry.offset + entry.size > stream.Length)
+                                        try
                                         {
-                                            throw new Exception("File is beyond archive length, incomplete archive!");
-                                        }
+                                            stream.Seek(entry.offset, SeekOrigin.Begin);
 
-                                        var archiveBytes = new byte[entry.size];
-                                        stream.Read(archiveBytes, 0, (int)entry.size);
-                                        File.WriteAllBytes(Path.Combine(basedir, filename), BLTE.Parse(archiveBytes));
+                                            if (entry.offset > stream.Length || entry.offset + entry.size > stream.Length)
+                                            {
+                                                throw new Exception("File is beyond archive length, incomplete archive!");
+                                            }
+
+                                            var archiveBytes = new byte[entry.size];
+                                            stream.Read(archiveBytes, 0, (int)entry.size);
+                                            File.WriteAllBytes(Path.Combine(basedir, filename), BLTE.Parse(archiveBytes));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine(e.Message);
+                                        }
                                     }
-                                    catch (Exception e)
-                                    {
-                                        Console.WriteLine(e.Message);
-                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine("!!!!! Unable to find " + fileEntry.Key + " (" + fileEntry.Value[0] + ") in archives!");
                                 }
 
                                 extractedFiles++;
