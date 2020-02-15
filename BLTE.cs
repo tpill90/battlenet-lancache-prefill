@@ -11,9 +11,8 @@ namespace BuildBackup
     {
         public static byte[] Parse(byte[] content)
         {
-            MemoryStream result = new MemoryStream();
-
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
+            using (var result = new MemoryStream())
+            using (var bin = new BinaryReader(new MemoryStream(content)))
             {
                 if (bin.ReadUInt32() != 0x45544c42) { throw new Exception("Not a BLTE file"); }
 
@@ -23,27 +22,18 @@ namespace BuildBackup
 
                 if (blteSize == 0)
                 {
+                    // These are always uncompressed
                     chunkInfos = new BLTEChunkInfo[1];
                     chunkInfos[0].isFullChunk = false;
-                    chunkInfos[0].inFileSize = Convert.ToInt32(bin.BaseStream.Length - bin.BaseStream.Position);
-                    chunkInfos[0].actualSize = Convert.ToInt32(bin.BaseStream.Length - bin.BaseStream.Position);
-                    chunkInfos[0].checkSum = new byte[16]; ;
+                    chunkInfos[0].compSize = Convert.ToInt32(bin.BaseStream.Length - 8);
+                    chunkInfos[0].decompSize = Convert.ToInt32(bin.BaseStream.Length - 8 - 1);
+                    chunkInfos[0].checkSum = new byte[16];
                 }
                 else
                 {
-
                     var bytes = bin.ReadBytes(4);
 
                     var chunkCount = bytes[1] << 16 | bytes[2] << 8 | bytes[3] << 0;
-
-                    //var unk = bin.ReadByte();
-
-                    ////Code by TOM_RUS 
-                    //byte v1 = bin.ReadByte();
-                    //byte v2 = bin.ReadByte();
-                    //byte v3 = bin.ReadByte();
-                    //var chunkCount = v1 << 16 | v2 << 8 | v3 << 0; // 3-byte
-                    ////Retrieved from https://github.com/WoW-Tools/CASCExplorer/blob/cli/CascLib/BLTEHandler.cs#L76
 
                     var supposedHeaderSize = 24 * chunkCount + 12;
 
@@ -62,8 +52,8 @@ namespace BuildBackup
                     for (int i = 0; i < chunkCount; i++)
                     {
                         chunkInfos[i].isFullChunk = true;
-                        chunkInfos[i].inFileSize = bin.ReadInt32(true);
-                        chunkInfos[i].actualSize = bin.ReadInt32(true);
+                        chunkInfos[i].compSize = bin.ReadInt32(true);
+                        chunkInfos[i].decompSize = bin.ReadInt32(true);
                         chunkInfos[i].checkSum = new byte[16];
                         chunkInfos[i].checkSum = bin.ReadBytes(16);
                     }
@@ -73,94 +63,54 @@ namespace BuildBackup
                 {
                     var chunk = chunkInfos[index];
 
-                    MemoryStream chunkResult = new MemoryStream();
-
-                    if (chunk.inFileSize > bin.BaseStream.Length)
+                    if (chunk.compSize > (bin.BaseStream.Length - bin.BaseStream.Position))
                     {
                         throw new Exception("Trying to read more than is available!");
                     }
 
-                    var chunkBuffer = bin.ReadBytes(chunk.inFileSize);
-
-                    var hasher = MD5.Create();
-                    var md5sum = hasher.ComputeHash(chunkBuffer);
-
-                    if (chunk.isFullChunk && BitConverter.ToString(md5sum) != BitConverter.ToString(chunk.checkSum))
-                    {
-                        throw new Exception("MD5 checksum mismatch on BLTE chunk! Sum is " + BitConverter.ToString(md5sum).Replace("-", "") + " but is supposed to be " + BitConverter.ToString(chunk.checkSum).Replace("-", ""));
-                    }
-
-                    HandleDataBlock(chunkBuffer, index, chunk, chunkResult);
-
-                    var chunkres = chunkResult.ToArray();
-                    if (chunk.isFullChunk && chunkres.Length != chunk.actualSize)
-                    {
-                        throw new Exception("Decoded result is wrong size!");
-                    }
-
-                    result.Write(chunkres, 0, chunkres.Length);
+                    HandleDataBlock(bin.ReadBytes(chunk.compSize), index, chunk, result);
                 }
 
-                foreach (var chunk in chunkInfos)
-                {
-                    if (chunk.inFileSize > bin.BaseStream.Length)
-                    {
-                        throw new Exception("Trying to read more than is available!");
-                    }
-                    else
-                    {
-                        bin.BaseStream.Position += chunk.inFileSize;
-                    }
-                }
+                return result.ToArray();
             }
-
-            return result.ToArray();
         }
-        private static void HandleDataBlock(byte[] chunkBuffer, int index, BLTEChunkInfo chunk, MemoryStream chunkResult)
+
+        private static void HandleDataBlock(byte[] data, int index, BLTEChunkInfo chunk, MemoryStream result)
         {
-            using (BinaryReader chunkreader = new BinaryReader(new MemoryStream(chunkBuffer)))
+            switch (data[0])
             {
-                var mode = chunkreader.ReadChar();
-
-                switch (mode)
-                {
-                    case 'N': // none
-                        chunkResult.Write(chunkreader.ReadBytes(chunk.actualSize), 0, chunk.actualSize); //read actual size because we already read the N from chunkreader
+                case 0x4E: // N (no compression)
+                    result.Write(data, 1, data.Length - 1);
+                    break;
+                case 0x5A: // Z (zlib, compressed)
+                    using (var stream = new MemoryStream(data, 3, chunk.compSize - 3))
+                    using (var ds = new DeflateStream(stream, CompressionMode.Decompress))
+                    {
+                        ds.CopyTo(result);
+                    }
+                    break;
+                case 0x45: // E (encrypted)
+                    byte[] decrypted = new byte[data.Length - 15];
+                    decrypted[0] = 0x4E; // N
+                    try
+                    {
+                        decrypted = Decrypt(data, index);
+                    }
+                    catch (KeyNotFoundException e)
+                    {
+                        Console.WriteLine(e.Message);
+                        result.Write(new byte[chunk.decompSize], 0, chunk.decompSize);
                         break;
-                    case 'Z': // zlib
-                        using (MemoryStream stream = new MemoryStream(chunkreader.ReadBytes(chunk.inFileSize - 1), 2, chunk.inFileSize - 3))
-                        {
-                            var ds = new DeflateStream(stream, CompressionMode.Decompress);
-                            ds.CopyTo(chunkResult);
-                        }
-                        break;
-                    case 'E': // encrypted
-                        byte[] decrypted = new byte[chunkBuffer.Length - 15];
-                        decrypted[0] = Convert.ToByte('N');
-                        try
-                        {
-                            decrypted = Decrypt(chunkBuffer, index);
-                        }
-                        catch (KeyNotFoundException e)
-                        {
-                            Console.WriteLine(e.Message);
-                            chunkResult.Write(new byte[chunk.actualSize], 0, chunk.actualSize);
-                            break;
-                        }
+                    }
 
-                        //Console.WriteLine("File is encrypted with key " + ReturnEncryptionKeyName(chunkreader.ReadBytes(chunk.inFileSize)));
-                        //Console.WriteLine("Encrypted chunk size is " + chunk.inFileSize);
+                    // Override inFileSize with decrypted length because it now differs from original encrypted chunk.compSize which breaks decompression
+                    chunk.compSize = decrypted.Length;
 
-                        // Override inFileSize with decrypted length because it now differs from original encrypted chunk.inFileSize which breaks decompression
-                        chunk.inFileSize = decrypted.Length;
-
-                        //Console.WriteLine("Decrypted chunk size is " + chunk.inFileSize);
-                        HandleDataBlock(decrypted, index, chunk, chunkResult);
-                        break;
-                    case 'F': // frame
-                    default:
-                        throw new Exception("Unsupported mode " + mode + "!");
-                }
+                    HandleDataBlock(decrypted, index, chunk, result);
+                    break;
+                case 0x46: // F (frame)
+                default:
+                    throw new Exception("Unsupported mode " + data[0].ToString("X") + "!");
             }
         }
         private static string ReturnEncryptionKeyName(byte[] data)
@@ -254,10 +204,11 @@ namespace BuildBackup
             Array.Copy(IV, 8, IV, 0, 8);
             Array.Resize(ref IV, 8);
 
-            var salsa = new Salsa20();
-            var decryptor = salsa.CreateDecryptor(key, IV);
-
-            return decryptor.TransformFinalBlock(data, 0, data.Length);
+            using (Salsa20 salsa = new Salsa20())
+            {
+                var decryptor = salsa.CreateDecryptor(key, IV);
+                return decryptor.TransformFinalBlock(data, 0, data.Length);
+            }
         }
     }
 }

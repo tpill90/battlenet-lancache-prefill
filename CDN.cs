@@ -29,7 +29,6 @@ namespace BuildBackup
                     var url = "http://" + cdn + "/" + path.ToLower();
                     var uri = new Uri(url);
                     string cleanname = uri.AbsolutePath;
-
                     try
                     {
                         if (!Directory.Exists(cacheDir + cleanname)) { Directory.CreateDirectory(Path.GetDirectoryName(cacheDir + cleanname)); }

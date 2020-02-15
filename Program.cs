@@ -1,6 +1,4 @@
-﻿using Ribbit.Constants;
-using Ribbit.Protocol;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -414,7 +412,14 @@ namespace BuildBackup
                                 continue;
 
                             var expl = line.Split(';');
-                            fdidList.Add(uint.Parse(expl[0]), expl[1]);
+                            if (expl.Length == 1)
+                            {
+                                fdidList.Add(uint.Parse(expl[0]), expl[0]);
+                            }
+                            else
+                            {
+                                fdidList.Add(uint.Parse(expl[0]), expl[1]);
+                            }
                         }
                     }
 
@@ -482,7 +487,7 @@ namespace BuildBackup
                         if (encodingList.ContainsKey(encodingEntry.hash.ToLower()))
                         {
                             target = encodingEntry.key.ToLower();
-                            Console.WriteLine(target);
+                            //Console.WriteLine(target);
                             foreach (var subName in encodingList[encodingEntry.hash.ToLower()])
                             {
                                 if (fileList.ContainsKey(target))
@@ -498,10 +503,32 @@ namespace BuildBackup
                         }
                     }
 
+                    var archivedFileList = new Dictionary<string, Dictionary<string, List<string>>>();
+                    var unarchivedFileList = new Dictionary<string, List<string>>();
+
+                    Console.WriteLine("Looking up in indexes..");
                     foreach (var fileEntry in fileList)
                     {
-                        var done = false;
+                        if (!indexDictionary.TryGetValue(fileEntry.Key.ToUpper(), out IndexEntry entry))
+                        {
+                            unarchivedFileList.Add(fileEntry.Key, fileEntry.Value);
+                        }
 
+                        var index = cdnConfig.archives[entry.index];
+                        if (!archivedFileList.ContainsKey(index))
+                        {
+                            archivedFileList.Add(index, new Dictionary<string, List<string>>());
+                        }
+
+                        archivedFileList[index].Add(fileEntry.Key, fileEntry.Value);
+                    }
+
+                    var extractedFiles = 0;
+                    var totalFiles = fileList.Count;
+
+                    Console.WriteLine("Extracting " + unarchivedFileList.Count + " unarchived files..");
+                    foreach (var fileEntry in unarchivedFileList)
+                    {
                         var target = fileEntry.Key;
 
                         foreach (var filename in fileEntry.Value)
@@ -517,7 +544,6 @@ namespace BuildBackup
                         {
                             foreach (var filename in fileEntry.Value)
                             {
-                                Console.WriteLine(filename);
                                 try
                                 {
                                     File.WriteAllBytes(Path.Combine(basedir, filename), BLTE.Parse(File.ReadAllBytes(unarchivedName)));
@@ -527,38 +553,70 @@ namespace BuildBackup
                                     Console.WriteLine(e.Message);
                                 }
                             }
-                            done = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Unarchived file does not exist " + unarchivedName + ", cannot extract " + string.Join(',', fileEntry.Value));
                         }
 
-                        if (!done)
+                        extractedFiles++;
+
+                        if (extractedFiles % 100 == 0)
                         {
-                            if (!indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
-                            {
-                                throw new Exception("Unable to find file in archives. File is not available!?");
-                            }
+                            Console.WriteLine("[" + DateTime.Now.ToString() + "] Extracted " + extractedFiles + " out of " + totalFiles + " files");
+                        }
+                    }
 
-                            var index = cdnConfig.archives[entry.index];
+                    foreach (var archiveEntry in archivedFileList)
+                    {
+                        var archiveName = Path.Combine(cdn.cacheDir, "tpr", "wow", "data", archiveEntry.Key[0] + "" + archiveEntry.Key[1], archiveEntry.Key[2] + "" + archiveEntry.Key[3], archiveEntry.Key);
+                        Console.WriteLine("[" + DateTime.Now.ToString() + "] Extracting " + archiveEntry.Value.Count + " files from archive " + archiveEntry.Key + "..");
 
-                            var archiveName = Path.Combine(cdn.cacheDir, "tpr", "wow", "data", index[0] + "" + index[1], index[2] + "" + index[3], index);
-                            if (!File.Exists(archiveName))
+                        using (var stream = new MemoryStream(File.ReadAllBytes(archiveName)))
+                        {
+                            foreach (var fileEntry in archiveEntry.Value)
                             {
-                                throw new FileNotFoundException("Unable to find archive " + index + " on disk!");
-                            }
+                                var target = fileEntry.Key;
 
-                            using (BinaryReader bin = new BinaryReader(File.Open(archiveName, FileMode.Open, FileAccess.Read)))
-                            {
                                 foreach (var filename in fileEntry.Value)
                                 {
-                                    Console.WriteLine(filename);
-                                    bin.BaseStream.Position = entry.offset;
+                                    if (!Directory.Exists(Path.Combine(basedir, Path.GetDirectoryName(filename))))
+                                    {
+                                        Directory.CreateDirectory(Path.Combine(basedir, Path.GetDirectoryName(filename)));
+                                    }
+                                }
+
+                                if (!indexDictionary.TryGetValue(target.ToUpper(), out IndexEntry entry))
+                                {
+                                    throw new Exception("Unable to find file in archives. File is not available!?");
+                                }
+
+                                foreach (var filename in fileEntry.Value)
+                                {
                                     try
                                     {
-                                        File.WriteAllBytes(Path.Combine(basedir, filename), BLTE.Parse(bin.ReadBytes((int)entry.size)));
+                                        stream.Seek(entry.offset, SeekOrigin.Begin);
+
+                                        if (entry.offset > stream.Length || entry.offset + entry.size > stream.Length)
+                                        {
+                                            throw new Exception("File is beyond archive length, incomplete archive!");
+                                        }
+
+                                        var archiveBytes = new byte[entry.size];
+                                        stream.Read(archiveBytes, 0, (int)entry.size);
+                                        File.WriteAllBytes(Path.Combine(basedir, filename), BLTE.Parse(archiveBytes));
                                     }
                                     catch (Exception e)
                                     {
                                         Console.WriteLine(e.Message);
                                     }
+                                }
+
+                                extractedFiles++;
+
+                                if (extractedFiles % 1000 == 0)
+                                {
+                                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Extracted " + extractedFiles + " out of " + totalFiles + " files");
                                 }
                             }
                         }
@@ -669,7 +727,7 @@ namespace BuildBackup
                     buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
 
                     encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
-                    
+
                     foreach (var entry in encoding.aEntries)
                     {
                         Console.WriteLine(entry.hash.ToLower() + " " + entry.size);
@@ -681,7 +739,7 @@ namespace BuildBackup
                 if (args[0] == "dumprawfile")
                 {
                     if (args.Length < 2) throw new Exception("Not enough arguments. Need mode, path, (numbytes)");
-                    
+
                     var file = BLTE.Parse(File.ReadAllBytes(args[1]));
 
                     if (args.Length == 3)
@@ -706,11 +764,11 @@ namespace BuildBackup
 
                     var folder = "data";
 
-                    if(args.Length == 4)
+                    if (args.Length == 4)
                     {
                         folder = args[3];
                     }
-                    
+
                     var index = ParseIndex(cdns.entries[0].path + "/", args[2], folder);
 
                     foreach (var entry in index)
@@ -997,7 +1055,7 @@ namespace BuildBackup
                     GetPatchIndexes(cdns.entries[0].path + "/", cdnConfig.patchArchives);
                     Console.Write("..done\n");
 
-                    if(patch.blocks != null)
+                    if (patch.blocks != null)
                     {
                         var unarchivedPatchKeyList = new List<string>();
                         foreach (var block in patch.blocks)
@@ -1386,7 +1444,7 @@ namespace BuildBackup
 
                 foreach (var subcdn in cdns.entries)
                 {
-                    foreach(var cdnHost in subcdn.hosts)
+                    foreach (var cdnHost in subcdn.hosts)
                     {
                         if (!cdn.cdnList.Contains(cdnHost))
                         {
@@ -1487,7 +1545,7 @@ namespace BuildBackup
                 Console.WriteLine("Error retrieving build config: " + e.Message);
                 return buildConfig;
             }
-           
+
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
                 Console.WriteLine("Error reading build config!");
