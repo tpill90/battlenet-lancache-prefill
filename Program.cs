@@ -30,6 +30,8 @@ namespace BuildBackup
         private static RootFile root;
         private static PatchFile patch;
 
+        private static bool fullDownload = true;
+
         private static bool overrideVersions;
         private static string overrideBuildconfig;
         private static string overrideCDNconfig;
@@ -782,6 +784,10 @@ namespace BuildBackup
                     }
                     Environment.Exit(0);
                 }
+                if (args[0] == "partialdl")
+                {
+                    fullDownload = false;
+                }
             }
 
             // Load programs
@@ -918,12 +924,19 @@ namespace BuildBackup
                 GetIndexes(cdns.entries[0].path + "/", cdnConfig.archives);
                 Console.Write("..done\n");
 
-                Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
-                foreach (var archive in cdnConfig.archives)
+                if (fullDownload)
                 {
-                    cdn.Get(cdns.entries[0].path + "/data/" + archive[0] + archive[1] + "/" + archive[2] + archive[3] + "/" + archive, false);
+                    Console.Write("Downloading " + cdnConfig.archives.Count() + " archives..");
+                    foreach (var archive in cdnConfig.archives)
+                    {
+                        cdn.Get(cdns.entries[0].path + "/data/" + archive[0] + archive[1] + "/" + archive[2] + archive[3] + "/" + archive, false);
+                    }
+                    Console.Write("..done\n");
                 }
-                Console.Write("..done\n");
+                else
+                {
+                    Console.WriteLine("Not a full run, skipping archive downloads..");
+                }
 
                 Console.Write("Loading encoding..");
 
@@ -970,22 +983,7 @@ namespace BuildBackup
 
                 Console.Write("..done\n");
 
-                if (!string.IsNullOrEmpty(cdnConfig.fileIndex))
-                {
-                    Console.Write("Parsing file index..");
-                    fileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.fileIndex);
-                    Console.Write("..done\n");
-
-                }
-
-                if (!string.IsNullOrEmpty(cdnConfig.patchFileIndex))
-                {
-                    Console.Write("Parsing patch file index..");
-                    patchFileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.patchFileIndex, "patch");
-                    Console.Write("..done\n");
-                }
-
-                if (program == "wow" || program == "wowt" || program == "wow_beta" || program == "wow_classic") // Only these are supported right now
+                if (program == "wow" || program == "wowt" || program == "wow_beta" || program == "wow_classic" || program == "wow_classic_ptr") // Only these are supported right now
                 {
                     Console.Write("Loading root..");
                     if (rootKey == "") { Console.WriteLine("Unable to find root key in encoding!"); } else { root = GetRoot(cdns.entries[0].path + "/", rootKey); }
@@ -1007,6 +1005,27 @@ namespace BuildBackup
                     {
                         Console.WriteLine("Error loading install: " + e.Message);
                     }
+                }
+
+                if (!string.IsNullOrEmpty(cdnConfig.fileIndex))
+                {
+                    Console.Write("Parsing file index..");
+                    fileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.fileIndex);
+                    Console.Write("..done\n");
+
+                }
+
+                if (!string.IsNullOrEmpty(cdnConfig.patchFileIndex))
+                {
+                    Console.Write("Parsing patch file index..");
+                    patchFileIndexList = ParseIndex(cdns.entries[0].path + "/", cdnConfig.patchFileIndex, "patch");
+                    Console.Write("..done\n");
+                }
+
+                if (!fullDownload)
+                {
+                    Console.WriteLine("Not a full run, skipping rest of download..");
+                    continue;
                 }
 
                 foreach (var entry in indexDictionary)
