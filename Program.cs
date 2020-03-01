@@ -12,7 +12,7 @@ namespace BuildBackup
 {
     class Program
     {
-        private static readonly Uri baseUrl = new Uri("http://us.patch.battle.net:1119/");
+        private static readonly Uri baseUrl = new Uri("http://eu.patch.battle.net:1119/");
 
         private static string[] checkPrograms;
         private static string[] backupPrograms;
@@ -48,9 +48,9 @@ namespace BuildBackup
             cdn.client = new HttpClient();
             cdn.client.Timeout = new TimeSpan(0, 5, 0);
             cdn.cdnList = new List<string> {
-                "blzddist1-a.akamaihd.net", // Akamai first
-                "eu.cdn.blizzard.com",      // Official EU CDN
                 "level3.blizzard.com",      // Level3
+                "eu.cdn.blizzard.com",      // Official EU CDN
+                "blzddist1-a.akamaihd.net", // Akamai first
                 "cdn.blizzard.com",         // Official regionless CDN
                 "us.cdn.blizzard.com",      // Official US CDN
                 "client01.pdl.wow.battlenet.com.cn", // China 1
