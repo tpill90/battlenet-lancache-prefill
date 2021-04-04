@@ -74,13 +74,13 @@ namespace BuildBackup
 
                     cdns = GetCDNs(args[1]);
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path, args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    cdnConfig = GetCDNconfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[3]);
+                    cdnConfig = GetCDNconfig(cdns.entries[0].path, args[3]);
                     if (cdnConfig.archives == null) { Console.WriteLine("Invalid cdnConfig"); }
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1]);
+                    encoding = GetEncoding(cdns.entries[0].path, buildConfig.encoding[1]);
 
                     string rootKey = "";
                     string downloadKey = "";
@@ -108,7 +108,7 @@ namespace BuildBackup
                         if (!hashes.ContainsKey(entry.key)) { hashes.Add(entry.key, entry.hash); }
                     }
 
-                    GetIndexes(Path.Combine(cdn.cacheDir, cdns.entries[0].path), cdnConfig.archives);
+                    GetIndexes(Path.Combine(cdns.entries[0].path), cdnConfig.archives);
 
                     foreach (var entry in indexDictionary)
                     {
@@ -251,7 +251,6 @@ namespace BuildBackup
                     }
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "dumpencoding")
                 {
                     if (args.Length != 3) throw new Exception("Not enough arguments. Need mode, product, encoding");
@@ -266,7 +265,6 @@ namespace BuildBackup
                     Console.WriteLine("ENCODINGESPEC " + encoding.encodingESpec);
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "extractfilebycontenthash" || args[0] == "extractrawfilebycontenthash")
                 {
                     if (args.Length != 6) throw new Exception("Not enough arguments. Need mode, product, buildconfig, cdnconfig, contenthash, outname");
@@ -275,10 +273,10 @@ namespace BuildBackup
 
                     args[4] = args[4].ToLower();
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path, args[2]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine(cdns.entries[0].path), buildConfig.encoding[1]);
 
                     string target = "";
 
@@ -296,9 +294,9 @@ namespace BuildBackup
                         throw new Exception("File not found in encoding!");
                     }
 
-                    cdnConfig = GetCDNconfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[3]);
+                    cdnConfig = GetCDNconfig(cdns.entries[0].path, args[3]);
 
-                    GetIndexes(Path.Combine(cdn.cacheDir, cdns.entries[0].path), cdnConfig.archives);
+                    GetIndexes(Path.Combine(cdns.entries[0].path), cdnConfig.archives);
 
                     if (args[0] == "extractrawfilebycontenthash")
                     {
@@ -319,18 +317,18 @@ namespace BuildBackup
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, "tpr", "wow"), args[1]);
+                    buildConfig = GetBuildConfig(Path.Combine("tpr", "wow"), args[1]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine("tpr", "wow"), buildConfig.encoding[1]);
 
                     var basedir = args[3];
 
                     var lines = File.ReadLines(args[4]);
 
-                    cdnConfig = GetCDNconfig(Path.Combine(cdn.cacheDir, "tpr", "wow"), args[2]);
+                    cdnConfig = GetCDNconfig(Path.Combine("tpr", "wow"), args[2]);
 
-                    GetIndexes(Path.Combine(cdn.cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    GetIndexes(Path.Combine("tpr", "wow"), cdnConfig.archives);
 
                     foreach (var line in lines)
                     {
@@ -374,14 +372,14 @@ namespace BuildBackup
                 {
                     if (args.Length != 5) throw new Exception("Not enough arguments. Need mode, buildconfig, cdnconfig, basedir, list");
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, "tpr", "wow"), args[1]);
+                    buildConfig = GetBuildConfig(Path.Combine("tpr", "wow"), args[1]);
                     if (string.IsNullOrWhiteSpace(buildConfig.buildName)) { Console.WriteLine("Invalid buildConfig!"); }
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, "tpr", "wow"), buildConfig.encoding[1]);
+                    encoding = GetEncoding(Path.Combine("tpr", "wow"), buildConfig.encoding[1]);
 
-                    cdnConfig = GetCDNconfig(Path.Combine(cdn.cacheDir, "tpr", "wow"), args[2]);
+                    cdnConfig = GetCDNconfig(Path.Combine("tpr", "wow"), args[2]);
 
-                    GetIndexes(Path.Combine(cdn.cacheDir, "tpr", "wow"), cdnConfig.archives);
+                    GetIndexes(Path.Combine("tpr", "wow"), cdnConfig.archives);
 
                     var basedir = args[3];
 
@@ -427,7 +425,7 @@ namespace BuildBackup
 
                     Console.WriteLine("Looking up in root..");
 
-                    root = GetRoot(Path.Combine(cdn.cacheDir, "tpr", "wow"), rootHash, true);
+                    root = GetRoot(Path.Combine("tpr", "wow"), rootHash, true);
 
                     var encodingList = new Dictionary<string, List<string>>();
 
@@ -660,9 +658,9 @@ namespace BuildBackup
 
                     cdns = GetCDNs(args[1]);
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path, args[2]);
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
+                    encoding = GetEncoding(cdns.entries[0].path, buildConfig.encoding[1], 0, true);
 
                     var encryptedKeys = new Dictionary<string, string>();
                     var encryptedSizes = new Dictionary<string, ulong>();
@@ -690,7 +688,7 @@ namespace BuildBackup
                         if (entry.hash == buildConfig.root.ToUpper()) { rootKey = entry.key.ToLower(); }
                     }
 
-                    root = GetRoot(Path.Combine(cdn.cacheDir, cdns.entries[0].path), rootKey, true);
+                    root = GetRoot(cdns.entries[0].path, rootKey, true);
 
                     foreach (var entry in root.entriesFDID)
                     {
@@ -731,9 +729,9 @@ namespace BuildBackup
 
                     cdns = GetCDNs(args[1]);
 
-                    buildConfig = GetBuildConfig(Path.Combine(cdn.cacheDir, cdns.entries[0].path), args[2]);
+                    buildConfig = GetBuildConfig(cdns.entries[0].path, args[2]);
 
-                    encoding = GetEncoding(Path.Combine(cdn.cacheDir, cdns.entries[0].path), buildConfig.encoding[1], 0, true);
+                    encoding = GetEncoding(cdns.entries[0].path, buildConfig.encoding[1], 0, true);
 
                     foreach (var entry in encoding.aEntries)
                     {
@@ -742,7 +740,6 @@ namespace BuildBackup
 
                     Environment.Exit(0);
                 }
-
                 if (args[0] == "dumprawfile")
                 {
                     if (args.Length < 2) throw new Exception("Not enough arguments. Need mode, path, (numbytes)");
