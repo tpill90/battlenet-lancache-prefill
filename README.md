@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Marlamin/BuildBackup.svg?branch=master)](https://travis-ci.org/Marlamin/BuildBackup)
+**Note**: This application is no longer actively supported. While parts of it might still work, I don't actively make an effort to make sure it _keeps_ working.
 
 # BuildBackup
 
