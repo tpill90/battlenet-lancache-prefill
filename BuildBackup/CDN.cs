@@ -1,0 +1,262 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using BuildBackup.Utils;
+using Shared.Models;
+
+namespace BuildBackup
+{
+    public class CDN
+    {
+        //TODO make these all private
+        public readonly HttpClient client;
+        public bool isEncrypted = false;
+        public string decryptionKeyName = "";
+        public List<string> cdnList;
+
+        //TODO break these requests out into a different class later
+        public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
+
+        //TODO comment what this is for
+        public bool DebugMode = false;
+
+        public CDN()
+        {
+            client = new HttpClient();
+            client.Timeout = new TimeSpan(0, 5, 0);
+
+            cdnList = new List<string> 
+            {
+                "level3.blizzard.com",      // Level3
+                "eu.cdn.blizzard.com",      // Official EU CDN
+                "blzddist1-a.akamaihd.net", // Akamai first
+                "cdn.blizzard.com",         // Official regionless CDN
+                "us.cdn.blizzard.com",      // Official US CDN
+                "client01.pdl.wow.battlenet.com.cn", // China 1
+                "client02.pdl.wow.battlenet.com.cn", // China 2
+                "client03.pdl.wow.battlenet.com.cn", // China 3
+                "client04.pdl.wow.battlenet.com.cn", // China 4
+                "client04.pdl.wow.battlenet.com.cn", // China 5
+                "blizzard.nefficient.co.kr", // Korea 
+            };
+        }
+
+        //TODO comment
+        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false)
+        {
+            hashId = hashId.ToLower();
+            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            return Get(uri, writeToDevNull);
+        }
+
+        //TODO comment
+        public byte[] GetIndex(string rootPath, string id)
+        {
+            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}.index";
+            return Get(uri);
+        }
+
+        //TODO comment
+        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null, bool requestIsSkippable = false)
+        {
+            if (startBytes != null && endBytes == null)
+            {
+                throw new ArgumentException("Invalid parameters : endBytes is null when startBytes is not");
+            }
+            if (startBytes == null && endBytes != null)
+            {
+                throw new ArgumentException("Invalid parameters : startBytes is null when endBytes is not");
+            }
+
+            // Record the requests we're making, so we can use it for debugging
+            if (startBytes != null && endBytes != null)
+            {
+                allRequestsMade.Add(new Request()
+                {
+                    Uri = requestPath,
+                    LowerByteRange = startBytes.Value,
+                    UpperByteRange = endBytes.Value
+                });
+            }
+            else
+            {
+                allRequestsMade.Add(new Request()
+                {
+                    Uri = requestPath,
+                    DownloadWholeFile = true
+                });
+            }
+
+            // TODO comment
+            if (DebugMode && writeToDevNull)
+            {
+                return null;
+            }
+
+            // Attempts to search for the file through each known cdn
+            foreach (var cdn in cdnList)
+            {
+                var uri = new Uri($"http://{cdn}/{requestPath}");
+
+                //if (DebugMode)
+                //{
+                //    string outputFilePath = Path.Combine("cache" + uri.AbsolutePath);
+                //    if (!Directory.Exists(outputFilePath))
+                //    {
+                //        Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath));
+                //    }
+
+                //    //TODO I don't want this to run, unless I'm in "debug" mode.
+                //    if (File.Exists(outputFilePath))
+                //    {
+                //        return File.ReadAllBytes(outputFilePath);
+                //    }
+                //}
+                
+                try
+                {
+                    using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+
+                    if (startBytes != null && endBytes != null)
+                    {
+                        requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
+                    }
+
+                    using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
+                    using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        if(writeToDevNull)
+                        {
+                            // Dump the received data, so we don't have to waste time writing it to disk.
+                            responseStream.CopyToAsync(Stream.Null).Wait();
+                            return null;
+                        }
+                        else
+                        {
+                            using var memoryStream = new MemoryStream();
+                            responseStream.CopyToAsync(memoryStream).Wait();
+
+                            var byteArray = memoryStream.ToArray();
+
+                            //if (DebugMode)
+                            //{
+                            //    string outputFilePath = Path.Combine("cache" + uri.AbsolutePath);
+                            //    File.WriteAllBytes(outputFilePath, byteArray);
+                            //}
+                            
+                            if (isEncrypted)
+                            {
+                                //TODO not sure if this even works at all originally
+                                var cleaned = Path.GetFileNameWithoutExtension(requestPath);
+                                var decrypted = BLTE.DecryptFile(cleaned, byteArray, decryptionKeyName);
+                                return decrypted;
+                            }
+                            return byteArray;
+                        }
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        Logger.WriteLine($"File not found on CDN {cdn} trying next CDN (if available)..");
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + $"http://{cdn}/{requestPath.ToLower()}");
+                    }
+                }
+                catch (TaskCanceledException e)
+                {
+                    if (!e.CancellationToken.IsCancellationRequested)
+                    {
+                        Logger.WriteLine("!!! Timeout while retrieving file " + $"http://{cdn}/{requestPath.ToLower()}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.WriteLine("!!! Error retrieving file " + $"http://{cdn}/{requestPath.ToLower()}" + ": " + e.Message);
+                }
+            }
+           
+            Logger.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!", true);
+            return Array.Empty<byte>();
+        }
+
+        public void GetByteRange(string rootPath, string id, int start, int size)
+        {
+            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
+            GetByteRange(uri, start, size);
+        }
+
+        public void GetByteRange(string path, int start, int size)
+        {
+            if (size > 266240)
+            {
+                //Debugger.Break();
+            }
+
+            path = path.ToLower();
+            
+            var found = false;
+
+            // Attempts to search for the file through each known cdn
+            foreach (var cdn in cdnList)
+            {
+                if (found)
+                {
+                    continue;
+                }
+
+                var uri = new Uri($"http://{cdn}/{path.ToLower()}");
+                
+                try
+                {
+                    using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri))
+                    {
+                        requestMessage.Headers.Range = new RangeHeaderValue(start, start + size);
+
+                        using HttpResponseMessage response = client.SendAsync(requestMessage).Result;
+                        using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            found = true;
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        {
+                            Logger.WriteLine($"File not found on CDN {cdn} trying next CDN (if available)..");
+                        }
+                        else
+                        {
+                            throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + $"http://{cdn}/{path.ToLower()}");
+                        }
+                    }
+                    
+                }
+                catch (TaskCanceledException e)
+                {
+                    if (!e.CancellationToken.IsCancellationRequested)
+                    {
+                        Logger.WriteLine("!!! Timeout while retrieving file " + $"http://{cdn}/{path.ToLower()}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.WriteLine("!!! Error retrieving file " + $"http://{cdn}/{path.ToLower()}" + ": " + e.Message);
+                }
+            }
+
+            if (!found)
+            {
+                Logger.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(path)}, cannot retrieve it!", true);
+            }
+            
+
+        }
+    }
+}

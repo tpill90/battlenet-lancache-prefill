@@ -4,3 +4,4 @@ obj
 *.ak
 lockfile
 Properties
+*.coalesced.log
