@@ -25,12 +25,13 @@ namespace Shared.Models
 
         public override string ToString()
         {
-            if (!DownloadWholeFile)
+            if (DownloadWholeFile)
             {
-                var size = ByteSize.FromBytes((double)TotalBytes);
-                return $"{Uri} {LowerByteRange}-{UpperByteRange} {size.MegaBytes.ToString("##.##")}mb";
+                return $"{Uri} - -";
             }
-            return $"{Uri} - -";
+            
+            var size = ByteSize.FromBytes((double)TotalBytes);
+            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
         }
     }
 }

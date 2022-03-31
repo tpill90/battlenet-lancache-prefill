@@ -1,6 +1,3 @@
-[steam] 192.168.1.55 / - - - [31/Mar/2022:12:03:56 +0100] "GET /appinfo/1296830/sha/8d2ca8163b66c77e851a1e9718e76d4751a2f0b9.txt.gz HTTP/1.1" 200 2352 "-" "Valve/Steam HTTP Client 1.0" "MISS" "clientconfig.akamai.steamstatic.com" "-"
-[steam] 192.168.1.55 / - - - [31/Mar/2022:12:03:56 +0100] "GET /appinfo/692850/sha/a2f6703dda6afb9dd5cf3a82714200da0b051800.txt.gz HTTP/1.1" 200 3491 "-" "Valve/Steam HTTP Client 1.0" "MISS" "clientconfig.akamai.steamstatic.com" "-"
-[steam] 192.168.1.55 / - - - [31/Mar/2022:12:03:56 +0100] "GET /appinfo/359550/sha/edb87c6c096d9a3ae178e4082b3219a36e0b3a13.txt.gz HTTP/1.1" 200 15265 "-" "Valve/Steam HTTP Client 1.0" "MISS" "clientconfig.akamai.steamstatic.com" "-"
 [blizzard] 192.168.1.55 / - - - [31/Mar/2022:12:04:07 +0100] "HEAD /tpr/hs/config/48/dd/48dd2ad5d0bbb89e8c5b03662402c3b7 HTTP/1.1" 200 0 "-" "-" "HIT" "us.cdn.blizzard.com" "-"
 [blizzard] 192.168.1.55 / - - - [31/Mar/2022:12:04:07 +0100] "GET /tpr/hs/config/48/dd/48dd2ad5d0bbb89e8c5b03662402c3b7 HTTP/1.1" 206 712 "-" "-" "HIT" "us.cdn.blizzard.com" "bytes=0-711"
 [blizzard] 192.168.1.55 / - - - [31/Mar/2022:12:04:07 +0100] "GET /tpr/hs/config/48/dd/48dd2ad5d0bbb89e8c5b03662402c3b7 HTTP/1.1" 206 0 "-" "-" "HIT" "level3.blizzard.com" "bytes=0-711"

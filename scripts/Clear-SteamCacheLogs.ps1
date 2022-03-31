@@ -1,4 +1,5 @@
-Write-Host -ForegroundColor Yellow "Clearing lancache logs"
+Write-Host -ForegroundColor Yellow "Stopping Lancache.."
 sudo docker stop lancache;
-sudo rm /mnt/md0/lancache/cache/logs/access.log -f; 
+Write-Host -ForegroundColor Yellow "Clearing logs.."
+sudo rm /mnt/nvme0n1/lancache/cache/logs/access.log -f; 
 sudo docker restart lancache;

@@ -28,4 +28,12 @@
             return Crayon.Output.Yellow(value.ToString());
         }
     }
+
+    public static class SpectreColors
+    {
+        public static string Blue(string inputText)
+        {
+            return $"[blue]{inputText}[/]";
+        }
+    }
 }

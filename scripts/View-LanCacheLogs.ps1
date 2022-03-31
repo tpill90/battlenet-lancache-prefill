@@ -1,1 +1,0 @@
-sudo docker exec -it lancache tail -f /data/logs/access.log

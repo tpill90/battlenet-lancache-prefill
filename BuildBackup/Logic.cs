@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -8,6 +9,7 @@ using System.Text;
 using BuildBackup.Structs;
 using Newtonsoft.Json;
 using Shared;
+using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -77,7 +79,7 @@ namespace BuildBackup
 
             if (cdnConfig.archives != null)
             {
-                Console.WriteLine($"CDNConfig loaded, {cdnConfig.archives.Count()} archives");
+                Console.WriteLine($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives");
             }
             else
             {
@@ -95,10 +97,16 @@ namespace BuildBackup
 
             VersionsEntry targetVersion = versions.entries[0];
             Console.WriteLine($"Found {Colors.Magenta(versions.entries.Count())} total versions.  Using version with info :");
-            Console.WriteLine($"     Version : {Colors.Cyan(targetVersion.versionsName)}");
-            Console.WriteLine($"     Region : {Colors.Cyan(targetVersion.region)}");
-            Console.WriteLine($"     CDN Config Id : {Colors.Cyan(targetVersion.cdnConfig)}");
-            Console.WriteLine($"     Build Config Id : {Colors.Cyan(targetVersion.buildConfig)}");
+
+            // Formatting output to table
+            var table = new Table();
+            table.AddColumn(new TableColumn(SpectreColors.Blue("Version")).Centered());
+            table.AddColumn(new TableColumn(SpectreColors.Blue("Region")).Centered());
+            table.AddColumn(new TableColumn(SpectreColors.Blue("CDN Config Id")).Centered());
+            table.AddColumn(new TableColumn(SpectreColors.Blue("Build Config Id")).Centered());
+            table.AddRow(targetVersion.versionsName, targetVersion.region, targetVersion.cdnConfig, targetVersion.buildConfig);
+            AnsiConsole.Write(table);
+
             return targetVersion;
         }
 
@@ -587,8 +595,12 @@ namespace BuildBackup
             return install;
         }
 
-        public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig, EncodingFile encoding)
+        public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig, CdnsFile cdns)
         {
+            Console.WriteLine("Loading encoding table...");
+            var timer = Stopwatch.StartNew();
+
+            EncodingFile encodingFile = GetEncoding(buildConfig, cdns);
             EncodingTable encodingTable = new EncodingTable();
 
             if (buildConfig.install.Length == 2)
@@ -601,7 +613,7 @@ namespace BuildBackup
                 encodingTable.downloadKey = buildConfig.download[1];
             }
 
-            foreach (var entry in encoding.aEntries)
+            foreach (var entry in encodingFile.aEntries)
             {
                 if (entry.hash == buildConfig.root.ToUpper())
                 {
@@ -623,6 +635,9 @@ namespace BuildBackup
                     encodingTable.EncodingDictionary.Add(entry.key, entry.hash);
                 }
             }
+
+            timer.Stop();
+            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             return encodingTable;
         }
@@ -794,6 +809,5 @@ namespace BuildBackup
 
             return encoding;
         }
-
     }
 }

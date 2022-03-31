@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ByteSizeLib;
-using ShellProgressBar;
+using Konsole;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -15,12 +15,14 @@ namespace BuildBackup.DataAccess
     {
         private CDN _cdn;
         private CdnsFile _cdns;
+        private readonly IConsole _console;
 
-        public PatchLoader(CDN cdn, CdnsFile cdns)
+        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console)
         {
             _cdn = cdn;
             Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
             _cdns = cdns;
+            _console = console;
         }
 
         //TODO comment
@@ -30,12 +32,12 @@ namespace BuildBackup.DataAccess
 
             if (!string.IsNullOrEmpty(buildConfig.patchConfig))
             {
-                _cdn.Get(_cdns.entries[0].path + "/config/", buildConfig.patchConfig);
+                _cdn.Get($"{_cdns.entries[0].path}/config/", buildConfig.patchConfig);
             }
 
             if (!string.IsNullOrEmpty(buildConfig.patch))
             {
-                return GetPatchFile(_cdns.entries[0].path + "/", buildConfig.patch, true);
+                return GetPatchFile($"{_cdns.entries[0].path}/", buildConfig.patch, true);
             }
 
             return new PatchFile();
@@ -127,24 +129,22 @@ namespace BuildBackup.DataAccess
             var downloadSize = ByteSize.FromBytes((double)patchFileIndexList.Sum(e => (decimal)e.Value.size));
 
             Console.WriteLine($"     Downloading {Colors.Cyan(patchFileIndexList.Count)} unarchived patch files from patch file index...");
-            Console.WriteLine($"     Total archive size : {Colors.Magenta(downloadSize.GigaBytes.ToString("##.##"))}gb");
+            Console.WriteLine($"     Total archive size : {Colors.Magenta(downloadSize.ToString())}");
 
             // Progress bar setup
-            using var progressBar = new ProgressBar(maxTicks: patchFileIndexList.Keys.Count,
-                message: $"Downloading {patchFileIndexList.Keys.Count} unarchived patch files...",
-                new ProgressBarOptions { ProgressBarOnBottom = true });
+            var progressBar2 = new ProgressBar(_console, PbStyle.SingleLine, patchFileIndexList.Keys.Count);
+            int count = 0;
+            var timer = Stopwatch.StartNew();
 
             // Download the files and update onscreen status
             Parallel.ForEach(patchFileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
             {
                 _cdn.Get($"{_cdns.entries[0].path}/patch/", entry,  writeToDevNull: true);
-                progressBar.Tick();
+                progressBar2.Refresh(count, $"     {_cdns.entries[0].path}/patch/{entry}");
+                count++;
             });
-            progressBar.Message = "Done!";
-            progressBar.Dispose();
-
-            // Adding some spacing for the next logging
-            Console.WriteLine();
+            timer.Stop();
+            progressBar2.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         //TODO comment

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using ByteSizeLib;
-using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -21,11 +20,53 @@ namespace BuildBackup.DataAccess
             _cdns = cdns;
         }
 
+        //TODO make this private, and make DownloadIndexedFilesFromArchive() call it instead
+        public (DownloadFile, InstallFile) ProcessRibbit(string rootKey, Logic logic, string downloadKey, string installKey)
+        {
+            DownloadFile download = new DownloadFile();
+            InstallFile install = new InstallFile();
+
+            Console.WriteLine("Processing Ribbit....");
+
+            var timer = Stopwatch.StartNew();
+            if (rootKey == "")
+            {
+                Console.WriteLine("Unable to find root key in encoding!");
+            }
+            else
+            {
+                //TODO why is this commented out?
+                //root = logic.GetRoot(cdns.entries[0].path + "/", rootKey);
+            }
+
+            if (downloadKey == "")
+            {
+                Console.WriteLine("Unable to find download key in encoding!");
+            }
+            else
+            {
+                download = logic.GetDownload(_cdns.entries[0].path, downloadKey, parseIt: true);
+            }
+            if (installKey == "")
+            {
+                Console.WriteLine("Unable to find install key in encoding!");
+            }
+            else
+            {
+                install = logic.GetInstall(_cdns.entries[0].path, installKey);
+            }
+
+            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            return (download, install);
+        }
+
         //TODO comment
         //TODO hashes needs a better name
         public void DownloadIndexedFilesFromArchive(CDNConfigFile cdnConfig, Dictionary<string, string> hashes, InstallFile installFile, CDN cdn, CdnsFile cdns)
         {
             Console.WriteLine("Parsing download file list.  Doing reverse lookup...");
+            var timer = Stopwatch.StartNew();
+
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn);
             Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
@@ -57,7 +98,7 @@ namespace BuildBackup.DataAccess
                     else if (fileIndexList.ContainsKey(encodingTableHash.ToUpper()))
                     {
                         var indexMatch = fileIndexList[encodingTableHash.ToUpper()];
-                        //TODO
+                        //TODO Not sure what needs to be done here
                         //Debugger.Break();
                     }
                     else
@@ -119,6 +160,8 @@ namespace BuildBackup.DataAccess
 
             coalesced = coalesced.OrderBy(e => e.archiveId).ThenBy(e => e.start).ToList();
 
+            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
             var size = ByteSize.FromBytes((double)coalesced.Sum(e => e.end - e.start)).MegaBytes;
             Console.WriteLine($"     Starting {Colors.Cyan(coalesced.Count)} file downloads by byte range. Totaling {Colors.Magenta(size.ToString("##.##"))}mb");
 
@@ -133,55 +176,6 @@ namespace BuildBackup.DataAccess
             }
             //progressBar.Message = "Done!";
             //progressBar.Dispose();
-        }
-
-        public (DownloadFile, InstallFile) ProcessRibbit(TactProduct tactProduct, string rootKey, Logic logic, string downloadKey, string installKey)
-        {
-            DownloadFile download = new DownloadFile();
-            InstallFile install = new InstallFile();
-
-            // Only these are supported right now
-            //if (program != "wow" && program != "wowt" && program != "wow_beta" && program != "wow_classic" && program != "wow_classic_ptr")
-            //{
-            //    return;
-            //}
-
-            Console.WriteLine("Processing Ribbit....");
-            Console.Write("     Loading root..");
-            if (rootKey == "")
-            {
-                Console.WriteLine("Unable to find root key in encoding!");
-            }
-            else
-            {
-                //TODO why is this commented out?
-                //root = logic.GetRoot(cdns.entries[0].path + "/", rootKey);
-            }
-            Console.Write("..done\n");
-
-            Console.Write("     Loading download..");
-            if (downloadKey == "")
-            {
-                Console.WriteLine("Unable to find download key in encoding!");
-            }
-            else
-            {
-                download = logic.GetDownload(_cdns.entries[0].path, downloadKey, parseIt: true);
-            }
-            Console.Write("..done\n");
-
-            Console.Write("     Loading install..");
-            if (installKey == "")
-            {
-                Console.WriteLine("Unable to find install key in encoding!");
-            }
-            else
-            {
-                install = logic.GetInstall(_cdns.entries[0].path, installKey);
-            }
-            Console.Write("..done\n");
-
-            return (download, install);
         }
     }
 }

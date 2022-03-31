@@ -10,6 +10,21 @@ namespace Shared
 {
     public static class NginxLogParser
     {
+        //TODO comment
+        //TODO test
+        public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
+        {
+            var logFolder = $@"{logBasePath}\{product.DisplayName}";
+
+            var latestFile = new DirectoryInfo(logFolder)
+                .GetFiles()
+                .Where(e => !e.Name.Contains("coalesced"))
+                .OrderByDescending(e => e.LastWriteTime)
+                .FirstOrDefault();
+
+            return latestFile.Name.Replace(".log", "");
+        }
+
         /// <summary>
         /// Finds the most recent log file for the specified product
         /// </summary>
@@ -34,9 +49,8 @@ namespace Shared
                 var rawLogs = ParseRequestLogs(File.ReadAllLines(latestFile.FullName));
                 List<Request> requestsToReplay = NginxLogParser.CoalesceRequests(rawLogs);
 
-                var coalescedFileName = logFolder + "\\" + latestFile.Name.Replace(".log", ".coalesced.log");
+                var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".log", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay));
-
 
                 return requestsToReplay;
             }
@@ -49,8 +63,9 @@ namespace Shared
 
             var parsedRequests = new List<Request>();
 
-            // Only interested in GET requests
-            foreach (var rawRequest in rawRequests.Where(e => e.Contains("GET")))
+            // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
+            var filteredRequests = rawRequests.Where(e => e.Contains("GET") && e.Contains("[blizzard]")).ToList();
+            foreach (var rawRequest in filteredRequests)
             {
                 // Find all matches between double quotes.  This will be the only info that we care about in the request logs.
                 var matches = Regex.Matches(rawRequest, "\"(.*?)\"");
@@ -64,6 +79,7 @@ namespace Shared
 
                 var parsedRequest = new Request()
                 {
+                    //TODO replace this with a regex
                     // Uri will be the second item.  Example : "GET /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708 HTTP/1.1". 
                     // Will also remove leading slash
                     Uri = httpRequest.Split(" ")[1].Remove(0, 1)
