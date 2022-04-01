@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using ByteSizeLib;
+using Konsole;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -26,7 +27,7 @@ namespace BuildBackup.DataAccess
             DownloadFile download = new DownloadFile();
             InstallFile install = new InstallFile();
 
-            Console.WriteLine("Processing Ribbit....");
+            Console.Write("Processing Ribbit... ");
 
             var timer = Stopwatch.StartNew();
             if (rootKey == "")
@@ -56,7 +57,7 @@ namespace BuildBackup.DataAccess
                 install = logic.GetInstall(_cdns.entries[0].path, installKey);
             }
 
-            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return (download, install);
         }
 
@@ -171,7 +172,7 @@ namespace BuildBackup.DataAccess
             {
                 //TODO this wasn't necessarily working correctly before.  Was accidentially having it download the entire file.
                 //TODO renable + have it write to dev-null
-                //cdn.GetByteRange(cdns.entries[0].path + "/data/", indexDownload.archiveId, indexDownload.start, indexDownload.end - indexDownload.start);
+                cdn.GetByteRange($"{cdns.entries[0].path}/data/", indexDownload.archiveId, indexDownload.start, indexDownload.end, true);
                 //progressBar.Tick();
             }
             //progressBar.Message = "Done!";

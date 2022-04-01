@@ -98,6 +98,7 @@ namespace BuildBackup
             VersionsEntry targetVersion = versions.entries[0];
             Console.WriteLine($"Found {Colors.Magenta(versions.entries.Count())} total versions.  Using version with info :");
 
+            //TODO move this to the VersionsEntry class
             // Formatting output to table
             var table = new Table();
             table.AddColumn(new TableColumn(SpectreColors.Blue("Version")).Centered());
@@ -210,9 +211,9 @@ namespace BuildBackup
         public CdnsFile GetCDNs(TactProduct tactProduct)
         {
             var cacheFile = $"cdns-{tactProduct.DisplayName}.json";
-            //TODO invalidate this after an hour??
-            // Load cached version.  
-            if (File.Exists(cacheFile))
+            
+            // Load cached version, only valid for 2 hours
+            if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(2))
             {
                 return JsonConvert.DeserializeObject<CdnsFile>(File.ReadAllText(cacheFile));
             }
@@ -597,7 +598,7 @@ namespace BuildBackup
 
         public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig, CdnsFile cdns)
         {
-            Console.WriteLine("Loading encoding table...");
+            Console.Write("Loading encoding table...");
             var timer = Stopwatch.StartNew();
 
             EncodingFile encodingFile = GetEncoding(buildConfig, cdns);
@@ -637,7 +638,7 @@ namespace BuildBackup
             }
 
             timer.Stop();
-            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             return encodingTable;
         }

@@ -24,7 +24,6 @@
     <PackageReference Include="MimeKit" Version="2.0.5" />
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="ShellProgressBar" Version="5.1.0" />
     <PackageReference Include="Spectre.Console" Version="0.44.0" />
   </ItemGroup>
 

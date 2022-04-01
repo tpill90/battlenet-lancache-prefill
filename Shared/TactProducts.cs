@@ -6,20 +6,18 @@
     /// </summary>
     public static class TactProducts 
     {
-        //TODO add bnet installer to this 
+        public static readonly TactProduct Diablo3 = new TactProduct { DisplayName = "Diablo 3", ProductCode = "d3" };
+
+        public static readonly TactProduct Hearthstone = new TactProduct { DisplayName = "Hearthstone", ProductCode = "hsb" };
+        public static readonly TactProduct HeroesOfTheStorm = new TactProduct { DisplayName = "Heroes of the Storm", ProductCode = "hero" };
+
+        public static readonly TactProduct Starcraft1 = new TactProduct { DisplayName = "Starcraft", ProductCode = "s1" };
+        public static readonly TactProduct Starcraft2 = new TactProduct { DisplayName = "Starcraft 2", ProductCode = "s2" };
+
+        public static readonly TactProduct Overwatch = new TactProduct { DisplayName = "Overwatch", ProductCode = "pro" };
+        public static readonly TactProduct WorldOfWarcraft = new TactProduct { DisplayName = "World Of Warcraft", ProductCode = "wow" };
+        public static readonly TactProduct WowClassic = new TactProduct { DisplayName = "WoW Classic", ProductCode = "wow_classic" };
         
-        public static TactProduct Diablo3 = new TactProduct { DisplayName = "Diablo 3", ProductCode = "d3" };
-
-        public static TactProduct Hearthstone = new TactProduct { DisplayName = "Hearthstone", ProductCode = "hsb" };
-        public static TactProduct HerosOfTheStorm = new TactProduct { DisplayName = "Heroes of the Storm", ProductCode = "hero" };
-
-        public static TactProduct Starcraft1 = new TactProduct { DisplayName = "Starcraft", ProductCode = "s1" };
-        public static TactProduct Starcraft2 = new TactProduct { DisplayName = "Starcraft 2", ProductCode = "s2" };
-
-        public static TactProduct Overwatch = new TactProduct { DisplayName = "Overwatch", ProductCode = "pro" };
-
-        public static TactProduct WowClassic = new TactProduct { DisplayName = "WoW Classic", ProductCode = "wow_classic" };
-
         #region Activision
 
         public static readonly TactProduct CodWarzone = new TactProduct { DisplayName = "Call of Duty Warzone", ProductCode = "odin" };

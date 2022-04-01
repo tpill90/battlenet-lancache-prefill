@@ -187,10 +187,10 @@ namespace BuildBackup
             return Array.Empty<byte>();
         }
 
-        public void GetByteRange(string rootPath, string id, int start, int size)
+        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull)
         {
             var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
-            GetByteRange(uri, start, size);
+            Get(uri, writeToDevNull, start, end);
         }
 
         public void GetByteRange(string path, int start, int size)

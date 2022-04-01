@@ -32,8 +32,6 @@ namespace BuildBackup.DataAccess
         {
             Console.WriteLine("Downloading full archive files....");
 
-            //MeasureIndexSize(cdnConfig);
-
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, cdnConfig.archives.Length);
             int count = 0;
             var timer = Stopwatch.StartNew();
