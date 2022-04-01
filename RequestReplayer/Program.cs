@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using Shared;
-using Colors = Shared.Colors;
+using BattleNetPrefill;
+using BattleNetPrefill.DebugUtil;
+using Spectre.Console;
+using Colors = BattleNetPrefill.Utils.Colors;
 
 namespace RequestReplayer
 {
@@ -14,41 +15,37 @@ namespace RequestReplayer
         private static readonly TactProduct[] TargetProducts = 
         {
             // Activision
-            TactProducts.CodBlackOpsColdWar,
-            TactProducts.CodWarzone,
-            //TODO TactProducts.CodVanguard,
+            TactProduct.CodBOCW,
+            TactProduct.CodWarzone,
+            TactProduct.CodVanguard,
             // Blizzard
-            TactProducts.Diablo3,
-            TactProducts.Hearthstone,
-            TactProducts.HeroesOfTheStorm,
-            TactProducts.Overwatch,
-            TactProducts.Starcraft1,
-            TactProducts.Starcraft2,
-            //TODO TactProducts.WorldOfWarcraft,
-            TactProducts.WowClassic
+            TactProduct.Diablo3,
+            TactProduct.Hearthstone,
+            TactProduct.HeroesOfTheStorm,
+            TactProduct.Overwatch,
+            TactProduct.Starcraft1,
+            TactProduct.Starcraft2,
+            TactProduct.WorldOfWarcraft,
+            TactProduct.WowClassic
         };
-
-        //TODO do a version check to see if the logs are out of date
+        
         public static void Main()
         {
             foreach (var targetProduct in TargetProducts)
             {
                 string replayLogVersion = NginxLogParser.GetLatestLogVersionForProduct(LogFileBasePath, targetProduct);
-                Console.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
-
-                var timer = Stopwatch.StartNew();
-                var requestsToReplay = NginxLogParser.ParseRequestLogs(LogFileBasePath, targetProduct).ToList();
-                timer.Stop();
-                Console.WriteLine($"Parsed request logs in {Colors.Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
+                AnsiConsole.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
+                
+                var requestsToReplay = NginxLogParser.GetSavedRequestLogs(LogFileBasePath, targetProduct).ToList();
 
                 var downloader = new Downloader(BlizzardCdnBaseUri);
                 downloader.DownloadRequestsParallel(requestsToReplay);
                 downloader.PrintStatistics();
 
-                Console.WriteLine();
+                AnsiConsole.WriteLine();
             }
 
-            Console.WriteLine("Done!");
+            AnsiConsole.WriteLine("Done!");
             Console.ReadLine();
         }
     }

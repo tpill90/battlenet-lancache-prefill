@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BattleNetPrefill": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill --activision"
+    }
+  }
+}

@@ -7,10 +7,11 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils;
 using ByteSizeLib;
-using Shared;
-using Shared.Models;
 using ShellProgressBar;
+using Spectre.Console;
 
 namespace RequestReplayer
 {
@@ -26,9 +27,9 @@ namespace RequestReplayer
 
         private long _totalBytesRead;
         private long _bufferSize = 4096 * 2;
-        private long readCount = 0L;
+        private long readCount;
 
-        private int _maxConcurrentDownloads = 4;
+        private int _maxConcurrentDownloads = 6;
 
         private Stopwatch _elapsedDownloadTime;
         private ByteSize _totalDownloadSize;
@@ -65,7 +66,7 @@ namespace RequestReplayer
 
         private async Task DownloadAsync(Request request, ProgressBar progressBar)
         {
-            var requestUri = new Uri($"{_blizzardCdnBaseUri}/{request.Uri}");
+            var requestUri = new Uri($"{_blizzardCdnBaseUri}/{request}");
 
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
             if (!request.DownloadWholeFile)
@@ -131,7 +132,7 @@ namespace RequestReplayer
         private void RefreshProgressBar(ProgressBar progressBar)
         {
             // Reduces the number of times that the progress bar updates, to reduce jitter
-            if (readCount % 10000 != 0)
+            if (readCount % 7000 != 0)
             {
                 return;
             }
@@ -147,11 +148,11 @@ namespace RequestReplayer
         {
             if (_failureCount > 0)
             {
-                Console.WriteLine($"     Total Errors : {Colors.Red(_failureCount)}");
+                AnsiConsole.WriteLine($"     Total Errors : {Colors.Red(_failureCount)}");
             }
             if (_fileNotFoundCount > 0)
             {
-                Console.WriteLine($"     Total files not found : {Colors.Yellow(_fileNotFoundCount)}");
+                AnsiConsole.WriteLine($"     Total files not found : {Colors.Yellow(_fileNotFoundCount)}");
             }
         }
     }
