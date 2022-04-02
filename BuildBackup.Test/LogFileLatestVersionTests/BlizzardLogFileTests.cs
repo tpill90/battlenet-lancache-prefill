@@ -8,6 +8,7 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
     /// Tests to validate that the 
     /// </summary>
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class BlizzardLogFileTests
     {
         [Test]

@@ -91,6 +91,7 @@ namespace BuildBackup
         }
 
         //TODO comment
+        //TODO this takes about 200ms.  Can it be sped up?
         public VersionsEntry GetVersionEntry(TactProduct tactProduct)
         {
             VersionsFile versions = GetVersions(tactProduct);

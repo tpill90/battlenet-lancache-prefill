@@ -60,7 +60,7 @@ namespace BuildBackup.DebugUtil
             _cachedContentLengths.TryAdd(uri.ToString(), contentLength);
             _cacheMisses++;
 
-            if (_cacheMisses == 25)
+            if (_cacheMisses == 100)
             {
                 Save();
             }

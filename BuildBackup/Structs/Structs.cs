@@ -8,8 +8,8 @@ namespace BuildBackup
     public class RangeRequest
     {
         public string archiveId;
-        public int start;
-        public int end;
+        public long start;
+        public long end;
 
         public override string ToString()
         {
@@ -89,12 +89,23 @@ namespace BuildBackup
         public string patchFileIndexSize;
     }
 
+    public class InstallFileMatch
+    {
+        public InstallFileEntry InstallFileEntry { get; set; }
+        public IndexEntry IndexEntry { get; set; }
+    }
+
     public struct IndexEntry
     {
         public short index;
         public string IndexId;
         public uint offset;
         public uint size;
+
+        public override string ToString()
+        {
+            return $"{IndexId} Offset: {offset} size: {size}";
+        }
     }
 
     public struct IndexFooter
@@ -175,6 +186,11 @@ namespace BuildBackup
         public string contentHashString;
         public uint size;
         public List<string> tags;
+
+        public override string ToString()
+        {
+            return $"{name} size: {size}";
+        }
     }
 
     public struct DownloadFile

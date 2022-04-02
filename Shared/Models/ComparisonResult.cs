@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ByteSizeLib;
+using Spectre.Console;
 
 namespace Shared.Models
 {
@@ -13,6 +15,7 @@ namespace Shared.Models
 
         public List<ComparedRequest> Hits { get; set; }
         public List<ComparedRequest> Misses { get; set; }
+        public List<Request> UnnecessaryRequests { get; set; }
 
         public ByteSize RequestTotalSize { get; set; }
         public ByteSize RealRequestsTotalSize { get; set; }
@@ -23,5 +26,35 @@ namespace Shared.Models
 
         public int HitCount => Hits.Count;
         public int MissCount => Misses.Count;
+
+        public void PrintOutput()
+        {
+            // Formatting output to table
+            var table = new Table();
+            table.AddColumn(new TableColumn("").LeftAligned());
+            table.AddColumn(new TableColumn(SpectreColors.Blue("Current")).Centered());
+            table.AddColumn(new TableColumn(SpectreColors.Blue("Expected")).Centered());
+            //TODO
+            // table.AddColumn(new TableColumn(SpectreColors.Blue("Matches")).Centered()); , ((char)0x2713).ToString()
+
+            table.AddRow("Requests made", RequestMadeCount.ToString(), RealRequestCount.ToString());
+            table.AddRow("Bandwidth required", RequestTotalSize.ToString(), RealRequestsTotalSize.ToString());
+            table.AddRow("Requests missing size", RequestsWithoutSize.ToString(), RealRequestsWithoutSize.ToString());
+            AnsiConsole.Write(table);
+
+            Console.WriteLine($"Total Hits : {Colors.Green(HitCount)}");
+            Console.WriteLine($"Total Misses : {Colors.Red(MissCount)}");
+            Console.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
+            Console.WriteLine($"Total Dupes : {Colors.Yellow(DuplicateRequests)}");
+            Console.WriteLine();
+        }
+    }
+
+    public class DiffResults
+    {
+        public List<ComparedRequest> MatchedRequests { get; set; }
+        public List<ComparedRequest> MissedRequests { get; set; }
+
+        public List<Request> UnnecessaryRequests { get; set; }
     }
 }

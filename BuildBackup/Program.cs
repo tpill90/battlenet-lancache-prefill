@@ -21,7 +21,7 @@ namespace BuildBackup
        
         private static TactProduct[] checkPrograms = new TactProduct[]{ TactProducts.Starcraft1 };
 
-        public static bool UseCdnDebugMode = true;
+        public static bool UseCdnDebugMode = false;
         
 
         public static void Main()
@@ -41,16 +41,11 @@ namespace BuildBackup
 
         public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode)
         {
-            CDN cdn = new CDN
-            {
-                DebugMode = useDebugMode
-            };
-
-            Logic logic = new Logic(cdn, baseUrl);
-            
             var timer = Stopwatch.StartNew();
-
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
+
+            CDN cdn = new CDN { DebugMode = useDebugMode };
+            Logic logic = new Logic(cdn, baseUrl);
 
             // Finding the latest version of the game
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
@@ -70,13 +65,12 @@ namespace BuildBackup
             {
                 BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
             }
-
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
                 cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
             }
 
-            // Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
+            //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
             var decryptionKeyName = logic.GetDecryptionKeyName(cdns, product, targetVersion);
             if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
             {
@@ -110,9 +104,11 @@ namespace BuildBackup
             patchLoader.DownloadPatchArchives(cdnConfig, patch);
 
             Console.WriteLine();
-            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString())}");
+            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
-            return ComparisonUtil.CompareToRealRequests(cdn.allRequestsMade.ToList(), product);
+            var comparisonUtil = new ComparisonUtil(console);
+            var result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
+            return result;
         }
     }
 }
