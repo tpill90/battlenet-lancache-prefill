@@ -111,7 +111,6 @@ namespace BuildBackup.DataAccess
                 {
                     hashLookupMisses.Add(file);
                 }
-
             }
 
             // Coalescing requests
@@ -119,7 +118,8 @@ namespace BuildBackup.DataAccess
             {
                 archiveId = e.IndexId,
                 start = (int)e.offset,
-                end = (int)e.offset + (int)e.size
+                // Need to subtract 1, since the byte range is "inclusive"
+                end = ((int)e.offset + (int)e.size - 1)
             })
                 // Deduplication
                 // TODO make this look nicer

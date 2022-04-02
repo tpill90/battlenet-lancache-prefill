@@ -21,17 +21,25 @@ namespace Shared.Models
         public long LowerByteRange { get; set; }
         public long UpperByteRange { get; set; }
 
-        public long TotalBytes => UpperByteRange - LowerByteRange;
+        /* TODO some requests have a total bytes in the response that differs from the number of bytes requested.  Should this be handled?  Diff comparison would like to know this info
+            Ex. "GET /tpr/sc1live/data/1f/79/1f797ab411c882e5f80a57e1a26d8e0d.index HTTP/1.1" 206 8268 "-" "-" "HIT" "level3.blizzard.com" "bytes=0-1048575"
+            This requested a range of 0-1048575, but only got 8268 bytes back.
+         */
+        // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
+        public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
+
+        //TODO implement this
+        public string CallingMethod { get; set; }
 
         public override string ToString()
         {
             if (DownloadWholeFile)
             {
-                return $"{Uri} - -";
+                return $"{Uri} - - {CallingMethod}";
             }
             
             var size = ByteSize.FromBytes((double)TotalBytes);
-            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
+            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size} {CallingMethod}";
         }
     }
 }

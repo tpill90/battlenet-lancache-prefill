@@ -104,7 +104,7 @@ namespace Shared
         }
 
         //TODO comment + unit test
-        public static List<Request> CoalesceRequests(List<Request> initialRequests)
+        internal static List<Request> CoalesceRequests(List<Request> initialRequests)
         {
             // De-duplicating requests
             var dedupedRequests = initialRequests.DistinctBy(e => new

@@ -3,6 +3,7 @@ using System.IO;
 
 namespace BuildBackup.Utils
 {
+    //TODO remove
     public static class Logger
     {
         private static StreamWriter writer;
