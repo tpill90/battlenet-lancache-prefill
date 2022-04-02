@@ -104,7 +104,7 @@ namespace BuildBackup
             ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable.EncodingDictionary, ribbitResult.Item2, cdn, cdns);
 
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable.EncodingDictionary);
-            
+
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchFiles(cdnConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch);

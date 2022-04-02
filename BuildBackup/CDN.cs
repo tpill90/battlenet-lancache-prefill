@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BuildBackup.Utils;
 using Shared.Models;
@@ -47,22 +47,22 @@ namespace BuildBackup
         }
 
         //TODO comment
-        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false)
+        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
         {
             hashId = hashId.ToLower();
             var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            return Get(uri, writeToDevNull);
+            return Get(uri, writeToDevNull, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
         }
 
         //TODO comment
-        public byte[] GetIndex(string rootPath, string id)
+        public byte[] GetIndex(string rootPath, string id, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
         {
             var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}.index";
-            return Get(uri);
+            return Get(uri, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
         }
 
         //TODO comment
-        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null, bool requestIsSkippable = false)
+        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null, string callingMethod = null)
         {
             if (startBytes != null && endBytes == null)
             {
@@ -76,19 +76,21 @@ namespace BuildBackup
             // Record the requests we're making, so we can use it for debugging
             if (startBytes != null && endBytes != null)
             {
-                allRequestsMade.Add(new Request()
+                allRequestsMade.Add(new Request
                 {
                     Uri = requestPath,
                     LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value
+                    UpperByteRange = endBytes.Value,
+                    CallingMethod = callingMethod
                 });
             }
             else
             {
-                allRequestsMade.Add(new Request()
+                allRequestsMade.Add(new Request
                 {
                     Uri = requestPath,
-                    DownloadWholeFile = true
+                    DownloadWholeFile = true,
+                    CallingMethod = callingMethod
                 });
             }
 
@@ -187,76 +189,11 @@ namespace BuildBackup
             return Array.Empty<byte>();
         }
 
-        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull)
+        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
         {
             var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
-            Get(uri, writeToDevNull, start, end);
+            Get(uri, writeToDevNull, start, end, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
         }
 
-        public void GetByteRange(string path, int start, int size)
-        {
-            if (size > 266240)
-            {
-                //Debugger.Break();
-            }
-
-            path = path.ToLower();
-            
-            var found = false;
-
-            // Attempts to search for the file through each known cdn
-            foreach (var cdn in cdnList)
-            {
-                if (found)
-                {
-                    continue;
-                }
-
-                var uri = new Uri($"http://{cdn}/{path.ToLower()}");
-                
-                try
-                {
-                    using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri))
-                    {
-                        requestMessage.Headers.Range = new RangeHeaderValue(start, start + size);
-
-                        using HttpResponseMessage response = client.SendAsync(requestMessage).Result;
-                        using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            found = true;
-                        }
-                        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                        {
-                            Logger.WriteLine($"File not found on CDN {cdn} trying next CDN (if available)..");
-                        }
-                        else
-                        {
-                            throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + $"http://{cdn}/{path.ToLower()}");
-                        }
-                    }
-                    
-                }
-                catch (TaskCanceledException e)
-                {
-                    if (!e.CancellationToken.IsCancellationRequested)
-                    {
-                        Logger.WriteLine("!!! Timeout while retrieving file " + $"http://{cdn}/{path.ToLower()}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteLine("!!! Error retrieving file " + $"http://{cdn}/{path.ToLower()}" + ": " + e.Message);
-                }
-            }
-
-            if (!found)
-            {
-                Logger.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(path)}, cannot retrieve it!", true);
-            }
-            
-
-        }
     }
 }
