@@ -186,6 +186,130 @@ namespace BuildBackup.DebugUtil
             return findExcessRequests;
         }
 
+        public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
+        {
+            // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
+            var requestsToProcess = new List<Request>(originalRequests.Count);
+            foreach (var request in originalRequests)
+            {
+                requestsToProcess.Add(request);
+            }
+            originalRequests.Clear();
+
+            // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
+            while(requestsToProcess.Any())
+            {
+                var current = requestsToProcess.First();
+                
+                // Exact match, remove from both lists
+                var exactMatches = generatedRequests.Where(e => e.Uri == current.Uri
+                                                              && e.LowerByteRange == current.LowerByteRange
+                                                              && e.UpperByteRange == current.UpperByteRange).ToList();
+                if (exactMatches.Any())
+                {
+                    if (exactMatches.Count > 1)
+                    {
+                        //TODO
+                        //Debugger.Break();
+                    }
+
+                    requestsToProcess.RemoveAt(0);
+                    generatedRequests.Remove(exactMatches[0]);
+                    continue;
+                }
+
+                var rangeMatches = generatedRequests.Where(e => e.Uri == current.Uri
+                                                              && current.LowerByteRange >= e.LowerByteRange
+                                                              && current.UpperByteRange <= e.UpperByteRange).ToList();
+                if (rangeMatches.Any())
+                {
+                    if (rangeMatches.Count > 1)
+                    {
+                        //TODO how do I handle this scenario?
+                    }
+                    // Breaking up the remainder into new slices
+
+                    if (rangeMatches[0].LowerByteRange != current.LowerByteRange)
+                    {
+                        var lowerSlice = new Request
+                        {
+                            Uri = rangeMatches[0].Uri,
+                            //TODO should probably unit test the range calculations as well
+                            LowerByteRange = rangeMatches[0].LowerByteRange,
+                            UpperByteRange = current.LowerByteRange - 1,
+                            CallingMethod = rangeMatches[0].CallingMethod
+                        };
+                        generatedRequests.Add(lowerSlice);
+                    }
+                    
+                    // Only add an upper slice, if there is any remaining bytes to do so.
+                    if (rangeMatches[0].UpperByteRange != current.UpperByteRange)
+                    {
+                        var upperSlice = new Request
+                        {
+                            Uri = rangeMatches[0].Uri,
+                            //TODO should probably unit test the range calculations as well
+                            LowerByteRange = current.UpperByteRange + 1,
+                            UpperByteRange = rangeMatches[0].UpperByteRange,
+                            CallingMethod = rangeMatches[0].CallingMethod
+                        };
+                        generatedRequests.Add(upperSlice);
+                    }
+                    generatedRequests.Remove(rangeMatches[0]);
+
+                    requestsToProcess.RemoveAt(0);
+                    continue;
+                }
+
+                var partialMatchesLower = generatedRequests.Where(e => e.Uri == current.Uri 
+                                                                  && current.LowerByteRange <= e.UpperByteRange
+                                                                  && current.UpperByteRange >= e.UpperByteRange).ToList();
+                if (partialMatchesLower.Any())
+                {
+                    // Store the originals, since we need to swap them
+                    var originalUpper = partialMatchesLower[0].UpperByteRange;
+                    var originalLower = current.LowerByteRange;
+
+                    // Now swap them
+                    partialMatchesLower[0].UpperByteRange = originalLower - 1;
+                    current.LowerByteRange = originalUpper + 1;
+                    continue;
+                }
+
+                var partialMatchesUpper = generatedRequests.Where(e => e.Uri == current.Uri
+                                                                       && current.UpperByteRange >= e.LowerByteRange
+                                                                       && current.LowerByteRange <= e.LowerByteRange).ToList();
+                if (partialMatchesUpper.Any())
+                {
+                    // Store the originals, since we need to swap them
+                    var originalUpper = current.UpperByteRange;
+                    var originalLower = partialMatchesUpper[0].LowerByteRange; 
+
+                    // Now swap them
+                    partialMatchesUpper[0].LowerByteRange = originalUpper + 1;
+                    current.UpperByteRange = originalLower - 1;
+                    continue;
+                }
+
+                //// Special case for indexes
+                //if (realReq.Uri.Contains(".index"))
+                //{
+                //    var indexMatches = generatedRequests.Where(e => e.Uri == realReq.Uri).ToList();
+                //    if (indexMatches.Any())
+                //    {
+                //        realReq.Matched = true;
+                //        generatedRequests.Remove(indexMatches[0]);
+                //    }
+
+                //    continue;
+                //}
+
+                // No match found - Put it back into the original array, as a "miss"
+                requestsToProcess.RemoveAt(0);
+                originalRequests.Add(current);
+            }
+        }
+
         private void PreLoadHeaderSizes(List<Request> requests, TactProduct product)
         {
             //TODO log that this is processing X of N 
