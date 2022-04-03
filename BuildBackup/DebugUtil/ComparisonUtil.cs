@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using BuildBackup.DebugUtil;
 using ByteSizeLib;
 using Konsole;
 using Newtonsoft.Json;
@@ -13,7 +12,7 @@ using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
 
-namespace BuildBackup
+namespace BuildBackup.DebugUtil
 {
     public class ComparisonUtil
     {
@@ -185,33 +184,6 @@ namespace BuildBackup
             File.WriteAllText(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\excessRequests.json", JsonConvert.SerializeObject(generatedRequests.ToList()));
 
             return findExcessRequests;
-        }
-
-        //TODO comment
-        private List<ComparedRequest> DiffRequests(List<Request> allRequestsMade, List<Request> targetRequests)
-        {
-            List<ComparedRequest> matches = targetRequests.Select(e => mapper.Map<ComparedRequest>(e)).ToList();
-            foreach (var realRequest in matches)
-            {
-                // Finding any requests that match on URI
-                var uriMatches = allRequestsMade.Where(e => e.Uri == realRequest.Uri).ToList();
-
-                // Handle each one of the matches
-                foreach (var match in uriMatches)
-                {
-                    if (match.DownloadWholeFile)
-                    {
-                        realRequest.Matched = true;
-                        realRequest.MatchedRequest = match;
-                    }
-                    else
-                    {
-                        //Debugger.Break();
-                    }
-                }
-            }
-
-            return matches;
         }
 
         private void PreLoadHeaderSizes(List<Request> requests, TactProduct product)
