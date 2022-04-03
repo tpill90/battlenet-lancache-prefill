@@ -131,7 +131,7 @@ namespace RequestReplayer
         private void RefreshProgressBar(ProgressBar progressBar)
         {
             // Reduces the number of times that the progress bar updates, to reduce jitter
-            if (readCount % 10000 != 0)
+            if (readCount % 7000 != 0)
             {
                 return;
             }

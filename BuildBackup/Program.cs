@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BuildBackup.DataAccess;
+using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
 using Konsole;
 using Shared;
@@ -21,7 +22,7 @@ namespace BuildBackup
        
         private static TactProduct[] checkPrograms = new TactProduct[]{ TactProducts.Starcraft1 };
 
-        public static bool UseCdnDebugMode = false;
+        public static bool UseCdnDebugMode = true;
         
 
         public static void Main()

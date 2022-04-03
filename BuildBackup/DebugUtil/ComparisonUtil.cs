@@ -37,21 +37,21 @@ namespace BuildBackup.DebugUtil
 
             PreLoadHeaderSizes(allRequestsMade, product);
 
-            //TODO re-implement coalescing + dedupe.  However this messes with the FullDownloadProperty
-            //allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
-
-            if (allRequestsMade.Any(e => e == null))
+            //TODO make a function
+            foreach (var request in allRequestsMade)
             {
-                //TODO debug this, probably a threading issue.
-                Console.WriteLine(Colors.Red("Some requests are null!!"));
-                Debugger.Break();
+                if (request.DownloadWholeFile)
+                {
+                    request.DownloadWholeFile = false;
+                    request.LowerByteRange = 0;
+                    // Subtracting 1, because it seems like the byte ranges are "inclusive".  Ex range 0-9 == 10 bytes length.
+                    request.UpperByteRange = fileSizeProvider.GetContentLength(new Uri($"{_blizzardCdnBaseUri}/{request.Uri}")) - 1;
+                }
             }
-            allRequestsMade = allRequestsMade.Where(e => e != null).ToList();
 
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product);
-            //var realRequestMatches = DiffRequests(allRequestsMade, realRequests);
 
-            var duplicates = allRequestsMade.GroupBy(e => new {e.LowerByteRange, e.UpperByteRange, e.Uri}).Where(e => e.Count() > 1).ToList();
+            CompareRequests(allRequestsMade, realRequests);
 
             var diffResult = FindExcessRequests(allRequestsMade, realRequests, fileSizeProvider);
 
@@ -62,7 +62,7 @@ namespace BuildBackup.DebugUtil
                 UnnecessaryRequests = diffResult.UnnecessaryRequests,
 
                 RequestMadeCount = allRequestsMade.Count,
-                DuplicateRequests = duplicates.Count,
+                DuplicateRequests = allRequestsMade.GroupBy(e => new { e.LowerByteRange, e.UpperByteRange, e.Uri }).Where(e => e.Count() > 1).Count(),
                 RealRequestCount = realRequests.Count,
 
                 RequestTotalSize = CalculateRequestSizes(allRequestsMade, product),
@@ -200,7 +200,20 @@ namespace BuildBackup.DebugUtil
             while(requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
-                
+
+                // Special case for indexes
+                if (current.Uri.Contains(".index"))
+                {
+                    var indexMatches = generatedRequests.Where(e => e.Uri == current.Uri).ToList();
+                    if (indexMatches.Any())
+                    {
+                        requestsToProcess.RemoveAt(0);
+                        generatedRequests.Remove(indexMatches[0]);
+                    }
+
+                    continue;
+                }
+
                 // Exact match, remove from both lists
                 var exactMatches = generatedRequests.Where(e => e.Uri == current.Uri
                                                               && e.LowerByteRange == current.LowerByteRange
@@ -291,18 +304,7 @@ namespace BuildBackup.DebugUtil
                     continue;
                 }
 
-                //// Special case for indexes
-                //if (realReq.Uri.Contains(".index"))
-                //{
-                //    var indexMatches = generatedRequests.Where(e => e.Uri == realReq.Uri).ToList();
-                //    if (indexMatches.Any())
-                //    {
-                //        realReq.Matched = true;
-                //        generatedRequests.Remove(indexMatches[0]);
-                //    }
-
-                //    continue;
-                //}
+                
 
                 // No match found - Put it back into the original array, as a "miss"
                 requestsToProcess.RemoveAt(0);
