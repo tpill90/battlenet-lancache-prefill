@@ -30,14 +30,42 @@ namespace BuildBackup.DebugUtil
         
         public ComparisonResult CompareAgainstRealRequests(List<Request> allRequestsMade, TactProduct product)
         {
-            var fileSizeProvider = new FileSizeProvider(product);
-
             Console.WriteLine("Comparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
 
-            PreLoadHeaderSizes(allRequestsMade, product);
+            var fileSizeProvider = new FileSizeProvider(product);
+            var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product);
 
-            //TODO make a function
+            var comparisonResult = new ComparisonResult
+            {
+                //Hits = diffResult.MatchedRequests,
+                //Misses = diffResult.MissedRequests,
+
+                RequestMadeCount = allRequestsMade.Count,
+                RealRequestCount = realRequests.Count,
+
+                RealRequestsTotalSize = ByteSize.FromBytes((double)realRequests.Sum(e => e.TotalBytes)),
+
+                RequestsWithoutSize = allRequestsMade.Count(e => e.DownloadWholeFile),
+                RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
+            };
+
+            PreLoadHeaderSizes(allRequestsMade, product);
+            GetRequestSizes(allRequestsMade, fileSizeProvider);
+            comparisonResult.RequestTotalSize = ByteSize.FromBytes((double) allRequestsMade.Sum(e => e.TotalBytes));
+            
+            CompareRequests(allRequestsMade, realRequests);
+            comparisonResult.Misses = realRequests;
+            comparisonResult.UnnecessaryRequests = allRequestsMade;
+
+            comparisonResult.PrintOutput();
+
+            Console.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            return comparisonResult;
+        }
+
+        private void GetRequestSizes(List<Request> allRequestsMade, FileSizeProvider fileSizeProvider)
+        {
             foreach (var request in allRequestsMade)
             {
                 if (request.DownloadWholeFile)
@@ -48,34 +76,6 @@ namespace BuildBackup.DebugUtil
                     request.UpperByteRange = fileSizeProvider.GetContentLength(new Uri($"{_blizzardCdnBaseUri}/{request.Uri}")) - 1;
                 }
             }
-
-            var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product);
-
-            CompareRequests(allRequestsMade, realRequests);
-
-            var diffResult = FindExcessRequests(allRequestsMade, realRequests, fileSizeProvider);
-
-            var comparisonResult = new ComparisonResult
-            {
-                Hits = diffResult.MatchedRequests,
-                Misses = diffResult.MissedRequests,
-                UnnecessaryRequests = diffResult.UnnecessaryRequests,
-
-                RequestMadeCount = allRequestsMade.Count,
-                DuplicateRequests = allRequestsMade.GroupBy(e => new { e.LowerByteRange, e.UpperByteRange, e.Uri }).Where(e => e.Count() > 1).Count(),
-                RealRequestCount = realRequests.Count,
-
-                RequestTotalSize = CalculateRequestSizes(allRequestsMade, product),
-                RealRequestsTotalSize = ByteSize.FromBytes((double)realRequests.Sum(e => e.TotalBytes)),
-
-                RequestsWithoutSize = allRequestsMade.Count(e => e.TotalBytes == 0),
-                RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
-            };
-
-            comparisonResult.PrintOutput();
-
-            Console.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-            return comparisonResult;
         }
 
         private DiffResults FindExcessRequests(List<Request> requests, List<Request> realRequests, FileSizeProvider fileSizeProvider)

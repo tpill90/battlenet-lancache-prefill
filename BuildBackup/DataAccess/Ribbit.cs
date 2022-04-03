@@ -115,60 +115,23 @@ namespace BuildBackup.DataAccess
                 }
             }
 
-            // Coalescing requests
-            var initial = indexDownloads.Select(e => new RangeRequest()
+            // Creating requests
+            var rangeRequests = indexDownloads.Select(e => new RangeRequest()
             {
                 archiveId = e.IndexEntry.IndexId,
-                start = (int)e.IndexEntry.offset,
+                start = (int) e.IndexEntry.offset,
                 // Need to subtract 1, since the byte range is "inclusive"
-                end = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
-            })
-                // Deduplication
-                // TODO make this look nicer
-                .GroupBy(e => new
-                {
-                    e.archiveId,
-                    e.start,
-                    e.end
-                })
-                .Select(e => new RangeRequest()
-                {
-                    archiveId = e.Key.archiveId,
-                    start = e.Key.start,
-                    end = e.Key.end
-                }).ToList();
+                end = ((int) e.IndexEntry.offset + (int) e.IndexEntry.size - 1)
+            }).ToList();
 
-            var coalesced = new List<RangeRequest>();
-            var current = initial[0];
-            initial.RemoveAt(0);
-
-            while (initial.Any())
-            {
-                var matched = initial.FirstOrDefault(e => e.archiveId == current.archiveId && e.start == (current.end+1));
-                if (matched != null)
-                {
-                    //TODO this might be a bug?
-                    current.end = matched.end;
-                    initial.Remove(matched);
-                }
-                else
-                {
-                    coalesced.Add(current);
-                    current = initial[0];
-                    initial.RemoveAt(0);
-                }
-            }
-
-            coalesced = coalesced.OrderBy(e => e.archiveId).ThenBy(e => e.start).ToList();
-            var asd = coalesced.Where(e => e.archiveId == indexDownloads[0].IndexEntry.IndexId).ToList();
             Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
-            var size = ByteSize.FromBytes((double)coalesced.Sum(e => e.end - e.start)).MegaBytes;
-            Console.WriteLine($"     Starting {Colors.Cyan(coalesced.Count)} file downloads by byte range. Totaling {Colors.Magenta(size.ToString("##.##"))}mb");
+            var size = ByteSize.FromBytes((double)rangeRequests.Sum(e => e.end - e.start)).MegaBytes;
+            Console.WriteLine($"     Starting {Colors.Cyan(rangeRequests.Count)} file downloads by byte range. Totaling {Colors.Magenta(size.ToString("##.##"))}mb");
 
             //TODO reenable and fix
             //var progressBar = new ProgressBar(coalesced.Count, $"Downloading {coalesced.Count} file downloads by byte range");
-            foreach (var indexDownload in coalesced)
+            foreach (var indexDownload in rangeRequests)
             {
                 //TODO this wasn't necessarily working correctly before.  Was accidentially having it download the entire file.
                 //TODO renable + have it write to dev-null

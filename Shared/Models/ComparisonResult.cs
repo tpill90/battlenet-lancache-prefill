@@ -13,8 +13,7 @@ namespace Shared.Models
 
         public int RealRequestCount { get; set; }
 
-        public List<ComparedRequest> Hits { get; set; }
-        public List<ComparedRequest> Misses { get; set; }
+        public List<Request> Misses { get; set; }
         public List<Request> UnnecessaryRequests { get; set; }
 
         public ByteSize RequestTotalSize { get; set; }
@@ -23,8 +22,6 @@ namespace Shared.Models
         public int RequestsWithoutSize { get; set; }
         public int RealRequestsWithoutSize { get; set; }
 
-
-        public int HitCount => Hits.Count;
         public int MissCount => Misses.Count;
 
         public void PrintOutput()
@@ -42,7 +39,6 @@ namespace Shared.Models
             table.AddRow("Requests missing size", RequestsWithoutSize.ToString(), RealRequestsWithoutSize.ToString());
             AnsiConsole.Write(table);
 
-            Console.WriteLine($"Total Hits : {Colors.Green(HitCount)}");
             Console.WriteLine($"Total Misses : {Colors.Red(MissCount)}");
             Console.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
             Console.WriteLine($"Total Dupes : {Colors.Yellow(DuplicateRequests)}");
