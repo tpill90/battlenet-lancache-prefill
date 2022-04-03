@@ -60,17 +60,16 @@ namespace BuildBackup.DataAccess
 
             Console.WriteLine($"     Downloading {Colors.Cyan(hashes.Count())} unarchived files..");
 
-            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, cdnConfig.archives.Length, 50);
+            
             int count = 0;
             var timer = Stopwatch.StartNew();
-
-            foreach (var entry in hashes)
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, hashes.Count, 50);
+            Parallel.ForEach(hashes, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
             {
                 _cdn.Get($"{_cdns.entries[0].path}/data/", entry.Key, writeToDevNull: true);
-                //TODO reenable this, slows down performance
-                //progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
+                progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
                 count++;
-            }
+            });
 
             timer.Stop();
             progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");

@@ -11,6 +11,7 @@
     <PackageReference Include="Crayon" Version="2.0.62" />
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Spectre.Console" Version="0.44.0" />
   </ItemGroup>
 
 </Project>

@@ -7,31 +7,36 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BuildBackup.DebugUtil;
 using ByteSizeLib;
+using Konsole;
 using Newtonsoft.Json;
 using Shared;
 using Shared.Models;
-using Spectre.Console;
+using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
-    public static class ComparisonUtil
+    public class ComparisonUtil
     {
-        private static readonly Mapper mapper;
+        private readonly IConsole _console;
+        private readonly Mapper mapper;
 
         //TODO extract url to settings
-        static string _blizzardCdnBaseUri = "http://level3.blizzard.com";
-        static ComparisonUtil()
+        string _blizzardCdnBaseUri = "http://level3.blizzard.com";
+        public ComparisonUtil(IConsole console)
         {
+            this._console = console;
             var mapperConfig = new MapperConfiguration(cfg => cfg.CreateMap<Request, ComparedRequest>());
             mapper = new Mapper(mapperConfig);
         }
         
-        public static ComparisonResult CompareAgainstRealRequests(List<Request> allRequestsMade, TactProduct product)
+        public ComparisonResult CompareAgainstRealRequests(List<Request> allRequestsMade, TactProduct product)
         {
             var fileSizeProvider = new FileSizeProvider(product);
 
             Console.WriteLine("Comparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
+
+            PreLoadHeaderSizes(allRequestsMade, product);
 
             //TODO re-implement coalescing + dedupe.  However this messes with the FullDownloadProperty
             //allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
@@ -44,18 +49,18 @@ namespace BuildBackup
             }
             allRequestsMade = allRequestsMade.Where(e => e != null).ToList();
 
-
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product);
-            var realRequestMatches = DiffRequests(allRequestsMade, realRequests);
+            //var realRequestMatches = DiffRequests(allRequestsMade, realRequests);
 
             var duplicates = allRequestsMade.GroupBy(e => new {e.LowerByteRange, e.UpperByteRange, e.Uri}).Where(e => e.Count() > 1).ToList();
 
-            FindExcessRequests(allRequestsMade, realRequests, fileSizeProvider);
+            var diffResult = FindExcessRequests(allRequestsMade, realRequests, fileSizeProvider);
 
             var comparisonResult = new ComparisonResult
             {
-                Hits = realRequestMatches.Where(e => e.Matched == true).ToList(),
-                Misses = realRequestMatches.Where(e => e.Matched == false).ToList(),
+                Hits = diffResult.MatchedRequests,
+                Misses = diffResult.MissedRequests,
+                UnnecessaryRequests = diffResult.UnnecessaryRequests,
 
                 RequestMadeCount = allRequestsMade.Count,
                 DuplicateRequests = duplicates.Count,
@@ -68,13 +73,13 @@ namespace BuildBackup
                 RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
             };
 
-            PrintOutput(comparisonResult);
+            comparisonResult.PrintOutput();
 
             Console.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
         }
 
-        private static void FindExcessRequests(List<Request> requests, List<Request> realRequests, FileSizeProvider fileSizeProvider)
+        private DiffResults FindExcessRequests(List<Request> requests, List<Request> realRequests, FileSizeProvider fileSizeProvider)
         {
             var deduped = requests.ToList();
             //var deduped = requests.GroupBy(e => new {e.LowerByteRange, e.UpperByteRange, e.Uri}).Select(e => e.First()).ToList();
@@ -108,7 +113,7 @@ namespace BuildBackup
                     if (exactMatches.Count > 1)
                     {
                         //TODO
-                        Debugger.Break();
+                        //Debugger.Break();
                     }
                     realReq.Matched = true;
                     generatedRequests.Remove(exactMatches[0]);
@@ -128,13 +133,15 @@ namespace BuildBackup
                     {
                         Uri = rangeMatches[0].Uri,
                         LowerByteRange = rangeMatches[0].LowerByteRange,
-                        UpperByteRange = realReq.LowerByteRange - 1
+                        UpperByteRange = realReq.LowerByteRange - 1,
+                        CallingMethod = rangeMatches[0].CallingMethod
                     };
                     var upperSlice = new Request
                     {
                         Uri = rangeMatches[0].Uri,
                         LowerByteRange = realReq.UpperByteRange + 1,
-                        UpperByteRange = rangeMatches[0].UpperByteRange
+                        UpperByteRange = rangeMatches[0].UpperByteRange,
+                        CallingMethod = rangeMatches[0].CallingMethod
                     };
                     generatedRequests.Add(lowerSlice);
                     generatedRequests.Add(upperSlice);
@@ -147,31 +154,41 @@ namespace BuildBackup
                 if (realReq.Uri.Contains(".index"))
                 {
                     var indexMatches = generatedRequests.Where(e => e.Uri == realReq.Uri).ToList();
-                    if (exactMatches.Count > 1)
+                    if (indexMatches.Any())
                     {
-                        //TODO how do I handle this scenario?
+                        realReq.Matched = true;
+                        generatedRequests.Remove(indexMatches[0]);
                     }
-                    realReq.Matched = true;
-                    generatedRequests.Remove(indexMatches[0]);
+                   
                     continue;
                 }
             }
 
-            var hits = realRequestsMatched.Where(e => e.Matched).OrderByDescending(e => e.Uri).ThenBy(e => e.LowerByteRange).ToList();
-            var misses = realRequestsMatched.Where(e => e.Matched == false).OrderByDescending(e => e.Uri).ThenBy(e => e.LowerByteRange).ToList();
-            var excessRequests = generatedRequests.OrderByDescending(e => e.Uri).ThenBy(e => e.LowerByteRange).ToList();
+            var findExcessRequests = new DiffResults()
+            {
+                MatchedRequests = realRequestsMatched.Where(e => e.Matched).ToList(),
+                MissedRequests = realRequestsMatched.Where(e => e.Matched == false).OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange).ToList(),
+
+                UnnecessaryRequests = generatedRequests.ToList()
+            };
+
+            var missedGroups = findExcessRequests.MissedRequests.GroupBy(e => e.Uri).Where(e => e.Count() > 10).OrderByDescending(e => e.Count()).ToList();
+            foreach (var group in missedGroups)
+            {
+                Console.WriteLine($"Missed {Colors.Yellow(group.Count())} requests for uri {Colors.Magenta(group.Key)} Size : {ByteSize.FromBytes(group.Sum(e => e.TotalBytes))}");
+            }
 
             File.Delete(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\allRequests.json");
             File.WriteAllText(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\allRequests.json", JsonConvert.SerializeObject(requests));
 
             File.Delete(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\excessRequests.json");
-            File.WriteAllText(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\excessRequests.json", JsonConvert.SerializeObject(excessRequests));
+            File.WriteAllText(@"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\excessRequests.json", JsonConvert.SerializeObject(generatedRequests.ToList()));
 
-            Debugger.Break();
+            return findExcessRequests;
         }
 
         //TODO comment
-        private static List<ComparedRequest> DiffRequests(List<Request> allRequestsMade, List<Request> targetRequests)
+        private List<ComparedRequest> DiffRequests(List<Request> allRequestsMade, List<Request> targetRequests)
         {
             List<ComparedRequest> matches = targetRequests.Select(e => mapper.Map<ComparedRequest>(e)).ToList();
             foreach (var realRequest in matches)
@@ -197,7 +214,27 @@ namespace BuildBackup
             return matches;
         }
 
-        private static ByteSize CalculateRequestSizes(List<Request> requests, TactProduct product)
+        private void PreLoadHeaderSizes(List<Request> requests, TactProduct product)
+        {
+            //TODO log that this is processing X of N 
+            //TODO speed up the initial processing
+            var fileSizeProvider = new FileSizeProvider(product);
+
+            // Speeding up by pre-caching the content-length headers in parallel.
+            var wholeFileRequests = requests.Where(e => e.DownloadWholeFile).OrderBy(e => e.Uri).ToList();
+
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, wholeFileRequests.Count, 50);
+            int count = 0;
+            Parallel.ForEach(wholeFileRequests, new ParallelOptions { MaxDegreeOfParallelism = 20 }, request =>
+            {
+                fileSizeProvider.GetContentLength(new Uri($"{_blizzardCdnBaseUri}/{request.Uri}"));
+                progressBar.Refresh(count, $"Getting request sizes");
+                count++;
+            });
+            fileSizeProvider.Save();
+        }
+
+        private ByteSize CalculateRequestSizes(List<Request> requests, TactProduct product)
         {
             //TODO log that this is processing X of N 
             //TODO speed up the initial processing
@@ -219,27 +256,6 @@ namespace BuildBackup
             }
             
             return ByteSize.FromBytes(totalBytes);
-        }
-
-        private static void PrintOutput(ComparisonResult comparisonResult)
-        {
-            // Formatting output to table
-            var table = new Table();
-            table.AddColumn(new TableColumn("").LeftAligned());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Current")).Centered());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Expected")).Centered());
-            //TODO
-            // table.AddColumn(new TableColumn(SpectreColors.Blue("Matches")).Centered()); , ((char)0x2713).ToString()
-
-            table.AddRow("Requests made", comparisonResult.RequestMadeCount.ToString(), comparisonResult.RealRequestCount.ToString());
-            table.AddRow("Bandwidth required", comparisonResult.RequestTotalSize.ToString(), comparisonResult.RealRequestsTotalSize.ToString());
-            table.AddRow("Requests missing size", comparisonResult.RequestsWithoutSize.ToString(), comparisonResult.RealRequestsWithoutSize.ToString());
-            AnsiConsole.Write(table);
-
-            Console.WriteLine($"Total Hits : {Colors.Green(comparisonResult.HitCount)}");
-            Console.WriteLine($"Total Misses : {Colors.Red(comparisonResult.MissCount)}");
-            Console.WriteLine($"Total Dupes : {Colors.Yellow(comparisonResult.DuplicateRequests)}");
-            Console.WriteLine();
         }
     }
 }

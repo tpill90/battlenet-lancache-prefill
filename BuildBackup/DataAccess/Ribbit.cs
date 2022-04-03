@@ -73,7 +73,7 @@ namespace BuildBackup.DataAccess
             Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
 
             List<InstallFileEntry> files = installFile.entries
-                //.Where(e => e.tags.Contains("1=enUS"))
+                .Where(e => e.tags.Contains("1=enUS"))
                 .ToList();
 
             var reverseLookupDictionary = hashes.ToDictionary(e => e.Value, e => e.Key);
@@ -82,7 +82,8 @@ namespace BuildBackup.DataAccess
             List<InstallFileEntry> hashLookupMisses = new List<InstallFileEntry>();
 
             // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
-            var indexDownloads = new List<IndexEntry>();
+            var indexDownloads = new List<InstallFileMatch>();
+            var indexDownloads2 = new List<InstallFileMatch>();
             foreach (var file in files)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
@@ -93,12 +94,13 @@ namespace BuildBackup.DataAccess
                     // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                     if (archiveIndexDictionary.ContainsKey(encodingTableHash.ToUpper()))
                     {
-                        var archiveIndex = archiveIndexDictionary[encodingTableHash.ToUpper()];
-                        indexDownloads.Add(archiveIndex);
+                        IndexEntry archiveIndex = archiveIndexDictionary[encodingTableHash.ToUpper()];
+                        indexDownloads.Add(new InstallFileMatch() { IndexEntry = archiveIndex, InstallFileEntry = file });
                     }
-                    else if (fileIndexList.ContainsKey(encodingTableHash.ToUpper()))
+                    if (fileIndexList.ContainsKey(encodingTableHash.ToUpper()))
                     {
-                        var indexMatch = fileIndexList[encodingTableHash.ToUpper()];
+                        IndexEntry indexMatch = fileIndexList[encodingTableHash.ToUpper()];
+                        indexDownloads2.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
                         //TODO Not sure what needs to be done here
                         //Debugger.Break();
                     }
@@ -116,10 +118,10 @@ namespace BuildBackup.DataAccess
             // Coalescing requests
             var initial = indexDownloads.Select(e => new RangeRequest()
             {
-                archiveId = e.IndexId,
-                start = (int)e.offset,
+                archiveId = e.IndexEntry.IndexId,
+                start = (int)e.IndexEntry.offset,
                 // Need to subtract 1, since the byte range is "inclusive"
-                end = ((int)e.offset + (int)e.size - 1)
+                end = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
             })
                 // Deduplication
                 // TODO make this look nicer
@@ -134,9 +136,7 @@ namespace BuildBackup.DataAccess
                     archiveId = e.Key.archiveId,
                     start = e.Key.start,
                     end = e.Key.end
-                })
-                .OrderBy(e => e.archiveId)
-                .ThenBy(e => e.start).ToList();
+                }).ToList();
 
             var coalesced = new List<RangeRequest>();
             var current = initial[0];
@@ -144,11 +144,11 @@ namespace BuildBackup.DataAccess
 
             while (initial.Any())
             {
-                var matched = initial.FirstOrDefault(e => e.archiveId == current.archiveId && e.start == current.end);
+                var matched = initial.FirstOrDefault(e => e.archiveId == current.archiveId && e.start == (current.end+1));
                 if (matched != null)
                 {
                     //TODO this might be a bug?
-                    current.end = matched.start;
+                    current.end = matched.end;
                     initial.Remove(matched);
                 }
                 else
@@ -160,7 +160,7 @@ namespace BuildBackup.DataAccess
             }
 
             coalesced = coalesced.OrderBy(e => e.archiveId).ThenBy(e => e.start).ToList();
-
+            var asd = coalesced.Where(e => e.archiveId == indexDownloads[0].IndexEntry.IndexId).ToList();
             Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             var size = ByteSize.FromBytes((double)coalesced.Sum(e => e.end - e.start)).MegaBytes;
