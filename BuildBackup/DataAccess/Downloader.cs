@@ -60,7 +60,6 @@ namespace BuildBackup.DataAccess
 
             Console.WriteLine($"     Downloading {Colors.Cyan(hashes.Count())} unarchived files..");
 
-            
             int count = 0;
             var timer = Stopwatch.StartNew();
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, hashes.Count, 50);

@@ -28,8 +28,6 @@ namespace BuildBackup.DataAccess
         //TODO comment
         public PatchFile DownloadPatchConfig(BuildConfigFile buildConfig)
         {
-            Console.WriteLine("Downloading patch file config..");
-
             if (!string.IsNullOrEmpty(buildConfig.patchConfig))
             {
                 _cdn.Get($"{_cdns.entries[0].path}/config/", buildConfig.patchConfig);
@@ -37,20 +35,18 @@ namespace BuildBackup.DataAccess
 
             if (!string.IsNullOrEmpty(buildConfig.patch))
             {
-                return GetPatchFile($"{_cdns.entries[0].path}/", buildConfig.patch, true);
+                return GetPatchFile($"{_cdns.entries[0].path}/", buildConfig.patch);
             }
 
             return new PatchFile();
         }
 
         //TODO should parseit be enabled?
-        private PatchFile GetPatchFile(string url, string hash, bool parseIt = false)
+        private PatchFile GetPatchFile(string url, string hash)
         {
             var patchFile = new PatchFile();
 
             byte[] content = _cdn.Get(url + "/patch/", hash);
-
-            if (!parseIt) return patchFile;
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
             {

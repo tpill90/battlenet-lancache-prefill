@@ -24,7 +24,6 @@ namespace BuildBackup
 
         public static bool UseCdnDebugMode = true;
         
-
         public static void Main()
         {
             foreach (var product in checkPrograms)

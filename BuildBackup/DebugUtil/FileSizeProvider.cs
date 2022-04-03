@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using Newtonsoft.Json;
 using Shared;
+using Shared.Models;
 
 namespace BuildBackup.DebugUtil
 {
@@ -12,6 +13,7 @@ namespace BuildBackup.DebugUtil
     public class FileSizeProvider
     {
         private readonly TactProduct _targetProduct;
+        private readonly string _blizzardCdnBaseUri;
         private HttpClient _client = new HttpClient();
 
         private ConcurrentDictionary<string, long> _cachedContentLengths;
@@ -22,9 +24,10 @@ namespace BuildBackup.DebugUtil
         private string CachedFileName => $"{_cacheDir}/{_targetProduct.ProductCode}.json";
         private object _cacheFileLock = new object();
 
-        public FileSizeProvider(TactProduct targetProduct)
+        public FileSizeProvider(TactProduct targetProduct, string baseCdnUri)
         {
             _targetProduct = targetProduct;
+            _blizzardCdnBaseUri = baseCdnUri;
             if(!Directory.Exists(_cacheDir))
             {
                 Directory.CreateDirectory(_cacheDir);
@@ -47,17 +50,22 @@ namespace BuildBackup.DebugUtil
             }
         }
 
-        public long GetContentLength(Uri uri)
+        public bool HasBeenCached(Request request)
         {
-            if (_cachedContentLengths.ContainsKey(uri.ToString()))
+            return _cachedContentLengths.ContainsKey(request.Uri);
+        }
+
+        public long GetContentLength(Request request)
+        {
+            if (_cachedContentLengths.ContainsKey(request.Uri))
             {
-                return _cachedContentLengths[uri.ToString()];
+                return _cachedContentLengths[request.Uri];
             }
 
-            var response = _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, uri)).Result;
+            var response = _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri}"))).Result;
             var contentLength = response.Content.Headers.ContentLength.Value;
 
-            _cachedContentLengths.TryAdd(uri.ToString(), contentLength);
+            _cachedContentLengths.TryAdd(request.Uri, contentLength);
             _cacheMisses++;
 
             if (_cacheMisses == 100)
