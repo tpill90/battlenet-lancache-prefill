@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace BuildBackup
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
-            CDN cdn = new CDN { DebugMode = useDebugMode };
+            CDN cdn = new CDN(console) { DebugMode = useDebugMode };
             Logic logic = new Logic(cdn, baseUrl);
 
             // Loading CDNs
@@ -69,14 +70,18 @@ namespace BuildBackup
 
             var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey);
             var installFile = logic.GetInstall(cdns.entries[0].path, encodingTable.installKey);
-            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns);
-            ribbit.HandleDownloadFile(cdnConfig, cdn, cdns, downloadFile);
+
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn);
+            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns, archiveIndexDictionary);
+            ribbit.HandleDownloadFile(cdnConfig, cdn, cdns, downloadFile, archiveIndexDictionary);
 
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchFiles(cdnConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch);
+
+            cdn.DownloadQueuedRequests();
 
             Console.WriteLine();
             Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");

@@ -1,18 +1,24 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BuildBackup.Utils;
+using Konsole;
+using Shared;
 using Shared.Models;
+using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
     public class CDN
     {
+        private readonly IConsole _console;
+
         //TODO make these all private
         public readonly HttpClient client;
 
@@ -21,14 +27,17 @@ namespace BuildBackup
         //TODO break these requests out into a different class later
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
+        private List<Request> QueuedRequests = new List<Request>();
+
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
         /// you won't need to wait for the full file transfer to complete.
         /// </summary>
         public bool DebugMode = false;
 
-        public CDN()
+        public CDN(IConsole console)
         {
+            _console = console;
             client = new HttpClient
             {
                 Timeout = new TimeSpan(0, 5, 0)
@@ -45,25 +54,69 @@ namespace BuildBackup
             };
         }
 
-        //TODO comment
-        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
+        public void QueueRequest(string rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
+        {
+            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+
+            if (startBytes != null && endBytes != null)
+            {
+                QueuedRequests.Add(new Request
+                {
+                    Uri = uri,
+                    LowerByteRange = startBytes.Value,
+                    UpperByteRange = endBytes.Value,
+                    WriteToDevNull = writeToDevNull
+                });
+            }
+            else
+            {
+                QueuedRequests.Add(new Request
+                {
+                    Uri = uri,
+                    DownloadWholeFile = true,
+                    WriteToDevNull = writeToDevNull
+                });
+            }
+        }
+
+        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false)
         {
             hashId = hashId.ToLower();
             var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            return Get(uri, writeToDevNull, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
+            return Get(uri, writeToDevNull);
+        }
+        
+        public byte[] GetIndex(string rootPath, string hashId)
+        {
+            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
+            return Get(uri);
         }
 
-        //TODO comment
-        public byte[] GetIndex(string rootPath, string id, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
+        public void GetByteRange(string rootPath, string hashId, long start, long end, bool writeToDevNull)
         {
-            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}.index";
-            return Get(uri, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
+            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            Get(uri, writeToDevNull, start, end);
         }
 
-        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
+        public void DownloadQueuedRequests()
         {
-            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
-            Get(uri, writeToDevNull, start, end, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
+            var coalesced = NginxLogParser.CoalesceRequests(QueuedRequests).ToList();
+
+            Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests");
+
+            int count = 0;
+            var timer = Stopwatch.StartNew();
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
+            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
+            {
+                Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: entry.LowerByteRange, entry.UpperByteRange);
+                //TODO progress bar slows things down
+                //progressBar.Refresh(count, $"     ");
+                count++;
+            });
+
+            timer.Stop();
+            progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         //TODO comment
@@ -85,8 +138,7 @@ namespace BuildBackup
                 {
                     Uri = requestPath,
                     LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value,
-                    CallingMethod = callingMethod
+                    UpperByteRange = endBytes.Value
                 });
             }
             else
@@ -94,8 +146,7 @@ namespace BuildBackup
                 allRequestsMade.Add(new Request
                 {
                     Uri = requestPath,
-                    DownloadWholeFile = true,
-                    CallingMethod = callingMethod
+                    DownloadWholeFile = true
                 });
             }
 
