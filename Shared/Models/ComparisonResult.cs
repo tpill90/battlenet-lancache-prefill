@@ -42,7 +42,10 @@ namespace Shared.Models
 
             Console.WriteLine($"Total Misses : {Colors.Red(MissCount)}");
             Console.WriteLine($"Misses Bandwidth : {Colors.Yellow(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
+            Console.WriteLine();
+
             Console.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
+            Console.WriteLine($"Wasted bandwidth : {Colors.Yellow(ByteSize.FromBytes(UnnecessaryRequests.Sum(e => e.TotalBytes)))}");
             Console.WriteLine($"Total Dupes : {Colors.Yellow(DuplicateRequests)}");
             //TODO log wasted bandwidth
 

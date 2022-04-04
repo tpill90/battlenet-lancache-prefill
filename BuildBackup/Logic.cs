@@ -26,6 +26,8 @@ namespace BuildBackup
 
         public CDNConfigFile GetCDNconfig(string url, VersionsEntry targetVersion)
         {
+            var timer = Stopwatch.StartNew();
+
             var cdnConfig = new CDNConfigFile();
 
             var content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", targetVersion.cdnConfig));
@@ -76,16 +78,12 @@ namespace BuildBackup
                 }
             }
 
-            if (cdnConfig.archives != null)
+            if (cdnConfig.archives == null)
             {
-                Console.WriteLine($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives");
-            }
-            else
-            {
-                Console.WriteLine($"Invalid cdnConfig !");
                 throw new Exception("Invalid CDNconfig");
             }
 
+            Console.WriteLine($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.  {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return cdnConfig;
         }
 

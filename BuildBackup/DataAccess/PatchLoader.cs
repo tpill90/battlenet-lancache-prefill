@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
+using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -36,18 +37,17 @@ namespace BuildBackup.DataAccess
 
             if (!string.IsNullOrEmpty(buildConfig.patch))
             {
-                return GetPatchFile($"{_cdns.entries[0].path}/", buildConfig.patch);
+                return GetPatchFile(_cdns.entries[0].path, buildConfig.patch);
             }
 
             return new PatchFile();
         }
 
-        //TODO should parseit be enabled?
         private PatchFile GetPatchFile(string url, string hash)
         {
             var patchFile = new PatchFile();
 
-            byte[] content = _cdn.Get(url + "/patch/", hash);
+            byte[] content = _cdn.Get($"{url}/patch/", hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
             {
@@ -114,15 +114,23 @@ namespace BuildBackup.DataAccess
             return patchFile;
         }
 
-        public void DownloadPatchFiles(CDNConfigFile cdnConfig)
+        public void DownloadPatchFiles(CDNConfigFile cdnConfig, TactProduct currentProduct)
         {
+            
+            var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
+
+            // For whatever reason, Starcraft1 does not use these patch files.
+            if (currentProduct == TactProducts.Starcraft1)
+            {
+                return;
+            }
+
             if (string.IsNullOrEmpty(cdnConfig.patchFileIndex))
             {
                 return;
             }
 
             Console.WriteLine("Parsing patch file index..");
-            var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
             var downloadSize = ByteSize.FromBytes((double)patchFileIndexList.Sum(e => (decimal)e.Value.size));
 
             Console.WriteLine($"     Downloading {Colors.Cyan(patchFileIndexList.Count)} unarchived patch files from patch file index...");
@@ -145,25 +153,18 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadPatchArchives(CDNConfigFile cdnConfig, PatchFile patchFile)
+        public void DownloadPatchArchives(CDNConfigFile cdnConfig, PatchFile patchFile, TactProduct currentProduct)
         {
-            if (cdnConfig.patchArchives == null)
+            Console.WriteLine("Downloading patch archives...");
+
+            Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Count())} patch archive indexes..");
+            var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, cdnConfig.patchArchives);
+
+            // For whatever reason, Starcraft1 does not use these patch files.
+            if (currentProduct == TactProducts.Starcraft1)
             {
                 return;
             }
-
-            Console.WriteLine("Downloading patch archives...");
-
-
-            Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
-            foreach (var patchId in cdnConfig.patchArchives)
-            {
-                _cdn.Get($"{_cdns.entries[0].path}/patch/", patchId, writeToDevNull: true);
-            }
-
-            Console.Write($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Count())} patch archive indexes..");
-            var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, cdnConfig.patchArchives);
-            Console.Write("..done\n");
 
             if (patchFile.blocks == null)
             {
@@ -199,6 +200,15 @@ namespace BuildBackup.DataAccess
             }
 
             Console.Write("..done\n");
+        }
+
+        private void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
+        {
+            Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
+            foreach (var patchId in cdnConfig.patchArchives)
+            {
+                _cdn.Get($"{_cdns.entries[0].path}/patch/", patchId, writeToDevNull: true);
+            }
         }
 
         private Dictionary<string, IndexEntry> GetPatchIndexes(string url, string[] archives)

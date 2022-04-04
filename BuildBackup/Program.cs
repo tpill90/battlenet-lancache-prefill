@@ -63,9 +63,6 @@ namespace BuildBackup
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
-            //TODO is this needed?
-            //GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic));
-
             EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
 
             var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey);
@@ -78,8 +75,8 @@ namespace BuildBackup
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
-            patchLoader.DownloadPatchFiles(cdnConfig);
-            patchLoader.DownloadPatchArchives(cdnConfig, patch);
+            patchLoader.DownloadPatchArchives(cdnConfig, patch, product);
+            patchLoader.DownloadPatchFiles(cdnConfig, product);
 
             cdn.DownloadQueuedRequests();
 
