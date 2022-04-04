@@ -9,7 +9,6 @@ using System.Text;
 using BuildBackup.Structs;
 using Newtonsoft.Json;
 using Shared;
-using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -23,18 +22,13 @@ namespace BuildBackup
         {
             this.cdn = cdn;
             _baseUrl = baseUrl;
-
-            if (!Directory.Exists("cache"))
-            {
-                Directory.CreateDirectory("cache");
-            }
         }
 
-        public CDNConfigFile GetCDNconfig(string url, string hash)
+        public CDNConfigFile GetCDNconfig(string url, VersionsEntry targetVersion)
         {
             var cdnConfig = new CDNConfigFile();
 
-            var content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", hash));
+            var content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", targetVersion.cdnConfig));
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
@@ -103,8 +97,10 @@ namespace BuildBackup
             VersionsFile versions = GetVersions(tactProduct);
 
             VersionsEntry targetVersion = versions.entries[0];
-            Console.WriteLine($"Found {Colors.Magenta(versions.entries.Count())} total versions.  Using version with info :");
-            targetVersion.PrintTable();
+
+            //TODO toggle this output with a flag
+            //Console.WriteLine($"Found {Colors.Magenta(versions.entries.Count())} total versions.  Using version with info :");
+            //targetVersion.PrintTable();
 
             Console.WriteLine($"GetVersionEntry took {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return targetVersion;
@@ -112,7 +108,7 @@ namespace BuildBackup
 
         public VersionsFile GetVersions(TactProduct tactProduct)
         {
-            var cacheFile = $"cache/versions-{tactProduct.DisplayName}.json";
+            var cacheFile = $"{Configuration.CacheDir}/versions-{tactProduct.ProductCode}.json";
             
             // Load cached version.  
             if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(1))
@@ -209,7 +205,7 @@ namespace BuildBackup
         //TODO should this be part of the CDN class?
         public CdnsFile GetCDNs(TactProduct tactProduct)
         {
-            var cacheFile = $"cdns-{tactProduct.DisplayName}.json";
+            var cacheFile = $"{Configuration.CacheDir}/cdns-{tactProduct.ProductCode}.json";
             
             // Load cached version, only valid for 2 hours
             if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(2))
@@ -506,7 +502,7 @@ namespace BuildBackup
             return root;
         }
 
-        public DownloadFile GetDownload(string url, string hash, bool parseIt = false)
+        public DownloadFile GetDownload(string url, string hash)
         {
             var download = new DownloadFile();
 
@@ -537,7 +533,7 @@ namespace BuildBackup
             return download;
         }
 
-        public InstallFile GetInstall(string url, string hash, bool parseIt = false)
+        public InstallFile GetInstall(string url, string hash)
         {
             var install = new InstallFile();
 

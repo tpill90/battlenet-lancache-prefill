@@ -2,7 +2,7 @@ using Konsole;
 using NUnit.Framework;
 using Shared;
 
-namespace BuildBackup.Test
+namespace BuildBackup.Test.ActualDownloadTests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]

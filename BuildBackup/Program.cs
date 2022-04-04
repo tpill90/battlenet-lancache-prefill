@@ -47,28 +47,30 @@ namespace BuildBackup
             CDN cdn = new CDN { DebugMode = useDebugMode };
             Logic logic = new Logic(cdn, baseUrl);
 
-            // Finding the latest version of the game
-            VersionsEntry targetVersion = logic.GetVersionEntry(product);
-
             // Loading CDNs
+            var timer2 = Stopwatch.StartNew();
             CdnsFile cdns = logic.GetCDNs(product);
+            Console.WriteLine($"GetCDNs loaded in {Colors.Yellow(timer2.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             // Initializing other classes, now that we have our CDN info loaded
             var patchLoader = new PatchLoader(cdn, cdns, console);
             var downloader = new Downloader(cdn, cdns, console);
             var ribbit = new Ribbit(cdn, cdns, console);
 
+            // Finding the latest version of the game
+            VersionsEntry targetVersion = logic.GetVersionEntry(product);
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
-            CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion.cdnConfig);
+            CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
             //TODO is this needed?
             //GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic));
 
             EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
 
-            var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey, parseIt: true);
+            var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey);
             var installFile = logic.GetInstall(cdns.entries[0].path, encodingTable.installKey);
-            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns, downloadFile);
+            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns);
+            ribbit.HandleDownloadFile(cdnConfig, cdn, cdns, downloadFile);
 
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
