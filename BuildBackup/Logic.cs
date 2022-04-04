@@ -23,13 +23,18 @@ namespace BuildBackup
         {
             this.cdn = cdn;
             _baseUrl = baseUrl;
+
+            if (!Directory.Exists("cache"))
+            {
+                Directory.CreateDirectory("cache");
+            }
         }
 
         public CDNConfigFile GetCDNconfig(string url, string hash)
         {
             var cdnConfig = new CDNConfigFile();
 
-            var content = Encoding.UTF8.GetString(cdn.Get(url + "/config/", hash));
+            var content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", hash));
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
@@ -114,8 +119,8 @@ namespace BuildBackup
 
         public VersionsFile GetVersions(TactProduct tactProduct)
         {
-            var cacheFile = $"versions-{tactProduct.DisplayName}.json";
-            //TODO invalidate this after an hour??
+            var cacheFile = $"cache/versions-{tactProduct.DisplayName}.json";
+            
             // Load cached version.  
             if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(1))
             {
@@ -514,20 +519,19 @@ namespace BuildBackup
 
             byte[] content = cdn.Get($"{url}/data/", hash);
 
-            if (!parseIt)
-            {
-                return download;
-            }
-
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
                 {
                     throw new Exception("Error while parsing download file. Did BLTE header size change?");
                 }
-                download.unk = bin.ReadBytes(3); // Unk
+                byte version = bin.ReadBytes(1)[0];
+                byte hash_size_ekey = bin.ReadBytes(1)[0];
+                byte has_checksum_in_entry = bin.ReadBytes(1)[0];
                 download.numEntries = bin.ReadUInt32(true);
                 download.numTags = bin.ReadUInt16(true);
+
+                bin.BaseStream.Seek(16, SeekOrigin.Begin);
 
                 download.entries = new DownloadEntry[download.numEntries];
                 for (int i = 0; i < download.numEntries; i++)

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using ByteSizeLib;
 using Konsole;
-using Newtonsoft.Json;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -17,21 +14,21 @@ namespace BuildBackup.DebugUtil
     public class ComparisonUtil
     {
         private readonly IConsole _console;
-        private readonly Mapper mapper;
 
         //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
         public ComparisonUtil(IConsole console)
         {
-            this._console = console;
-            var mapperConfig = new MapperConfiguration(cfg => cfg.CreateMap<Request, ComparedRequest>());
-            mapper = new Mapper(mapperConfig);
+            _console = console;
         }
         
         public ComparisonResult CompareAgainstRealRequests(List<Request> allRequestsMade, TactProduct product)
         {
-            Console.WriteLine("Comparing requests against real request logs...");
+            Console.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
+
+            //TODO sometimes seems to incorrectly combine requests.
+            //allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
 
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
@@ -122,9 +119,8 @@ namespace BuildBackup.DebugUtil
                     {
                         requestsToProcess.RemoveAt(0);
                         generatedRequests.Remove(indexMatches[0]);
+                        continue;
                     }
-
-                    continue;
                 }
 
                 // Exact match, remove from both lists
@@ -217,12 +213,20 @@ namespace BuildBackup.DebugUtil
                     continue;
                 }
 
-                
+                //TODO figure out why this is happening
+                if (current.TotalBytes == 0)
+                {
+                    requestsToProcess.RemoveAt(0);
+                    continue;
+                }
 
                 // No match found - Put it back into the original array, as a "miss"
                 requestsToProcess.RemoveAt(0);
                 originalRequests.Add(current);
             }
+
+            
+            
         }
     }
 }

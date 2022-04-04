@@ -47,7 +47,7 @@ namespace Shared
             else
             {
                 var rawLogs = ParseRequestLogs(File.ReadAllLines(latestFile.FullName));
-                List<Request> requestsToReplay = NginxLogParser.CoalesceRequests(rawLogs);
+                List<Request> requestsToReplay = CoalesceRequests(rawLogs);
 
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".log", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay));
@@ -104,7 +104,9 @@ namespace Shared
         }
 
         //TODO comment + unit test
-        internal static List<Request> CoalesceRequests(List<Request> initialRequests)
+        //TODO switch to internal/private
+        //TODO i think this is sometimes incorrectly combining results
+        public static List<Request> CoalesceRequests(List<Request> initialRequests)
         {
             // De-duplicating requests
             var dedupedRequests = initialRequests.DistinctBy(e => new

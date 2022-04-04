@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
+using Newtonsoft.Json;
+using Shared;
+using Shared.Models;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -12,13 +18,15 @@ namespace BuildBackup.DataAccess
     {
         private CDN _cdn;
         private CdnsFile _cdns;
+        private readonly IConsole _console;
 
-        public Ribbit(CDN cdn, CdnsFile cdns)
+        public Ribbit(CDN cdn, CdnsFile cdns, IConsole console)
         {
             _cdn = cdn;
 
             Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
             _cdns = cdns;
+            _console = console;
         }
 
         //TODO make this private, and make DownloadIndexedFilesFromArchive() call it instead
@@ -63,44 +71,42 @@ namespace BuildBackup.DataAccess
 
         //TODO comment
         //TODO hashes needs a better name
-        public void DownloadIndexedFilesFromArchive(CDNConfigFile cdnConfig, Dictionary<string, string> hashes, InstallFile installFile, CDN cdn, CdnsFile cdns)
+        public void DownloadIndexedFilesFromArchive(CDNConfigFile cdnConfig, EncodingTable encodingTable, InstallFile installFile, 
+            CDN cdn, CdnsFile cdns, DownloadFile download)
         {
+            var rootFolder = @"C:\Users\Tim\Desktop\temp";
             Console.WriteLine("Parsing download file list.  Doing reverse lookup...");
             var timer = Stopwatch.StartNew();
 
-
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn);
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
             Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
-
-            List<InstallFileEntry> files = installFile.entries
-                .Where(e => e.tags.Contains("1=enUS"))
-                .ToList();
-
-            var reverseLookupDictionary = hashes.ToDictionary(e => e.Value, e => e.Key);
 
             //TODO lookup why these are missing
             List<InstallFileEntry> hashLookupMisses = new List<InstallFileEntry>();
 
             // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
-            var indexDownloads = new List<InstallFileMatch>();
-            var indexDownloads2 = new List<InstallFileMatch>();
-            foreach (var file in files)
+            var archiveIndexDownloads = new List<InstallFileMatch>();
+            var fileIndexDownloads = new List<InstallFileMatch>();
+
+            var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
+
+            foreach (var file in installFile.entries)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
                 if (reverseLookupDictionary.ContainsKey(file.contentHashString.ToUpper()))
                 {
-                    var encodingTableHash = reverseLookupDictionary[file.contentHashString];
-
                     // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
-                    if (archiveIndexDictionary.ContainsKey(encodingTableHash.ToUpper()))
+                    var upperHash = reverseLookupDictionary[file.contentHashString].ToUpper();
+
+                    if (archiveIndexDictionary.ContainsKey(upperHash))
                     {
-                        IndexEntry archiveIndex = archiveIndexDictionary[encodingTableHash.ToUpper()];
-                        indexDownloads.Add(new InstallFileMatch() { IndexEntry = archiveIndex, InstallFileEntry = file });
+                        IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
+                        archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex, InstallFileEntry = file });
                     }
-                    if (fileIndexList.ContainsKey(encodingTableHash.ToUpper()))
+                    else if (fileIndexList.ContainsKey(upperHash))
                     {
-                        IndexEntry indexMatch = fileIndexList[encodingTableHash.ToUpper()];
-                        indexDownloads2.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
+                        IndexEntry indexMatch = fileIndexList[upperHash];
+                        fileIndexDownloads.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
                         //TODO Not sure what needs to be done here
                         //Debugger.Break();
                     }
@@ -114,32 +120,51 @@ namespace BuildBackup.DataAccess
                     hashLookupMisses.Add(file);
                 }
             }
-
-            // Creating requests
-            var rangeRequests = indexDownloads.Select(e => new RangeRequest()
+            foreach (var file in download.entries)
             {
-                archiveId = e.IndexEntry.IndexId,
-                start = (int) e.IndexEntry.offset,
+                if (encodingTable.EncodingDictionary.ContainsKey(file.hash.ToUpper()))
+                {
+                    var upperHash = encodingTable.EncodingDictionary[file.hash.ToUpper()].ToUpper();
+                    if (archiveIndexDictionary.ContainsKey(upperHash))
+                    {
+                        Debugger.Break();
+                        IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
+                        //archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex, InstallFileEntry = file });
+                    }
+                    
+                }
+                if (archiveIndexDictionary.ContainsKey(file.hash.ToUpper()))
+                {
+                    //Debugger.Break();
+                    IndexEntry archiveIndex = archiveIndexDictionary[file.hash.ToUpper()];
+                    archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex });
+                }
+
+            }
+
+            var requests = archiveIndexDownloads.Select(e => new Request
+            {
+                Uri = e.IndexEntry.IndexId,
+                LowerByteRange = (int)e.IndexEntry.offset,
                 // Need to subtract 1, since the byte range is "inclusive"
-                end = ((int) e.IndexEntry.offset + (int) e.IndexEntry.size - 1)
+                UpperByteRange = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
             }).ToList();
+            requests = NginxLogParser.CoalesceRequests(requests);
+
 
             Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"     Starting {Colors.Cyan(requests.Count)} file downloads by byte range. " +
+                              $"Totaling {Colors.Magenta(ByteSize.FromBytes(requests.Sum(e => e.TotalBytes)))}");
 
-            var size = ByteSize.FromBytes((double)rangeRequests.Sum(e => e.end - e.start)).MegaBytes;
-            Console.WriteLine($"     Starting {Colors.Cyan(rangeRequests.Count)} file downloads by byte range. Totaling {Colors.Magenta(size.ToString("##.##"))}mb");
-
-            //TODO reenable and fix
-            //var progressBar = new ProgressBar(coalesced.Count, $"Downloading {coalesced.Count} file downloads by byte range");
-            foreach (var indexDownload in rangeRequests)
+            int count = 0;
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, requests.Count, 50);
+            Parallel.ForEach(requests, new ParallelOptions { MaxDegreeOfParallelism = 5 }, indexDownload =>
             {
-                //TODO this wasn't necessarily working correctly before.  Was accidentially having it download the entire file.
-                //TODO renable + have it write to dev-null
-                cdn.GetByteRange($"{cdns.entries[0].path}/data/", indexDownload.archiveId, indexDownload.start, indexDownload.end, true);
-                //progressBar.Tick();
-            }
-            //progressBar.Message = "Done!";
-            //progressBar.Dispose();
+                cdn.GetByteRange($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
+                //progressBar.Refresh(count, $"Downloading {rangeRequests.Count} file downloads by byte range");
+                count++;
+            });
+            Console.WriteLine($"    Complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
     }
 }

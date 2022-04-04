@@ -20,13 +20,13 @@ namespace BuildBackup
     {
         private static readonly Uri baseUrl = new Uri("http://us.patch.battle.net:1119/");
        
-        private static TactProduct[] checkPrograms = new TactProduct[]{ TactProducts.Starcraft1 };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
 
         public static bool UseCdnDebugMode = true;
         
         public static void Main()
         {
-            foreach (var product in checkPrograms)
+            foreach (var product in ProductsToProcess)
             {
                 ProcessProduct(product, new Writer(), UseCdnDebugMode);
             }
@@ -56,15 +56,42 @@ namespace BuildBackup
             // Initializing other classes, now that we have our CDN info loaded
             var patchLoader = new PatchLoader(cdn, cdns, console);
             var downloader = new Downloader(cdn, cdns, console);
-            var ribbit = new Ribbit(cdn, cdns);
+            var ribbit = new Ribbit(cdn, cdns, console);
 
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion.buildConfig, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion.cdnConfig);
 
+            //TODO is this needed?
+            //GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic));
+           
+
+            EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
+
+            var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey, parseIt: true);
+            var installFile = logic.GetInstall(cdns.entries[0].path, encodingTable.installKey);
+            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns, downloadFile);
+
+            downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
+
+            //PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
+            //patchLoader.DownloadPatchFiles(cdnConfig);
+            //patchLoader.DownloadPatchArchives(cdnConfig, patch);
+
+            Console.WriteLine();
+            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
+            var comparisonUtil = new ComparisonUtil(console);
+            var result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
+            return result;
+        }
+
+        private static bool GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns, Logic logic)
+        {
             if (cdnConfig.builds != null)
             {
                 BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
             }
+
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
                 cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
@@ -78,7 +105,7 @@ namespace BuildBackup
                 {
                     Console.WriteLine("Decryption key is set and not available on disk, skipping.");
                     cdn.isEncrypted = false;
-                    return null;
+                    return true;
                 }
                 else
                 {
@@ -90,25 +117,7 @@ namespace BuildBackup
                 cdn.isEncrypted = false;
             }
 
-            EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
-
-            downloader.DownloadFullArchives(cdnConfig);
-
-            (DownloadFile, InstallFile) ribbitResult = ribbit.ProcessRibbit(encodingTable.rootKey, logic, encodingTable.downloadKey, encodingTable.installKey);
-            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable.EncodingDictionary, ribbitResult.Item2, cdn, cdns);
-
-            downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable.EncodingDictionary);
-
-            PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
-            patchLoader.DownloadPatchFiles(cdnConfig);
-            patchLoader.DownloadPatchArchives(cdnConfig, patch);
-
-            Console.WriteLine();
-            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-
-            var comparisonUtil = new ComparisonUtil(console);
-            var result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
-            return result;
+            return false;
         }
     }
 }

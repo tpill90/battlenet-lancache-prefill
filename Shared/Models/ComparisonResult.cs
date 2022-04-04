@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ByteSizeLib;
 using Spectre.Console;
 
@@ -40,17 +41,18 @@ namespace Shared.Models
             AnsiConsole.Write(table);
 
             Console.WriteLine($"Total Misses : {Colors.Red(MissCount)}");
+            Console.WriteLine($"Misses Bandwidth : {Colors.Yellow(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
             Console.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
             Console.WriteLine($"Total Dupes : {Colors.Yellow(DuplicateRequests)}");
+            //TODO log wasted bandwidth
+
             Console.WriteLine();
+
+            var missedGroups = Misses.GroupBy(e => e.Uri).OrderByDescending(e => e.Count()).ToList();
+            foreach (var group in missedGroups)
+            {
+                //Console.WriteLine($"Missed {Colors.Yellow(group.Count())} requests for uri {Colors.Magenta(group.Key)} Size : {ByteSize.FromBytes(group.Sum(e => e.TotalBytes))}");
+            }
         }
-    }
-
-    public class DiffResults
-    {
-        public List<ComparedRequest> MatchedRequests { get; set; }
-        public List<ComparedRequest> MissedRequests { get; set; }
-
-        public List<Request> UnnecessaryRequests { get; set; }
     }
 }

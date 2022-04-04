@@ -205,6 +205,17 @@ namespace BuildBackup
     {
         public string hash;
         public byte[] unk;
+
+        public override string ToString()
+        {
+            return hash;
+        }
+    }
+
+    public class DownloadTag
+    {
+        public short Type;
+        public BitArray Bits;
     }
 
     public struct BLTEChunkInfo

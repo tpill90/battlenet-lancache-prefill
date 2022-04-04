@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using BuildBackup.Structs;
 using Konsole;
 using Colors = Shared.Colors;
 
@@ -47,7 +48,7 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, Dictionary<string, string> hashes)
+        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable)
         {
             // Actually downloading the files
             Console.WriteLine("Processing unarchived files");
@@ -55,18 +56,38 @@ namespace BuildBackup.DataAccess
 
             foreach (var indexEntry in archiveIndexDictionary)
             {
-                hashes.Remove(indexEntry.Key.ToUpper());
+                encodingTable.EncodingDictionary.Remove(indexEntry.Key.ToUpper());
             }
 
-            Console.WriteLine($"     Downloading {Colors.Cyan(hashes.Count())} unarchived files..");
+            Console.WriteLine($"     Downloading {Colors.Cyan(encodingTable.EncodingDictionary.Count())} unarchived files..");
 
             int count = 0;
             var timer = Stopwatch.StartNew();
-            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, hashes.Count, 50);
-            Parallel.ForEach(hashes, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, encodingTable.EncodingDictionary.Count, 50);
+            Parallel.ForEach(encodingTable.EncodingDictionary, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
             {
                 _cdn.Get($"{_cdns.entries[0].path}/data/", entry.Key, writeToDevNull: true);
-                progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
+                //progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
+                count++;
+            });
+
+            timer.Stop();
+            progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+        }
+
+        public void DownloadUnarchivedIndexFiles(CDNConfigFile cdnConfig)
+        {
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
+
+            Console.WriteLine($"     Downloading {Colors.Cyan(fileIndexList.Count())} unarchived files from file index..");
+
+            int count = 0;
+            var timer = Stopwatch.StartNew();
+            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, fileIndexList.Count, 50);
+            Parallel.ForEach(fileIndexList, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
+            {
+                _cdn.Get($"{_cdns.entries[0].path}/data/", entry.Key, writeToDevNull: true);
+                //progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
                 count++;
             });
 

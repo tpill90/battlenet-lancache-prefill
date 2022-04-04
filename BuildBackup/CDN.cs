@@ -27,9 +27,11 @@ namespace BuildBackup
 
         public CDN()
         {
-            client = new HttpClient();
-            client.Timeout = new TimeSpan(0, 5, 0);
-
+            client = new HttpClient
+            {
+                Timeout = new TimeSpan(0, 5, 0)
+            };
+            
             cdnList = new List<string> 
             {
                 "level3.blizzard.com",      // Level3
@@ -37,12 +39,7 @@ namespace BuildBackup
                 "blzddist1-a.akamaihd.net", // Akamai first
                 "cdn.blizzard.com",         // Official regionless CDN
                 "us.cdn.blizzard.com",      // Official US CDN
-                "client01.pdl.wow.battlenet.com.cn", // China 1
-                "client02.pdl.wow.battlenet.com.cn", // China 2
-                "client03.pdl.wow.battlenet.com.cn", // China 3
-                "client04.pdl.wow.battlenet.com.cn", // China 4
-                "client04.pdl.wow.battlenet.com.cn", // China 5
-                "blizzard.nefficient.co.kr", // Korea 
+                "blizzard.nefficient.co.kr" // Korea 
             };
         }
 
@@ -59,6 +56,12 @@ namespace BuildBackup
         {
             var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}.index";
             return Get(uri, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
+        }
+
+        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
+        {
+            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
+            Get(uri, writeToDevNull, start, end, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
         }
 
         //TODO comment
@@ -123,7 +126,6 @@ namespace BuildBackup
                 try
                 {
                     using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-
                     if (startBytes != null && endBytes != null)
                     {
                         requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
@@ -184,16 +186,8 @@ namespace BuildBackup
                     Logger.WriteLine("!!! Error retrieving file " + $"http://{cdn}/{requestPath.ToLower()}" + ": " + e.Message);
                 }
             }
-           
             Logger.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!", true);
             return Array.Empty<byte>();
         }
-
-        public void GetByteRange(string rootPath, string id, long start, long end, bool writeToDevNull, [CallerMemberName] string callerName = "", [CallerFilePath] string callerFile = "")
-        {
-            var uri = $"{rootPath}{id.Substring(0, 2)}/{id.Substring(2, 2)}/{id}";
-            Get(uri, writeToDevNull, start, end, callingMethod: $"{Path.GetFileName(callerFile)} - {callerName}");
-        }
-
     }
 }
