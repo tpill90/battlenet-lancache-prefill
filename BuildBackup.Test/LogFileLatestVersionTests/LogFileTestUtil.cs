@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using BuildBackup.Structs;
 using Shared;
 
 namespace BuildBackup.Test.LogFileLatestVersionTests

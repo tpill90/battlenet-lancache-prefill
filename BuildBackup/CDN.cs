@@ -15,14 +15,16 @@ namespace BuildBackup
     {
         //TODO make these all private
         public readonly HttpClient client;
-        public bool isEncrypted = false;
-        public string decryptionKeyName = "";
+
         public List<string> cdnList;
 
         //TODO break these requests out into a different class later
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
-        //TODO comment what this is for
+        /// <summary>
+        /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
+        /// you won't need to wait for the full file transfer to complete.
+        /// </summary>
         public bool DebugMode = false;
 
         public CDN()
@@ -155,13 +157,6 @@ namespace BuildBackup
                             //    File.WriteAllBytes(outputFilePath, byteArray);
                             //}
                             
-                            if (isEncrypted)
-                            {
-                                //TODO not sure if this even works at all originally
-                                var cleaned = Path.GetFileNameWithoutExtension(requestPath);
-                                var decrypted = BLTE.DecryptFile(cleaned, byteArray, decryptionKeyName);
-                                return decrypted;
-                            }
                             return byteArray;
                         }
                     }

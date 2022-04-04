@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using BuildBackup.Structs;
 
 namespace BuildBackup.DataAccess
 {
     public static class Requests
     {
-        public static BuildConfigFile GetBuildConfig(string url, string hash, CDN cdn)
+        public static BuildConfigFile GetBuildConfig(string url, VersionsEntry versionsEntry, CDN cdn)
         {
             string content;
 
@@ -14,7 +15,7 @@ namespace BuildBackup.DataAccess
 
             try
             {
-                content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", hash));
+                content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", versionsEntry.buildConfig));
             }
             catch (Exception e)
             {

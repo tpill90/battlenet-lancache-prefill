@@ -58,12 +58,11 @@ namespace BuildBackup
             var downloader = new Downloader(cdn, cdns, console);
             var ribbit = new Ribbit(cdn, cdns, console);
 
-            BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion.buildConfig, cdn);
+            BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion.cdnConfig);
 
             //TODO is this needed?
             //GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic));
-           
 
             EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
 
@@ -73,9 +72,9 @@ namespace BuildBackup
 
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
-            //PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
-            //patchLoader.DownloadPatchFiles(cdnConfig);
-            //patchLoader.DownloadPatchArchives(cdnConfig, patch);
+            PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
+            patchLoader.DownloadPatchFiles(cdnConfig);
+            patchLoader.DownloadPatchArchives(cdnConfig, patch);
 
             Console.WriteLine();
             Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
@@ -99,23 +98,23 @@ namespace BuildBackup
 
             //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
             var decryptionKeyName = logic.GetDecryptionKeyName(cdns, product, targetVersion);
-            if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
-            {
-                if (!File.Exists(decryptionKeyName + ".ak"))
-                {
-                    Console.WriteLine("Decryption key is set and not available on disk, skipping.");
-                    cdn.isEncrypted = false;
-                    return true;
-                }
-                else
-                {
-                    cdn.isEncrypted = true;
-                }
-            }
-            else
-            {
-                cdn.isEncrypted = false;
-            }
+            //if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
+            //{
+            //    if (!File.Exists(decryptionKeyName + ".ak"))
+            //    {
+            //        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
+            //        cdn.isEncrypted = false;
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        cdn.isEncrypted = true;
+            //    }
+            //}
+            //else
+            //{
+            //    cdn.isEncrypted = false;
+            //}
 
             return false;
         }

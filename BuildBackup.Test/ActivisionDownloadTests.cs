@@ -13,8 +13,6 @@ namespace BuildBackup.Test
         {
             var results = Program.ProcessProduct(TactProducts.CodBlackOpsColdWar, new MockConsole(120, 50), true);
             Assert.AreEqual(0, results.MissCount);
-            // Should have some hits
-            Assert.AreNotEqual(0, results.HitCount);
         }
 
         [Test]
@@ -22,8 +20,6 @@ namespace BuildBackup.Test
         {
             var results = Program.ProcessProduct(TactProducts.CodWarzone, new MockConsole(120, 50), true);
             Assert.AreEqual(0, results.MissCount);
-            // Should have some hits
-            Assert.AreNotEqual(0, results.HitCount);
         }
 
         [Test]
@@ -31,8 +27,6 @@ namespace BuildBackup.Test
         {
             var results = Program.ProcessProduct(TactProducts.CodVanguard, new MockConsole(120, 50), true);
             Assert.AreEqual(0, results.MissCount);
-            // Should have some hits
-            Assert.AreNotEqual(0, results.HitCount);
         }
     }
 }

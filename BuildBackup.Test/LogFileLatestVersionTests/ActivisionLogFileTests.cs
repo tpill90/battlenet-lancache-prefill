@@ -1,10 +1,12 @@
-﻿using NUnit.Framework;
+﻿using BuildBackup.Structs;
+using NUnit.Framework;
 using Shared;
 
 namespace BuildBackup.Test.LogFileLatestVersionTests
 {
     //TODO comment
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class ActivisionLogFileTests
     {
         [Test]

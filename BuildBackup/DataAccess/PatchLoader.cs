@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
 using Colors = Shared.Colors;
