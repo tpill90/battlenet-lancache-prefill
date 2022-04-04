@@ -99,21 +99,14 @@ namespace BuildBackup
         //TODO this takes about 200ms.  Can it be sped up?
         public VersionsEntry GetVersionEntry(TactProduct tactProduct)
         {
+            var timer = Stopwatch.StartNew();
             VersionsFile versions = GetVersions(tactProduct);
 
             VersionsEntry targetVersion = versions.entries[0];
             Console.WriteLine($"Found {Colors.Magenta(versions.entries.Count())} total versions.  Using version with info :");
+            targetVersion.PrintTable();
 
-            //TODO move this to the VersionsEntry class
-            // Formatting output to table
-            var table = new Table();
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Version")).Centered());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Region")).Centered());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("CDN Config Id")).Centered());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Build Config Id")).Centered());
-            table.AddRow(targetVersion.versionsName, targetVersion.region, targetVersion.cdnConfig, targetVersion.buildConfig);
-            AnsiConsole.Write(table);
-
+            Console.WriteLine($"GetVersionEntry took {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return targetVersion;
         }
 
