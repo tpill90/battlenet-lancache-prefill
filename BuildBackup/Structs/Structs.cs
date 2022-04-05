@@ -152,31 +152,6 @@ namespace BuildBackup
         }
     }
 
-    public struct DownloadFile
-    {
-        public byte[] unk;
-        public uint numEntries;
-        public uint numTags;
-        public DownloadEntry[] entries;
-    }
-
-    public struct DownloadEntry
-    {
-        public string hash;
-        public byte[] unk;
-
-        public override string ToString()
-        {
-            return hash;
-        }
-    }
-
-    public class DownloadTag
-    {
-        public short Type;
-        public BitArray Bits;
-    }
-
     public struct BLTEChunkInfo
     {
         public bool isFullChunk;
