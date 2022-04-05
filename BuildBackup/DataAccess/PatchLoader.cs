@@ -18,13 +18,15 @@ namespace BuildBackup.DataAccess
         private CDN _cdn;
         private CdnsFile _cdns;
         private readonly IConsole _console;
+        private readonly TactProduct _currentProduct;
 
-        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console)
+        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console, TactProduct currentProduct)
         {
             _cdn = cdn;
             Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
             _cdns = cdns;
             _console = console;
+            _currentProduct = currentProduct;
         }
 
         //TODO comment
@@ -114,12 +116,12 @@ namespace BuildBackup.DataAccess
             return patchFile;
         }
 
-        public void DownloadPatchFiles(CDNConfigFile cdnConfig, TactProduct currentProduct)
+        public void DownloadPatchFiles(CDNConfigFile cdnConfig)
         {
             var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
 
             // For whatever reason, Starcraft1 does not use these patch files.
-            if (currentProduct == TactProducts.Starcraft1)
+            if (_currentProduct == TactProducts.Starcraft1)
             {
                 return;
             }
@@ -152,7 +154,7 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadPatchArchives(CDNConfigFile cdnConfig, PatchFile patchFile, TactProduct currentProduct)
+        public void DownloadPatchArchives(CDNConfigFile cdnConfig, PatchFile patchFile)
         {
             Console.WriteLine("Downloading patch archives...");
 
@@ -160,7 +162,7 @@ namespace BuildBackup.DataAccess
             var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, cdnConfig.patchArchives);
 
             // For whatever reason, Starcraft1 does not use these patch files.
-            if (currentProduct == TactProducts.Starcraft1)
+            if (_currentProduct == TactProducts.Starcraft1)
             {
                 return;
             }
@@ -203,10 +205,16 @@ namespace BuildBackup.DataAccess
 
         public void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
         {
+            // Skipping products where this isn't required
+            if (_currentProduct == TactProducts.Starcraft1)
+            {
+                return;
+            }
+
             Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
             foreach (var patchId in cdnConfig.patchArchives)
             {
-                _cdn.Get($"{_cdns.entries[0].path}/patch/", patchId, writeToDevNull: true);
+                _cdn.QueueRequest($"{_cdns.entries[0].path}/patch/", patchId, writeToDevNull: true);
             }
         }
 

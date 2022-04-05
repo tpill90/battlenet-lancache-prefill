@@ -100,6 +100,32 @@ namespace BuildBackup.Test.DebugUtilTests
 
         //TODO comment
         [Test]
+        public void RangeMatches_FullSubset_FoundAtEndOfRange_Reversed()
+        {
+            var generatedRequests = new List<Request>
+            {
+                // This request will be larger than what is expected, but should still be considered a match
+                new Request {Uri = "/example", LowerByteRange = 50, UpperByteRange = 100 }
+            };
+            var expectedRequests = new List<Request>
+            {
+                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+            };
+
+            var comparisonUtil = new ComparisonUtil(null);
+            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            
+            // Since this matched fully, should be completely removed
+            Assert.IsEmpty(generatedRequests);
+
+            // There is a partial match, so the remaining request byte ranges should be split into two.
+            Assert.AreEqual(1, expectedRequests.Count);
+            Assert.AreEqual(0, expectedRequests[0].LowerByteRange);
+            Assert.AreEqual(49, expectedRequests[0].UpperByteRange);
+        }
+
+        //TODO comment
+        [Test]
         public void RangeMatches_FullSubset_FoundAtBeginningOfRange()
         {
             var generatedRequests = new List<Request>
@@ -119,6 +145,33 @@ namespace BuildBackup.Test.DebugUtilTests
             Assert.AreEqual(1, generatedRequests.Count);
             // Since this matched fully, should be completely removed
             Assert.IsEmpty(expectedRequests);
+        }
+
+        //TODO comment
+        [Test]
+        public void RangeMatches_FullSubset_FoundAtBeginningOfRange_Reversed()
+        {
+            var generatedRequests = new List<Request>
+            {
+                // This request will be larger than what is expected, but should still be considered a match
+                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 50}
+            };
+            var expectedRequests = new List<Request>
+            {
+                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+            };
+
+            var comparisonUtil = new ComparisonUtil(null);
+            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+
+            
+            // Since this matched fully, should be completely removed
+            Assert.IsEmpty(generatedRequests);
+
+            // There is a partial match, so the remaining request byte ranges should be split into two.
+            Assert.AreEqual(51, expectedRequests[0].LowerByteRange);
+            Assert.AreEqual(100, expectedRequests[0].UpperByteRange);
+            Assert.AreEqual(1, expectedRequests.Count);
         }
 
         //TODO comment
@@ -171,6 +224,31 @@ namespace BuildBackup.Test.DebugUtilTests
             Assert.AreEqual(1, expectedRequests.Count);
             Assert.AreEqual(25, expectedRequests[0].LowerByteRange);
             Assert.AreEqual(49, expectedRequests[0].UpperByteRange);
+        }
+
+        //TODO comment
+        //TODO rename
+        [Test]
+        public void PartialMatchLower_WholeGeneratedRequestMatches_EndOfRange()
+        {
+            var generatedRequests = new List<Request>
+            {
+                new Request {Uri = "/example", LowerByteRange = 44527, UpperByteRange = 64327 },
+                new Request {Uri = "/example", LowerByteRange = 16997, UpperByteRange = 40744 }
+            };
+            var expectedRequests = new List<Request>
+            {
+                new Request {Uri = "/example", LowerByteRange = 16997, UpperByteRange = 64327 }
+            };
+
+            var comparisonUtil = new ComparisonUtil(null);
+            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+
+            Assert.AreEqual(0, generatedRequests.Count);
+
+            Assert.AreEqual(1, expectedRequests.Count);
+            Assert.AreEqual(40745, expectedRequests[0].LowerByteRange);
+            Assert.AreEqual(44526, expectedRequests[0].UpperByteRange);
         }
 
         //TODO comment

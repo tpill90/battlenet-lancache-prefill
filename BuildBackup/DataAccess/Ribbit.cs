@@ -103,13 +103,16 @@ namespace BuildBackup.DataAccess
 
             //TODO make this more flexible.  Perhaps pass in the region by name?
             var tagToUse = download.tags.Single(e => e.Name.Contains("enUS"));
-            
+            var tagToUse2 = download.tags.Single(e => e.Name.Contains("Windows"));
+
+            var asd = download.tags.Select(e => e.Name).ToList();
+
             for (var i = 0; i < download.entries.Length; i++)
             {
                 var current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
-                if (tagToUse.Bits[i] == false)
+                if (tagToUse.Bits[i] == false || tagToUse2.Bits[i] == false)
                 {
                     continue;
                 }

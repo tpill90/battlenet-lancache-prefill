@@ -110,7 +110,7 @@ namespace BuildBackup.DebugUtil
             while(requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
-
+                
                 // Special case for indexes
                 if (current.Uri.Contains(".index"))
                 {
@@ -150,51 +150,32 @@ namespace BuildBackup.DebugUtil
                         //TODO how do I handle this scenario?
                     }
                     // Breaking up the remainder into new slices
-
-                    if (rangeMatches[0].LowerByteRange != current.LowerByteRange)
-                    {
-                        var lowerSlice = new Request
-                        {
-                            Uri = rangeMatches[0].Uri,
-                            //TODO should probably unit test the range calculations as well
-                            LowerByteRange = rangeMatches[0].LowerByteRange,
-                            UpperByteRange = current.LowerByteRange - 1,
-                            CallingMethod = rangeMatches[0].CallingMethod
-                        };
-                        generatedRequests.Add(lowerSlice);
-                    }
-                    
-                    // Only add an upper slice, if there is any remaining bytes to do so.
-                    if (rangeMatches[0].UpperByteRange != current.UpperByteRange)
-                    {
-                        var upperSlice = new Request
-                        {
-                            Uri = rangeMatches[0].Uri,
-                            //TODO should probably unit test the range calculations as well
-                            LowerByteRange = current.UpperByteRange + 1,
-                            UpperByteRange = rangeMatches[0].UpperByteRange,
-                            CallingMethod = rangeMatches[0].CallingMethod
-                        };
-                        generatedRequests.Add(upperSlice);
-                    }
-                    generatedRequests.Remove(rangeMatches[0]);
+                    var match = rangeMatches[0];
+                    generatedRequests.AddRange(SplitRequests(match, current));
+                    generatedRequests.Remove(match);
 
                     requestsToProcess.RemoveAt(0);
                     continue;
                 }
+
+
 
                 var partialMatchesLower = generatedRequests.Where(e => e.Uri == current.Uri 
                                                                   && current.LowerByteRange <= e.UpperByteRange
                                                                   && current.UpperByteRange >= e.UpperByteRange).ToList();
                 if (partialMatchesLower.Any())
                 {
+                    // Case where the request we are testing against satisfies the whole match - lower end match
+                    var generatedRequest = partialMatchesLower[0];
+                    
                     // Store the originals, since we need to swap them
-                    var originalUpper = partialMatchesLower[0].UpperByteRange;
+                    var originalUpper = generatedRequest.UpperByteRange;
                     var originalLower = current.LowerByteRange;
 
                     // Now swap them
-                    partialMatchesLower[0].UpperByteRange = originalLower - 1;
+                    generatedRequest.UpperByteRange = originalLower - 1;
                     current.LowerByteRange = originalUpper + 1;
+                    
                     continue;
                 }
 
@@ -210,6 +191,7 @@ namespace BuildBackup.DebugUtil
                     // Now swap them
                     partialMatchesUpper[0].LowerByteRange = originalUpper + 1;
                     current.UpperByteRange = originalLower - 1;
+                    
                     continue;
                 }
 
@@ -224,9 +206,37 @@ namespace BuildBackup.DebugUtil
                 requestsToProcess.RemoveAt(0);
                 originalRequests.Add(current);
             }
+        }
 
-            
-            
+        private static List<Request> SplitRequests(Request match, Request current)
+        {
+            var results = new List<Request>();
+            if (match.LowerByteRange != current.LowerByteRange)
+            {
+                var lowerSlice = new Request
+                {
+                    Uri = match.Uri,
+                    //TODO should probably unit test the range calculations as well
+                    LowerByteRange = match.LowerByteRange,
+                    UpperByteRange = current.LowerByteRange - 1
+                };
+                results.Add(lowerSlice);
+            }
+
+            // Only add an upper slice, if there is any remaining bytes to do so.
+            if (match.UpperByteRange != current.UpperByteRange)
+            {
+                var upperSlice = new Request
+                {
+                    Uri = match.Uri,
+                    //TODO should probably unit test the range calculations as well
+                    LowerByteRange = current.UpperByteRange + 1,
+                    UpperByteRange = match.UpperByteRange
+                };
+                results.Add(upperSlice);
+            }
+
+            return results;
         }
     }
 }
