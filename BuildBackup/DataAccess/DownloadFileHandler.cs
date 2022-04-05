@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Text;
 using BuildBackup.Structs;
@@ -25,7 +26,7 @@ namespace BuildBackup.DataAccess
                 download.numEntries = bin.ReadUInt32(true);
                 download.numTags = bin.ReadUInt16(true);
 
-                uint numMaskBytes = (download.numEntries + 7) / 8;
+                int numMaskBytes = (int)((download.numEntries + 7) / 8);
 
                 //TODO implement
                 //uint32 entryExtra = 6;
@@ -43,13 +44,31 @@ namespace BuildBackup.DataAccess
                 //    }
                 //}
 
+                // Reading the download entries
                 bin.BaseStream.Seek(16, SeekOrigin.Begin);
-
                 download.entries = new DownloadEntry[download.numEntries];
                 for (int i = 0; i < download.numEntries; i++)
                 {
                     download.entries[i].hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
                     bin.ReadBytes(10);
+                }
+
+                // Reading the tags
+                download.tags = new DownloadTag[download.numTags];
+                for (int i = 0; i < download.numTags; i++)
+                {
+                    DownloadTag tag = new DownloadTag();
+                    tag.Name = bin.ReadCString();
+                    tag.Type = bin.ReadInt16BE();
+
+                    byte[] bits = bin.ReadBytes(numMaskBytes);
+
+                    for (int j = 0; j < numMaskBytes; j++)
+                        bits[j] = (byte)((bits[j] * 0x0202020202 & 0x010884422010) % 1023);
+
+                    tag.Bits = new BitArray(bits);
+
+                    download.tags[i] = tag;
                 }
             }
 

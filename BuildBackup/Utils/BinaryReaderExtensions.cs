@@ -25,6 +25,12 @@ namespace System.IO
             return reader.ReadInt16();
         }
 
+        public static short ReadInt16BE(this BinaryReader reader)
+        {
+            byte[] val = reader.ReadBytes(2);
+            return (short)(val[1] | val[0] << 8);
+        }
+
         public static Int32 ReadInt32(this BinaryReader reader, bool invertEndian = false)
         {
             if (invertEndian)

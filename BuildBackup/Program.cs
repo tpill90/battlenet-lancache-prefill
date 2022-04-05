@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
@@ -16,6 +14,7 @@ namespace BuildBackup
     /// <summary>
     /// Documentation :
     ///   https://wowdev.wiki/TACT
+    ///   https://github.com/d07RiV/blizzget/wiki
     /// </summary>
     public class Program
     {
@@ -65,18 +64,19 @@ namespace BuildBackup
 
             EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
 
-            var downloadFile = logic.GetDownload(cdns.entries[0].path, encodingTable.downloadKey);
+            var downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdns.entries[0].path, encodingTable.downloadKey);
             var installFile = logic.GetInstall(cdns.entries[0].path, encodingTable.installKey);
 
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn);
-            ribbit.DownloadIndexedFilesFromArchive(cdnConfig, encodingTable, installFile, cdn, cdns, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(cdnConfig, cdn, cdns, downloadFile, archiveIndexDictionary);
+            ribbit.HandleInstallFile(cdnConfig, encodingTable, installFile, cdn, cdns, archiveIndexDictionary);
+            ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary);
 
             downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch, product);
             patchLoader.DownloadPatchFiles(cdnConfig, product);
+            patchLoader.DownloadFullPatchArchives(cdnConfig);
 
             cdn.DownloadQueuedRequests();
 

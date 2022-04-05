@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using BuildBackup.Utils;
+using ByteSizeLib;
 using Konsole;
 using Shared;
 using Shared.Models;
@@ -54,6 +55,7 @@ namespace BuildBackup
             };
         }
 
+        //TODO finish making everything use this
         public void QueueRequest(string rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
             var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
@@ -101,8 +103,8 @@ namespace BuildBackup
         public void DownloadQueuedRequests()
         {
             var coalesced = NginxLogParser.CoalesceRequests(QueuedRequests).ToList();
-
-            Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests");
+            Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
+                              $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
 
             int count = 0;
             var timer = Stopwatch.StartNew();

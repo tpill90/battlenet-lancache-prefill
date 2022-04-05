@@ -22,8 +22,9 @@ namespace BuildBackup.Structs
         }
     }
 
-    public class DownloadTag
+    public sealed class DownloadTag
     {
+        public string Name;
         public short Type;
         public BitArray Bits;
     }

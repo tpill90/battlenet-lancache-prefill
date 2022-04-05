@@ -28,7 +28,7 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadIndexedFilesFromArchive(CDNConfigFile cdnConfig, EncodingTable encodingTable, InstallFile installFile, 
+        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, InstallFile installFile, 
             CDN cdn, CdnsFile cdns, Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
             Console.WriteLine("Parsing install file list.");
@@ -45,7 +45,10 @@ namespace BuildBackup.DataAccess
 
             var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
 
-            foreach (var file in installFile.entries)
+            var filtered = installFile.entries
+                .Where(e => e.tags.Any(e2 => e2.Contains("enUS")))
+                .ToList();
+            foreach (var file in filtered)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
                 if (reverseLookupDictionary.ContainsKey(file.contentHashString.ToUpper()))
@@ -98,26 +101,39 @@ namespace BuildBackup.DataAccess
             Console.WriteLine($"     Complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
-        public void HandleDownloadFile(CDNConfigFile cdnConfig, CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary)
+        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
             Console.WriteLine("Parsing download file list...");
             var timer = Stopwatch.StartNew();
 
             var indexDownloads = 0;
             var totalBytes = 0L;
-            foreach (var file in download.entries)
-            {
-                if (archiveIndexDictionary.ContainsKey(file.hash))
-                {
-                    IndexEntry e = archiveIndexDictionary[file.hash];
-                    
-                    // Need to subtract 1, since the byte range is "inclusive"
-                    int upperByteRange = ((int)e.offset + (int)e.size - 1);
-                    cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, e.offset, upperByteRange, writeToDevNull: true);
 
-                    indexDownloads++;
-                    totalBytes += (upperByteRange - e.offset);
+            //TODO make this more flexible.  Perhaps pass in the region by name?
+            var tagToUse = download.tags.Single(e => e.Name.Contains("enUS"));
+            
+            for (var i = 0; i < download.entries.Length; i++)
+            {
+                var current = download.entries[i];
+
+                // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
+                if (tagToUse.Bits[i] == false)
+                {
+                    continue;
                 }
+                if (!archiveIndexDictionary.ContainsKey(current.hash))
+                {
+                    continue;
+                }
+                
+                IndexEntry e = archiveIndexDictionary[current.hash];
+
+                // Need to subtract 1, since the byte range is "inclusive"
+                int upperByteRange = ((int) e.offset + (int) e.size - 1);
+                cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, e.offset, upperByteRange, writeToDevNull: true);
+
+                indexDownloads++;
+                totalBytes += (upperByteRange - e.offset);
             }
 
             Console.WriteLine($"     Starting {Colors.Cyan(indexDownloads)} file downloads by byte range. " +
