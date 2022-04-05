@@ -16,12 +16,12 @@ namespace BuildBackup
     public class Logic
     {
         private CDN cdn;
-        private readonly Uri _baseUrl;
+        private readonly Uri _battleNetPatchUri;
 
-        public Logic(CDN cdn, Uri baseUrl)
+        public Logic(CDN cdn, Uri battleNetPatchUri)
         {
             this.cdn = cdn;
-            _baseUrl = baseUrl;
+            _battleNetPatchUri = battleNetPatchUri;
         }
 
         public CDNConfigFile GetCDNconfig(string url, VersionsEntry targetVersion)
@@ -106,7 +106,7 @@ namespace BuildBackup
 
         public VersionsFile GetVersions(TactProduct tactProduct)
         {
-            var cacheFile = $"{Configuration.CacheDir}/versions-{tactProduct.ProductCode}.json";
+            var cacheFile = $"{Config.CacheDir}/versions-{tactProduct.ProductCode}.json";
             
             // Load cached version.  
             if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(1))
@@ -117,7 +117,7 @@ namespace BuildBackup
             string content;
             var versions = new VersionsFile();
 
-            var url = $"{_baseUrl}{tactProduct.ProductCode}/versions";
+            var url = $"{_battleNetPatchUri}{tactProduct.ProductCode}/versions";
             using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(url)).Result)
             {
                 if (response.IsSuccessStatusCode)
@@ -203,7 +203,7 @@ namespace BuildBackup
         //TODO should this be part of the CDN class?
         public CdnsFile GetCDNs(TactProduct tactProduct)
         {
-            var cacheFile = $"{Configuration.CacheDir}/cdns-{tactProduct.ProductCode}.json";
+            var cacheFile = $"{Config.CacheDir}/cdns-{tactProduct.ProductCode}.json";
             
             // Load cached version, only valid for 2 hours
             if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(2))
@@ -215,7 +215,7 @@ namespace BuildBackup
 
             CdnsFile cdns = new CdnsFile();
 
-            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri($"{_baseUrl}{tactProduct.ProductCode}/cdns")).Result)
+            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/cdns")).Result)
             {
                 if (response.IsSuccessStatusCode)
                 {
@@ -316,7 +316,7 @@ namespace BuildBackup
 
             try
             {
-                using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(_baseUrl + program + "/" + "blob/game")).Result)
+                using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(_battleNetPatchUri + program + "/" + "blob/game")).Result)
                 {
                     if (response.IsSuccessStatusCode)
                     {

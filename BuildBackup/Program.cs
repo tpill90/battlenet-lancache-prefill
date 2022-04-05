@@ -18,8 +18,6 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static readonly Uri baseUrl = new Uri("http://us.patch.battle.net:1119/");
-       
         private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
 
         public static bool UseCdnDebugMode = true;
@@ -45,7 +43,7 @@ namespace BuildBackup
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
             CDN cdn = new CDN(console) { DebugMode = useDebugMode };
-            Logic logic = new Logic(cdn, baseUrl);
+            Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
 
             // Loading CDNs
             var timer2 = Stopwatch.StartNew();
@@ -54,8 +52,8 @@ namespace BuildBackup
 
             // Initializing other classes, now that we have our CDN info loaded
             var patchLoader = new PatchLoader(cdn, cdns, console);
-            var downloader = new Downloader(cdn, cdns, console);
-            var ribbit = new Ribbit(cdn, cdns, console);
+            var unarchivedFileHandler = new UnarchivedFileHandler(cdn, cdns, console);
+            var ribbit = new Ribbit(cdn, cdns);
 
             // Finding the latest version of the game
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
@@ -71,7 +69,7 @@ namespace BuildBackup
             ribbit.HandleInstallFile(cdnConfig, encodingTable, installFile, cdn, cdns, archiveIndexDictionary);
             ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary);
 
-            downloader.DownloadUnarchivedFiles(cdnConfig, encodingTable);
+            unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch, product);

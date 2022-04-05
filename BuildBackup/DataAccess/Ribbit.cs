@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.Structs;
 using ByteSizeLib;
-using Konsole;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -16,22 +15,20 @@ namespace BuildBackup.DataAccess
     {
         private CDN _cdn;
         private CdnsFile _cdns;
-        private readonly IConsole _console;
 
-        public Ribbit(CDN cdn, CdnsFile cdns, IConsole console)
+        public Ribbit(CDN cdn, CdnsFile cdns)
         {
             _cdn = cdn;
 
             Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
             _cdns = cdns;
-            _console = console;
         }
 
         //TODO comment
         public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, InstallFile installFile, 
             CDN cdn, CdnsFile cdns, Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
-            Console.WriteLine("Parsing install file list.");
+            Console.Write("Parsing install file list...");
             var timer = Stopwatch.StartNew();
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
@@ -89,21 +86,16 @@ namespace BuildBackup.DataAccess
             }).ToList();
             requests = NginxLogParser.CoalesceRequests(requests);
 
-            Console.WriteLine($"     Starting {Colors.Cyan(requests.Count)} file downloads by byte range. " +
-                              $"Totaling {Colors.Magenta(ByteSize.FromBytes(requests.Sum(e => e.TotalBytes)))}");
-            
-            //var progressBar = new ProgressBar(_console, PbStyle.SingleLine, requests.Count, 50);
-            Parallel.ForEach(requests, new ParallelOptions { MaxDegreeOfParallelism = 5 }, indexDownload =>
+            foreach(var indexDownload in requests)
             {
-                cdn.GetByteRange($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
-                //progressBar.Refresh(count, $"Downloading {rangeRequests.Count} file downloads by byte range");
-            });
-            Console.WriteLine($"     Complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+                cdn.QueueRequest($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
+            }
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
-            Console.WriteLine("Parsing download file list...");
+            Console.Write("Parsing download file list...");
             var timer = Stopwatch.StartNew();
 
             var indexDownloads = 0;
@@ -135,11 +127,8 @@ namespace BuildBackup.DataAccess
                 indexDownloads++;
                 totalBytes += (upperByteRange - e.offset);
             }
-
-            Console.WriteLine($"     Starting {Colors.Cyan(indexDownloads)} file downloads by byte range. " +
-                              $"Totaling {Colors.Magenta(ByteSize.FromBytes(totalBytes))}");
-
-            Console.WriteLine($"     Complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
     }
 }
