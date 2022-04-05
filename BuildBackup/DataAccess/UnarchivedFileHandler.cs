@@ -9,13 +9,13 @@ using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
 {
-    public class Downloader
+    public class UnarchivedFileHandler
     {
         private CDN _cdn;
         private CdnsFile _cdns;
         private readonly IConsole _console;
 
-        public Downloader(CDN cdn, CdnsFile cdns, IConsole console)
+        public UnarchivedFileHandler(CDN cdn, CdnsFile cdns, IConsole console)
         {
             _cdn = cdn;
 

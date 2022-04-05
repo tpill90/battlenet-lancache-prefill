@@ -58,6 +58,7 @@ namespace BuildBackup
         //TODO finish making everything use this
         public void QueueRequest(string rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
+            hashId = hashId.ToLower();
             var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
 
             if (startBytes != null && endBytes != null)
@@ -108,12 +109,25 @@ namespace BuildBackup
 
             int count = 0;
             var timer = Stopwatch.StartNew();
+
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
             Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
             {
-                Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: entry.LowerByteRange, entry.UpperByteRange);
-                //TODO progress bar slows things down
-                //progressBar.Refresh(count, $"     ");
+                if (entry.DownloadWholeFile)
+                {
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: null, null);
+                }
+                else
+                {
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: entry.LowerByteRange, entry.UpperByteRange);
+                }
+
+                if (!DebugMode)
+                {
+                    // Skip refreshing the progress bar when debugging.  Slows things down
+                    progressBar.Refresh(count, $"     ");
+                }
+                
                 count++;
             });
 

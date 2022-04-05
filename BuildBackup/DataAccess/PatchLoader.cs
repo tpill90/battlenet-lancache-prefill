@@ -116,7 +116,6 @@ namespace BuildBackup.DataAccess
 
         public void DownloadPatchFiles(CDNConfigFile cdnConfig, TactProduct currentProduct)
         {
-            
             var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
 
             // For whatever reason, Starcraft1 does not use these patch files.
@@ -202,7 +201,7 @@ namespace BuildBackup.DataAccess
             Console.Write("..done\n");
         }
 
-        private void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
+        public void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
         {
             Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
             foreach (var patchId in cdnConfig.patchArchives)
