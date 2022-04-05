@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 using BuildBackup.Structs;
-using ByteSizeLib;
-using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
 
@@ -25,11 +25,13 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, InstallFile installFile, 
-            CDN cdn, CdnsFile cdns, Dictionary<string, IndexEntry> archiveIndexDictionary)
+        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns, 
+            Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
             Console.Write("Parsing install file list...");
             var timer = Stopwatch.StartNew();
+
+            var installFile = ParseInstallFile(cdns.entries[0].path, encodingTable.installKey);
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
 
@@ -42,10 +44,7 @@ namespace BuildBackup.DataAccess
 
             var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
 
-            var filtered = installFile.entries
-                .Where(e => e.tags.Any(e2 => e2.Contains("enUS")))
-                .ToList();
-            foreach (var file in filtered)
+            foreach (var file in installFile.entries.ToList())
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
                 if (reverseLookupDictionary.ContainsKey(file.contentHashString.ToUpper()))
@@ -84,13 +83,72 @@ namespace BuildBackup.DataAccess
                 // Need to subtract 1, since the byte range is "inclusive"
                 UpperByteRange = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
             }).ToList();
-            requests = NginxLogParser.CoalesceRequests(requests);
 
             foreach(var indexDownload in requests)
             {
                 cdn.QueueRequest($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+        }
+
+        public InstallFile ParseInstallFile(string url, string hash)
+        {
+            var install = new InstallFile();
+
+            byte[] content = _cdn.Get($"{url}/data/", hash);
+
+            using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
+            {
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN")
+                {
+                    throw new Exception("Error while parsing install file. Did BLTE header size change?");
+                }
+
+                bin.ReadByte();
+
+                install.hashSize = bin.ReadByte();
+                if (install.hashSize != 16) throw new Exception("Unsupported install hash size!");
+
+                install.numTags = bin.ReadUInt16(true);
+                install.numEntries = bin.ReadUInt32(true);
+
+                int bytesPerTag = ((int)install.numEntries + 7) / 8;
+
+                install.tags = new InstallTagEntry[install.numTags];
+
+                for (var i = 0; i < install.numTags; i++)
+                {
+                    install.tags[i].name = bin.ReadCString();
+                    install.tags[i].type = bin.ReadUInt16(true);
+
+                    var filebits = bin.ReadBytes(bytesPerTag);
+
+                    for (int j = 0; j < bytesPerTag; j++)
+                        filebits[j] = (byte)((filebits[j] * 0x0202020202 & 0x010884422010) % 1023);
+
+                    install.tags[i].files = new BitArray(filebits);
+                }
+
+                install.entries = new InstallFileEntry[install.numEntries];
+
+                for (var i = 0; i < install.numEntries; i++)
+                {
+                    install.entries[i].name = bin.ReadCString();
+                    install.entries[i].contentHash = bin.ReadBytes(install.hashSize);
+                    install.entries[i].contentHashString = BitConverter.ToString(install.entries[i].contentHash).Replace("-", "");
+                    install.entries[i].size = bin.ReadUInt32(true);
+                    install.entries[i].tags = new List<string>();
+                    for (var j = 0; j < install.numTags; j++)
+                    {
+                        if (install.tags[j].files[i] == true)
+                        {
+                            install.entries[i].tags.Add(install.tags[j].type + "=" + install.tags[j].name);
+                        }
+                    }
+                }
+            }
+
+            return install;
         }
 
         public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary)
@@ -104,8 +162,6 @@ namespace BuildBackup.DataAccess
             //TODO make this more flexible.  Perhaps pass in the region by name?
             var tagToUse = download.tags.Single(e => e.Name.Contains("enUS"));
             var tagToUse2 = download.tags.Single(e => e.Name.Contains("Windows"));
-
-            var asd = download.tags.Select(e => e.Name).ToList();
 
             for (var i = 0; i < download.entries.Length; i++)
             {
