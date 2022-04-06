@@ -62,7 +62,8 @@ namespace BuildBackup
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
-            EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
+            EncodingFileHandler encodingFileHandler = new EncodingFileHandler(cdns, cdn);
+            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig, cdns);
 
             GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic);
 
