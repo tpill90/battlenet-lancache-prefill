@@ -25,7 +25,7 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns, 
+        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns,
             Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
             Console.Write("Parsing install file list...");
@@ -34,7 +34,7 @@ namespace BuildBackup.DataAccess
             var installFile = ParseInstallFile(cdns.entries[0].path, encodingTable.installKey);
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
-            
+
             // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
             var archiveIndexDownloads = new List<InstallFileMatch>();
             var fileIndexDownloads = new List<InstallFileMatch>();
@@ -44,19 +44,19 @@ namespace BuildBackup.DataAccess
             foreach (var file in installFile.entries)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
-                if (!reverseLookupDictionary.ContainsKey(file.contentHashString))
+                if (!reverseLookupDictionary.ContainsKey(file.contentHashString.FromHexString().ToMD5()))
                 {
                     continue;
                 }
 
-				//TODO make multi region
+                //TODO make multi region
                 if (!file.tags.Contains("1=enUS"))
                 {
                     continue;
                 }
 
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
-                var upperHash = reverseLookupDictionary[file.contentHashString].ToUpper();
+                var upperHash = reverseLookupDictionary[file.contentHashString.FromHexString().ToMD5()].ToString().ToUpper();
 
                 if (archiveIndexDictionary.ContainsKey(upperHash))
                 {
@@ -96,10 +96,10 @@ namespace BuildBackup.DataAccess
             //        {
             //            Debugger.Break();
             //        }
-                    
+
             //    }
             //}
-         
+
             //foreach (var file in fileIndexDownloads)
             //{
             //    if (reverseLookupDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
@@ -110,7 +110,7 @@ namespace BuildBackup.DataAccess
             //        {
             //            Debugger.Break();
             //        }
-                    
+
             //    }
             //    if (archiveIndexDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
             //    {
@@ -130,7 +130,7 @@ namespace BuildBackup.DataAccess
                 UpperByteRange = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
             }).ToList();
 
-            foreach(var indexDownload in requests)
+            foreach (var indexDownload in requests)
             {
                 cdn.QueueRequest($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
             }

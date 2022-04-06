@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using MoreLinq;
+using Shared;
 
 namespace BuildBackup.DataAccess
 {
@@ -100,8 +102,17 @@ namespace BuildBackup.DataAccess
             return returnDict;
         }
 
+        private static Dictionary<string, IndexEntry> _archiveIndexDictionary;
+
         public static Dictionary<string, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn)
         {
+            if (_archiveIndexDictionary != null)
+            {
+                return _archiveIndexDictionary;
+            }
+
+            Console.Write("Building archive indexes...");
+            var timer = Stopwatch.StartNew();
             var indexDictionary = new ConcurrentDictionary<string, IndexEntry>();
             Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (archive, state, i) =>
             {
@@ -143,7 +154,10 @@ namespace BuildBackup.DataAccess
                 }
             });
 
-            return indexDictionary.ToDictionary();
+            timer.Stop();
+            Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            _archiveIndexDictionary = indexDictionary.ToDictionary();
+            return _archiveIndexDictionary;
         }
 
         private static List<string> ParsePatchFileIndex(string url, string hash, CDN cdn)

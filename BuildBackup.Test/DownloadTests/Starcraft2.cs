@@ -7,7 +7,7 @@ using Shared.Models;
 
 namespace BuildBackup.Test.DownloadTests
 {
-    public class Starcraft1
+    public class Starcraft2
     {
         private ComparisonResult _results;
 
@@ -15,13 +15,13 @@ namespace BuildBackup.Test.DownloadTests
         public void Setup()
         {
             // Run the download process only once
-            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true);
+            _results = Program.ProcessProduct(TactProducts.Starcraft2, new MockConsole(120, 50), true);
         }
 
         [Test]
         public void MissedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(1);
+            var expected = ByteSize.FromMegaBytes(2);
 
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
             Assert.Less(missedBandwidth.Bytes, expected.Bytes);
@@ -41,7 +41,7 @@ namespace BuildBackup.Test.DownloadTests
         public void Misses()
         {
             //TODO Improve this
-            Assert.LessOrEqual(250, _results.MissCount);
+            Assert.LessOrEqual(1522, _results.MissCount);
         }
     }
 }

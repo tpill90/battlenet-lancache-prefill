@@ -2,11 +2,14 @@
 {
     public struct BuildConfigFile
     {
-        public string root;
-        public string[] download;
+        public MD5Hash root;
+        
+        public MD5Hash[] download;
         public string[] downloadSize;
-        public string[] install;
+
+        public MD5Hash[] install;
         public string[] installSize;
+
         public string[] encoding;
         public string[] encodingSize;
         public string[] size;

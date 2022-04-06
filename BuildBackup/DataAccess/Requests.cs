@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
@@ -38,13 +39,13 @@ namespace BuildBackup.DataAccess
                 switch (cols[0])
                 {
                     case "root":
-                        buildConfig.root = cols[1];
+                        buildConfig.root = cols[1].FromHexString().ToMD5();
                         break;
                     case "download":
-                        buildConfig.download = cols[1].Split(' ');
+                        buildConfig.download = cols[1].Split(' ').Select(e => e.FromHexString().ToMD5()).ToArray();
                         break;
                     case "install":
-                        buildConfig.install = cols[1].Split(' ');
+                        buildConfig.install = cols[1].Split(' ').Select(e => e.FromHexString().ToMD5()).ToArray();
                         break;
                     case "encoding":
                         buildConfig.encoding = cols[1].Split(' ');

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using BuildBackup.Structs;
 
 namespace System.IO
 {
@@ -116,6 +119,92 @@ namespace System.IO
 
             return byteArray;
         }
+
+        public static T Read<T>(this BinaryReader reader) where T : unmanaged
+        {
+            byte[] result = reader.ReadBytes(Unsafe.SizeOf<T>());
+
+            return Unsafe.ReadUnaligned<T>(ref result[0]);
+        }
+
+        public static string ToHexString(this byte[] data)
+        {
+#if NET5_0_OR_GREATER
+            return Convert.ToHexString(data);
+#else
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+            if (data.Length == 0)
+                return string.Empty;
+            if (data.Length > int.MaxValue / 2)
+                throw new ArgumentOutOfRangeException(nameof(data), "SR.ArgumentOutOfRange_InputTooLarge");
+            return HexConverter.ToString(data, HexConverter.Casing.Upper);
+#endif
+        }
+
+        public static bool EqualsTo(this in MD5Hash key, byte[] array)
+        {
+            if (array.Length != 16)
+                return false;
+
+            ref MD5Hash other = ref Unsafe.As<byte, MD5Hash>(ref array[0]);
+
+            if (key.lowPart != other.lowPart || key.highPart != other.highPart)
+                return false;
+
+            return true;
+        }
+
+        public static bool EqualsTo9(this in MD5Hash key, byte[] array)
+        {
+            if (array.Length != 16)
+                return false;
+
+            ref MD5Hash other = ref Unsafe.As<byte, MD5Hash>(ref array[0]);
+
+            return EqualsTo9(key, other);
+        }
+
+        public static bool EqualsTo9(this in MD5Hash key, in MD5Hash other)
+        {
+            if (key.lowPart != other.lowPart)
+                return false;
+
+            if ((key.highPart & 0xFF) != (other.highPart & 0xFF))
+                return false;
+
+            return true;
+        }
+
+        public static bool EqualsTo(this in MD5Hash key, in MD5Hash other)
+        {
+            return key.lowPart == other.lowPart && key.highPart == other.highPart;
+        }
+
+        public static unsafe string ToHexString(this in MD5Hash key)
+        {
+#if NET5_0_OR_GREATER
+            ref MD5Hash md5ref = ref Unsafe.AsRef(in key);
+            var md5Span = MemoryMarshal.CreateReadOnlySpan(ref md5ref, 1);
+            var span = MemoryMarshal.AsBytes(md5Span);
+            return Convert.ToHexString(span);
+#else
+            byte[] array = new byte[16];
+            fixed (byte* aptr = array)
+            {
+                *(MD5Hash*)aptr = key;
+            }
+            return array.ToHexString();
+#endif
+        }
+
+        public static MD5Hash ToMD5(this byte[] array)
+        {
+            if (array.Length != 16)
+                throw new ArgumentException("array size != 16", nameof(array));
+
+            return Unsafe.As<byte, MD5Hash>(ref array[0]);
+        }
     }
 
     public static class CStringExtensions
@@ -159,6 +248,27 @@ namespace System.IO
                 res[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
             }
             return res;
+        }
+
+        public static byte[] FromHexString(this string str)
+        {
+#if NET5_0_OR_GREATER
+            return Convert.FromHexString(str);
+#else
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
+            if (str.Length == 0)
+                return Array.Empty<byte>();
+            if ((uint)str.Length % 2 != 0)
+                throw new FormatException("SR.Format_BadHexLength");
+
+            byte[] result = new byte[str.Length >> 1];
+
+            if (!HexConverter.TryDecodeFromUtf16(str, result))
+                throw new FormatException("SR.Format_BadHexChar");
+
+            return result;
+#endif
         }
     }
 }

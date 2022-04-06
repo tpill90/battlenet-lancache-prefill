@@ -20,39 +20,39 @@ namespace BuildBackup.DataAccess
             _cdn = cdn;
         }
 
-        public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig, CdnsFile cdns)
+        public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig)
         {
             Console.Write("Loading encoding table...");
             var timer = Stopwatch.StartNew();
 
-            EncodingFile encodingFile = GetEncoding(buildConfig, cdns);
-            EncodingTable encodingTable = new EncodingTable();
+            EncodingFile encodingFile = GetEncoding(buildConfig);
 
+            EncodingTable encodingTable = new EncodingTable();
             if (buildConfig.install.Length == 2)
             {
-                encodingTable.installKey = buildConfig.install[1];
+                encodingTable.installKey = buildConfig.install[1].ToString();
             }
 
             if (buildConfig.download.Length == 2)
             {
-                encodingTable.downloadKey = buildConfig.download[1];
+                encodingTable.downloadKey = buildConfig.download[1].ToString();
             }
 
             foreach (var entry in encodingFile.aEntries)
             {
-                if (entry.hash == buildConfig.rootUpper)
+                if (entry.hash == buildConfig.root)
                 {
-                    encodingTable.rootKey = entry.key.ToLower();
+                    encodingTable.rootKey = entry.key.ToString().ToLower();
                 }
 
-                if (encodingTable.downloadKey == "" && entry.hash == buildConfig.download[0].ToUpper())
+                if (encodingTable.downloadKey == "" && entry.hash == buildConfig.download[0])
                 {
-                    encodingTable.downloadKey = entry.key.ToLower();
+                    encodingTable.downloadKey = entry.key.ToString().ToLower();
                 }
 
-                if (encodingTable.installKey == "" && entry.hash == buildConfig.install[0].ToUpper())
+                if (encodingTable.installKey == "" && entry.hash == buildConfig.install[0])
                 {
-                    encodingTable.installKey = entry.key.ToLower();
+                    encodingTable.installKey = entry.key.ToString().ToLower();
                 }
 
                 if (!encodingTable.EncodingDictionary.ContainsKey(entry.key))
@@ -67,20 +67,20 @@ namespace BuildBackup.DataAccess
             return encodingTable;
         }
 
-        public EncodingFile GetEncoding(BuildConfigFile buildConfig, CdnsFile cdns)
+        private EncodingFile GetEncoding(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
+            string url = _cdns.entries[0].path;
+            var hash = buildConfig.encoding[1];
+            int encodingSize = 0;
             if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
             {
-                return GetEncoding(cdns.entries[0].path, buildConfig.encoding[1], 0);
+                encodingSize = 0;
             }
             else
             {
-                return GetEncoding(cdns.entries[0].path, buildConfig.encoding[1], int.Parse(buildConfig.encodingSize[1]));
+                encodingSize = int.Parse(buildConfig.encodingSize[1]);
             }
-        }
 
-        private EncodingFile GetEncoding(string url, string hash, int encodingSize = 0, bool parseTableB = false, bool checkStuff = false)
-        {
             var encoding = new EncodingFile();
 
             byte[] content = _cdn.Get($"{url}/data/", hash);
@@ -91,13 +91,16 @@ namespace BuildBackup.DataAccess
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {
-                    throw new Exception("File corrupt/not fully downloaded! Remove " + "data / " + hash[0] + hash[1] + " / " + hash[2] + hash[3] + " / " + hash + " from cache.");
+                    throw new Exception($"File corrupt/not fully downloaded! Remove data / {hash[0]}{hash[1]} / {hash[2]}{hash[3]} / {hash} from cache.");
                 }
             }
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
-                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN") { throw new Exception("Error while parsing encoding file. Did BLTE header size change?"); }
+                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN")
+                {
+                    throw new Exception("Error while parsing encoding file. Did BLTE header size change?");
+                }
                 encoding.unk1 = bin.ReadByte();
                 encoding.checksumSizeA = bin.ReadByte();
                 encoding.checksumSizeB = bin.ReadByte();
@@ -132,8 +135,8 @@ namespace BuildBackup.DataAccess
 
                     for (int i = 0; i < encoding.numEntriesA; i++)
                     {
-                        encoding.aHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                        encoding.aHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        encoding.aHeaders[i].firstHash = bin.Read<MD5Hash>();
+                        encoding.aHeaders[i].checksum = bin.Read<MD5Hash>();
                     }
                 }
                 else
@@ -150,14 +153,13 @@ namespace BuildBackup.DataAccess
                     ushort keysCount;
                     while ((keysCount = bin.ReadUInt16()) != 0)
                     {
-                        EncodingFileEntry entry = new EncodingFileEntry()
+                        EncodingFileEntry entry = new EncodingFileEntry
                         {
                             keyCount = keysCount,
                             size = bin.ReadUInt32(true),
-                            hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", ""),
-                            key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "")
+                            hash = bin.Read<MD5Hash>(),
+                            key = bin.Read<MD5Hash>()
                         };
-
                         // @TODO add support for multiple encoding keys
                         for (int key = 0; key < entry.keyCount - 1; key++)
                         {
@@ -185,8 +187,8 @@ namespace BuildBackup.DataAccess
 
                     for (int i = 0; i < encoding.numEntriesB; i++)
                     {
-                        encoding.bHeaders[i].firstHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                        encoding.bHeaders[i].checksum = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                        encoding.bHeaders[i].firstHash = bin.Read<MD5Hash>();
+                        encoding.bHeaders[i].checksum = bin.Read<MD5Hash>();
                     }
                 }
                 else

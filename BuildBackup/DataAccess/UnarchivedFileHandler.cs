@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.Structs;
@@ -31,15 +32,15 @@ namespace BuildBackup.DataAccess
 
             var timer = Stopwatch.StartNew();
 
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
+            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
             foreach (var indexEntry in archiveIndexDictionary)
             {
-                encodingTable.EncodingDictionary.Remove(indexEntry.Key.ToUpper());
+                encodingTable.EncodingDictionary.Remove(indexEntry.Key.FromHexString().ToMD5());
             }
-            
-            foreach(var entry in encodingTable.EncodingDictionary)
+
+            foreach (var entry in encodingTable.EncodingDictionary)
             {
-                _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key, writeToDevNull: true);
+                _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key.ToString(), writeToDevNull: true);
             }
 
             timer.Stop();

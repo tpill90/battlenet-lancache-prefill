@@ -5,18 +5,6 @@ using BuildBackup.Structs;
 
 namespace BuildBackup
 {
-    public class RangeRequest
-    {
-        public string archiveId;
-        public long start;
-        public long end;
-
-        public override string ToString()
-        {
-            return $"{archiveId} {start}-{end}";
-        }
-    }
-
     public struct VersionsFile
     {
         public VersionsEntry[] entries;
@@ -80,46 +68,6 @@ namespace BuildBackup
         public byte checksumSize;
         public uint numElements;
         public byte[] footerChecksum;
-    }
-
-    public struct EncodingFile
-    {
-        public byte unk1;
-        public byte checksumSizeA;
-        public byte checksumSizeB;
-        public ushort sizeA;
-        public ushort sizeB;
-        public uint numEntriesA;
-        public uint numEntriesB;
-        public byte unk2;
-        public ulong stringBlockSize;
-        public string[] stringBlockEntries;
-        public EncodingHeaderEntry[] aHeaders;
-        public EncodingFileEntry[] aEntries;
-        public EncodingHeaderEntry[] bHeaders;
-        public Dictionary<string, EncodingFileDescEntry> bEntries;
-        public string encodingESpec;
-    }
-
-    public struct EncodingHeaderEntry
-    {
-        public string firstHash;
-        public string checksum;
-    }
-
-    public struct EncodingFileEntry
-    {
-        public ushort keyCount;
-        public uint size;
-        public string hash;
-        public string key;
-    }
-
-    public struct EncodingFileDescEntry
-    {
-        public string key;
-        public uint stringIndex;
-        public ulong compressedSize;
     }
 
     public struct InstallFile
