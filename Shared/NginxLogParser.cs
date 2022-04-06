@@ -108,7 +108,7 @@ namespace Shared
         //TODO i think this is sometimes incorrectly combining results
         public static List<Request> CoalesceRequests(List<Request> initialRequests)
         {
-            // De-duplicating requests
+            // Initial De-duplicating requests
             var dedupedRequests = initialRequests.DistinctBy(e => new
                 {
                     e.Uri, 
@@ -119,6 +119,7 @@ namespace Shared
                 .OrderBy(e => e.Uri)
                 .ThenBy(e => e.LowerByteRange)
                 .ToList();
+
 
             //Coalescing any requests to the same URI that have sequential byte ranges.  
             var coalesced = new List<Request>();
@@ -152,6 +153,16 @@ namespace Shared
                 coalesced.Add(current);
             }
             
+            // Deduplicating again
+            coalesced = coalesced.DistinctBy(e => new
+                {
+                    e.Uri,
+                    e.LowerByteRange,
+                    e.UpperByteRange,
+                    e.DownloadWholeFile
+                })
+                .ToList();
+
             return coalesced;
         }
     }

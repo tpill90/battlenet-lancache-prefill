@@ -25,6 +25,23 @@ namespace Shared.Test
         }
 
         [Test]
+        public void DuplicatesCreatedFromCombinedRequests_WillGetRemoved()
+        {
+            var requests = new List<Request>
+            {
+                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                // Creating two requests that will be combined into a single request, that is a duplicate of the above
+                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 49, DownloadWholeFile = true },
+                new Request { Uri = "SampleUri", LowerByteRange = 50, UpperByteRange = 100, DownloadWholeFile = true }
+            };
+
+            var result = NginxLogParser.CoalesceRequests(requests);
+
+            // Expect there to be 1 result left, since we deduped the final request.
+            Assert.AreEqual(1, result.Count);
+        }
+
+        [Test]
         public void RequestsThatDontMatch_OnUri_WontGetCombined()
         {
             var requests = new List<Request>

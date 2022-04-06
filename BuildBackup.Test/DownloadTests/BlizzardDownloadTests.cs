@@ -29,12 +29,7 @@ namespace BuildBackup.Test.ActualDownloadTests
             Assert.AreEqual(0, results.MissCount);
         }
 
-        [Test]
-        public void Starcraft1_HasNoMisses()
-        {
-            var results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true);
-            Assert.AreEqual(0, results.MissCount);
-        }
+        
 
         [Test]
         public void Starcraft2_HasNoMisses()
