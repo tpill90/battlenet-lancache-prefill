@@ -20,7 +20,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft2 };
 
         public static bool UseCdnDebugMode = true;
         
@@ -56,20 +56,20 @@ namespace BuildBackup
             var patchLoader = new PatchLoader(cdn, cdns, console, product);
             var unarchivedFileHandler = new UnarchivedFileHandler(cdn, cdns, console);
             var ribbit = new Ribbit(cdn, cdns);
+            var encodingFileHandler = new EncodingFileHandler(cdns, cdn);
 
             // Finding the latest version of the game
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
-            EncodingFileHandler encodingFileHandler = new EncodingFileHandler(cdns, cdn);
-            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig, cdns);
-
             GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic);
 
+            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
             var downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdns.entries[0].path, encodingTable.downloadKey);
-
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn);
+
+            // Starting the download
             ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, cdns, archiveIndexDictionary);
             ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary);
 

@@ -16,6 +16,7 @@ using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
+    //TODO rename to something like HttpRequestHandler
     public class CDN
     {
         private readonly IConsole _console;
@@ -28,7 +29,7 @@ namespace BuildBackup
         //TODO break these requests out into a different class later
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
-        private List<Request> QueuedRequests = new List<Request>();
+        private readonly List<Request> _queuedRequests = new List<Request>();
 
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
@@ -63,7 +64,7 @@ namespace BuildBackup
 
             if (startBytes != null && endBytes != null)
             {
-                QueuedRequests.Add(new Request
+                _queuedRequests.Add(new Request
                 {
                     Uri = uri,
                     LowerByteRange = startBytes.Value,
@@ -73,7 +74,7 @@ namespace BuildBackup
             }
             else
             {
-                QueuedRequests.Add(new Request
+                _queuedRequests.Add(new Request
                 {
                     Uri = uri,
                     DownloadWholeFile = true,
@@ -95,15 +96,9 @@ namespace BuildBackup
             return Get(uri);
         }
 
-        public void GetByteRange(string rootPath, string hashId, long start, long end, bool writeToDevNull)
-        {
-            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            Get(uri, writeToDevNull, start, end);
-        }
-
         public void DownloadQueuedRequests()
         {
-            var coalesced = NginxLogParser.CoalesceRequests(QueuedRequests).ToList();
+            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests).ToList();
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
 
@@ -115,7 +110,7 @@ namespace BuildBackup
             {
                 if (entry.DownloadWholeFile)
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: null, null);
+                    Get(entry.Uri, entry.WriteToDevNull, startBytes: null, null);
                 }
                 else
                 {
@@ -136,7 +131,7 @@ namespace BuildBackup
         }
 
         //TODO comment
-        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null, string callingMethod = null)
+        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             if (startBytes != null && endBytes == null)
             {
@@ -166,7 +161,7 @@ namespace BuildBackup
                 });
             }
 
-            // TODO comment
+            // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
             if (DebugMode && writeToDevNull)
             {
                 return null;
@@ -177,78 +172,55 @@ namespace BuildBackup
             {
                 var uri = new Uri($"http://{cdn}/{requestPath}");
 
-                //if (DebugMode)
-                //{
-                //    string outputFilePath = Path.Combine("cache" + uri.AbsolutePath);
-                //    if (!Directory.Exists(outputFilePath))
-                //    {
-                //        Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath));
-                //    }
-
-                //    //TODO I don't want this to run, unless I'm in "debug" mode.
-                //    if (File.Exists(outputFilePath))
-                //    {
-                //        return File.ReadAllBytes(outputFilePath);
-                //    }
-                //}
-                
-                try
+                if (!writeToDevNull)
                 {
-                    using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                    if (startBytes != null && endBytes != null)
+                    string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                    if (File.Exists(outputFilePath))
                     {
-                        requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
+                        return File.ReadAllBytes(outputFilePath);
                     }
+                }
+                
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                if (startBytes != null && endBytes != null)
+                {
+                    requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
+                }
 
-                    using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
-                    using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
+                using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
+                using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
 
-                    if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
+                {
+                    if(writeToDevNull)
                     {
-                        if(writeToDevNull)
-                        {
-                            // Dump the received data, so we don't have to waste time writing it to disk.
-                            responseStream.CopyToAsync(Stream.Null).Wait();
-                            return null;
-                        }
-                        else
-                        {
-                            using var memoryStream = new MemoryStream();
-                            responseStream.CopyToAsync(memoryStream).Wait();
-
-                            var byteArray = memoryStream.ToArray();
-
-                            //if (DebugMode)
-                            //{
-                            //    string outputFilePath = Path.Combine("cache" + uri.AbsolutePath);
-                            //    File.WriteAllBytes(outputFilePath, byteArray);
-                            //}
-                            
-                            return byteArray;
-                        }
-                    }
-                    else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        Logger.WriteLine($"File not found on CDN {cdn} trying next CDN (if available)..");
+                        // Dump the received data, so we don't have to waste time writing it to disk.
+                        responseStream.CopyToAsync(Stream.Null).Wait();
+                        return null;
                     }
                     else
                     {
-                        throw new FileNotFoundException("Error retrieving file: HTTP status code " + response.StatusCode + " on URL " + $"http://{cdn}/{requestPath.ToLower()}");
+                        using var memoryStream = new MemoryStream();
+                        responseStream.CopyToAsync(memoryStream).Wait();
+
+                        var byteArray = memoryStream.ToArray();
+                        
+                        // Cache to disk
+                        string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                        FileInfo file = new FileInfo(outputFilePath);
+                        file.Directory.Create();
+                        File.WriteAllBytes(file.FullName, byteArray);
+                        
+                        return byteArray;
                     }
                 }
-                catch (TaskCanceledException e)
+                else
                 {
-                    if (!e.CancellationToken.IsCancellationRequested)
-                    {
-                        Logger.WriteLine("!!! Timeout while retrieving file " + $"http://{cdn}/{requestPath.ToLower()}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteLine("!!! Error retrieving file " + $"http://{cdn}/{requestPath.ToLower()}" + ": " + e.Message);
+                    throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdn}/{requestPath.ToLower()}");
                 }
             }
-            Logger.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!", true);
+
+            Console.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!");
             return Array.Empty<byte>();
         }
     }

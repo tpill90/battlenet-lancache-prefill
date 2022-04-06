@@ -30,18 +30,15 @@ namespace Shared.Models
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
         public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
 
-        //TODO implement this
-        public string CallingMethod { get; set; }
-
         public override string ToString()
         {
             if (DownloadWholeFile)
             {
-                return $"{Uri} - - {CallingMethod}";
+                return $"{Uri} - -";
             }
             
             var size = ByteSize.FromBytes((double)TotalBytes);
-            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size} {CallingMethod}";
+            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
         }
     }
 }
