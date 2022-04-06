@@ -20,12 +20,24 @@ namespace BuildBackup
         public string decryptionKeyName;
     }
 
+    public struct Archive
+    {
+        public string hashId;
+        public byte[] mask;
+
+        public override string ToString()
+        {
+            return $"{hashId} {mask.Length}";
+        }
+    }
+
     public struct CDNConfigFile
     {
         /// <summary>
         /// A list of CDN identifiers for all archives
         /// </summary>
-        public string[] archives;
+        public Archive[] archives;
+
         public string archiveGroup;
         public string[] patchArchives;
         public string patchArchiveGroup;

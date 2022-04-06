@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
 using Konsole;
-using Newtonsoft.Json;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -20,7 +18,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft2 };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
 
         public static bool UseCdnDebugMode = true;
         
@@ -63,24 +61,24 @@ namespace BuildBackup
             BuildConfigFile buildConfig = Requests.GetBuildConfig(cdns.entries[0].path, targetVersion, cdn);
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
-            GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic);
+            logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns);
 
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
             var downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdns.entries[0].path, encodingTable.downloadKey);
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn);
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn, product, Config.BattleNetPatchUri);
 
             // Starting the download
             ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, cdns, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary);
+            ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary, cdnConfig);
 
-            unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable);
-
-            //DownloadFileHandler.DownloadFullArchives(cdnConfig, cdn, cdns);
+            unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, product);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch);
             patchLoader.DownloadPatchFiles(cdnConfig);
             patchLoader.DownloadFullPatchArchives(cdnConfig);
+
+            //DownloadFileHandler.DownloadFullArchives(cdnConfig, cdn, cdns);
 
             cdn.DownloadQueuedRequests();
 
@@ -89,50 +87,9 @@ namespace BuildBackup
 
             var comparisonUtil = new ComparisonUtil(console);
             var result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
-
-            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\missing.json", JsonConvert.SerializeObject(result.Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
-           // File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\excess.json", JsonConvert.SerializeObject(result.UnnecessaryRequests));
+            
             return result;
         }
-
-        private static void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns, Logic logic)
-        {
-            // Not required by these products
-            if (product == TactProducts.Starcraft1)
-            {
-                return;
-            }
-
-            if (cdnConfig.builds != null)
-            {
-                BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
-            }
-
-            if (!string.IsNullOrEmpty(targetVersion.keyRing))
-            {
-                // Starcraft 2 calls this
-                cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
-            }
-
-            //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
-            var decryptionKeyName = logic.GetDecryptionKeyName(cdns, product, targetVersion);
-            //if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
-            //{
-            //    if (!File.Exists(decryptionKeyName + ".ak"))
-            //    {
-            //        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
-            //        cdn.isEncrypted = false;
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        cdn.isEncrypted = true;
-            //    }
-            //}
-            //else
-            //{
-            //    cdn.isEncrypted = false;
-            //}
-        }
+        
     }
 }

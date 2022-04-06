@@ -41,7 +41,10 @@ namespace BuildBackup
                 {
                     case "archives":
                         var archives = cols[1].Split(' ');
-                        cdnConfig.archives = archives;
+                        cdnConfig.archives = archives.Select(e => new Archive()
+                        {
+                            hashId = e
+                        }).ToArray();
                         break;
                     case "archive-group":
                         cdnConfig.archiveGroup = cols[1];
@@ -369,11 +372,11 @@ namespace BuildBackup
             }
             return gblob;
         }
-
-        //TODO refactor this cdns file out
+        
         public string GetDecryptionKeyName(CdnsFile cdns, TactProduct tactProduct, VersionsEntry targetVersion)
         {
             string decryptionKeyName = null;
+
             var gameblob = GetGameBlob(tactProduct.ProductCode);
             if (!string.IsNullOrEmpty(gameblob.decryptionKeyName))
             {
@@ -499,7 +502,50 @@ namespace BuildBackup
 
             return root;
         }
-        
-        
+
+        public void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns)
+        {
+            var timer = Stopwatch.StartNew();
+            // Not required by these products
+            if (product == TactProducts.Starcraft1)
+            {
+                return;
+            }
+
+            Console.Write("Loading encryption...");
+
+            if (cdnConfig.builds != null)
+            {
+                BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
+            }
+
+            if (!string.IsNullOrEmpty(targetVersion.keyRing))
+            {
+                // Starcraft 2 calls this
+                cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
+            }
+
+            //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
+            //var decryptionKeyName = GetDecryptionKeyName(cdns, product, targetVersion);
+            //if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
+            //{
+            //    if (!File.Exists(decryptionKeyName + ".ak"))
+            //    {
+            //        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
+            //        cdn.isEncrypted = false;
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        cdn.isEncrypted = true;
+            //    }
+            //}
+            //else
+            //{
+            //    cdn.isEncrypted = false;
+            //}
+
+            Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+        }
     }
 }

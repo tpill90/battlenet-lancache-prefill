@@ -91,7 +91,7 @@ namespace BuildBackup.DataAccess
 
             Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 10 }, (entry) =>
             {
-                _cdn.Get($"{_cdns.entries[0].path}/data/", entry, writeToDevNull: true);
+                _cdn.Get($"{_cdns.entries[0].path}/data/", entry.hashId, writeToDevNull: true);
                 count++;
             });
             timer.Stop();

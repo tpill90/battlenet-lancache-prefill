@@ -73,55 +73,6 @@ namespace BuildBackup.DataAccess
                 }
             }
 
-            //foreach (var file in fileIndexList)
-            //{
-            //    if (reverseLookupDictionary.ContainsKey(file.Key))
-            //    {
-            //        var entry = reverseLookupDictionary[file.Key];
-
-            //        if (archiveIndexDictionary.ContainsKey(entry))
-            //        {
-            //            Debugger.Break();
-            //        }
-
-            //    }
-            //    if (archiveIndexDictionary.ContainsKey(file.Key))
-            //    {
-            //        Debugger.Break();
-            //    }
-            //    if (encodingTable.EncodingDictionary.ContainsKey(file.Key))
-            //    {
-            //        var entry = encodingTable.EncodingDictionary[file.Key];
-            //        if (archiveIndexDictionary.ContainsKey(entry))
-            //        {
-            //            Debugger.Break();
-            //        }
-
-            //    }
-            //}
-
-            //foreach (var file in fileIndexDownloads)
-            //{
-            //    if (reverseLookupDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
-            //    {
-            //        var entry = reverseLookupDictionary[file.InstallFileEntry.contentHashString];
-
-            //        if (archiveIndexDictionary.ContainsKey(entry))
-            //        {
-            //            Debugger.Break();
-            //        }
-
-            //    }
-            //    if (archiveIndexDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
-            //    {
-            //        Debugger.Break();
-            //    }
-            //    if (encodingTable.EncodingDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
-            //    {
-            //        Debugger.Break();
-            //    }
-            //}
-
             var requests = archiveIndexDownloads.Select(e => new Request
             {
                 Uri = e.IndexEntry.IndexId,
@@ -197,7 +148,7 @@ namespace BuildBackup.DataAccess
             return install;
         }
 
-        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary)
+        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile)
         {
             Console.Write("Parsing download file list...");
             var timer = Stopwatch.StartNew();
@@ -224,13 +175,56 @@ namespace BuildBackup.DataAccess
                 }
 
                 IndexEntry e = archiveIndexDictionary[current.hash];
+                uint blockSize = 1048576;
 
+                uint offset = e.offset;
+                uint size = e.size;
+                uint blockStart = offset / blockSize;
+                uint blockEnd = (offset + size + blockSize - 1) / blockSize;
+
+                uint getStart = blockEnd;
+                uint getEnd = blockStart;
+
+                var mask = cdnConfigFile.archives[e.index].mask;
+
+                for (int j = (int)blockStart; j < blockEnd; ++j)
+                {
+                    var condition2 = (mask[j / 8] & (1 << (j & 7)) ) != 0;
+                    if (j / 8 >= mask.Length || condition2)
+                    {
+                        getStart = (uint)Math.Max(getStart, i);
+                        getEnd = (uint)Math.Max(getEnd, i + 1);
+                    }
+                }
+
+                
+
+
+                //if (getStart < getEnd)
+                //{
+                //    var startBytes = getStart * blockSize;
+                //    var endBytes = (getEnd * blockSize) - 1;
+                //    //cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytes, endBytes, writeToDevNull: true);
+                //    indexDownloads++;
+                //}
+                if (blockStart < blockEnd)
+                {
+                    var excessBlocks = 1;
+                    var startBytesBlock = Math.Max(((int)blockStart - excessBlocks) * blockSize, 0);
+                    var endBytesBlock = ((blockEnd + excessBlocks) * blockSize) - 1;
+                    cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytesBlock, endBytesBlock, writeToDevNull: true);
+                }
+                else
+                {
+                    Debugger.Break();
+                }
+                
+
+
+                var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
-                int upperByteRange = ((int) e.offset + (int) e.size - 1);
-                cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, e.offset, upperByteRange, writeToDevNull: true);
-
-                indexDownloads++;
-                totalBytes += (upperByteRange - e.offset);
+                int upperByteRange = ((int)e.offset + (int)e.size - 1);
+                //cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
             }
             
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");

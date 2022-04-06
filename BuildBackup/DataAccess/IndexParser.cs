@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using BuildBackup.DebugUtil;
+using BuildBackup.Structs;
 using MoreLinq;
 using Shared;
+using Shared.Models;
 
 namespace BuildBackup.DataAccess
 {
@@ -104,8 +107,10 @@ namespace BuildBackup.DataAccess
 
         private static Dictionary<string, IndexEntry> _archiveIndexDictionary;
 
-        public static Dictionary<string, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn)
+        public static Dictionary<string, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn, TactProduct product, Uri blizzardCdnUri)
         {
+            int CHUNK_SIZE = 4096;
+            uint BlockSize = (1 << 20);
             if (_archiveIndexDictionary != null)
             {
                 return _archiveIndexDictionary;
@@ -114,48 +119,126 @@ namespace BuildBackup.DataAccess
             Console.Write("Building archive indexes...");
             var timer = Stopwatch.StartNew();
             var indexDictionary = new ConcurrentDictionary<string, IndexEntry>();
+
+            var fileSizeProvider = new FileSizeProvider(product, blizzardCdnUri.ToString());
+
             Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (archive, state, i) =>
             {
                 // Requests the actual index contents, and parses them into a useable format
-                byte[] indexContent = cdn.GetIndex($"{url}/data/", cdnConfig.archives[i]);
+                byte[] indexContent = cdn.GetIndex($"{url}/data/", cdnConfig.archives[i].hashId);
 
-                using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
+                using (var stream = new MemoryStream(indexContent))
+                using (BinaryReader br = new BinaryReader(stream))
                 {
-                    int indexEntries = indexContent.Length / 4096;
+                    #region footer
+                    stream.Seek(-20, SeekOrigin.End);
 
-                    for (var b = 0; b < indexEntries; b++)
+                    byte version = br.ReadByte();
+
+                    if (version != 1)
+                        throw new InvalidDataException("ParseIndex -> version");
+
+                    byte unk1 = br.ReadByte();
+
+                    if (unk1 != 0)
+                        throw new InvalidDataException("ParseIndex -> unk1");
+
+                    byte unk2 = br.ReadByte();
+
+                    if (unk2 != 0)
+                        throw new InvalidDataException("ParseIndex -> unk2");
+
+                    byte blockSizeKb = br.ReadByte();
+
+                    if (blockSizeKb != 4)
+                        throw new InvalidDataException("ParseIndex -> blockSizeKb");
+
+                    byte offsetBytes = br.ReadByte();
+
+                    if (offsetBytes != 4)
+                        throw new InvalidDataException("ParseIndex -> offsetBytes");
+
+                    byte sizeBytes = br.ReadByte();
+
+                    if (sizeBytes != 4)
+                        throw new InvalidDataException("ParseIndex -> sizeBytes");
+
+                    byte keySizeBytes = br.ReadByte();
+
+                    if (keySizeBytes != 16)
+                        throw new InvalidDataException("ParseIndex -> keySizeBytes");
+
+                    byte checksumSize = br.ReadByte();
+
+                    if (checksumSize != 8)
+                        throw new InvalidDataException("ParseIndex -> checksumSize");
+
+                    int numElements = br.ReadInt32();
+
+                    if (numElements * (keySizeBytes + sizeBytes + offsetBytes) > stream.Length)
+                        throw new Exception("ParseIndex failed");
+
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    #endregion
+
+                    for (int j = 0; j < numElements; j++)
                     {
-                        for (var bi = 0; bi < 170; bi++)
+                        MD5Hash key = br.Read<MD5Hash>();
+
+                        var entry = new IndexEntry
                         {
-                            var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-
-                            var entry = new IndexEntry
+                            index = (short)i,
+                            size = br.ReadUInt32(true),
+                            offset = br.ReadUInt32(true),
+                            IndexId = cdnConfig.archives[i].hashId
+                        };
+                        if (!indexDictionary.ContainsKey(key.ToString()))
+                        {
+                            if (indexDictionary.TryAdd(key.ToString(), entry))
                             {
-                                index = (short) i,
-                                size = bin.ReadUInt32(true),
-                                offset = bin.ReadUInt32(true),
-                                IndexId = cdnConfig.archives[i]
-                            };
-
-                            if (!indexDictionary.ContainsKey(headerHash))
+                            }
+                            else
                             {
-                                if (indexDictionary.TryAdd(headerHash, entry))
-                                {
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"could not add {headerHash}, it was already added.");
-                                }
+                                Console.WriteLine($"could not add {key.ToString()}, it was already added.");
                             }
                         }
 
-                        bin.ReadBytes(16);
+                        // each chunk is 4096 bytes, and zero padding at the end
+                        long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);
+
+                        // skip padding
+                        if (remaining < 16 + 4 + 4)
+                        {
+                            stream.Position += remaining;
+                        }
                     }
                 }
             });
 
+            // Building mask sizes
+            for (int i = 0; i < cdnConfig.archives.Length; i++)
+            {
+                var hashId = cdnConfig.archives[i].hashId.ToLower();
+                var uri = $"{url}/data/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+                var contentLength = fileSizeProvider.GetContentLength(new Request() { Uri = uri });
+
+                long chunks = (contentLength + BlockSize - 1) / BlockSize;
+                var size = (chunks + 7) / 8;
+                cdnConfig.archives[i].mask = new byte[(int)size];
+
+                for (int k = 0; k < size; k++)
+                {
+                    cdnConfig.archives[i].mask[k] = 0xFF;
+                }
+            }
+            
+
             timer.Stop();
             Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
+            fileSizeProvider.Save();
+
             _archiveIndexDictionary = indexDictionary.ToDictionary();
             return _archiveIndexDictionary;
         }
