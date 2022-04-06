@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
 using Konsole;
+using Newtonsoft.Json;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -51,7 +53,7 @@ namespace BuildBackup
             Console.WriteLine($"GetCDNs loaded in {Colors.Yellow(timer2.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             // Initializing other classes, now that we have our CDN info loaded
-            var patchLoader = new PatchLoader(cdn, cdns, console);
+            var patchLoader = new PatchLoader(cdn, cdns, console, product);
             var unarchivedFileHandler = new UnarchivedFileHandler(cdn, cdns, console);
             var ribbit = new Ribbit(cdn, cdns);
 
@@ -62,18 +64,21 @@ namespace BuildBackup
 
             EncodingTable encodingTable = logic.BuildEncodingTable(buildConfig, cdns);
 
+            GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns, logic);
+
             var downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdns.entries[0].path, encodingTable.downloadKey);
-            var installFile = logic.GetInstall(cdns.entries[0].path, encodingTable.installKey);
 
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn);
-            ribbit.HandleInstallFile(cdnConfig, encodingTable, installFile, cdn, cdns, archiveIndexDictionary);
+            ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, cdns, archiveIndexDictionary);
             ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary);
 
             unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable);
 
+            //DownloadFileHandler.DownloadFullArchives(cdnConfig, cdn, cdns);
+
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
-            patchLoader.DownloadPatchArchives(cdnConfig, patch, product);
-            patchLoader.DownloadPatchFiles(cdnConfig, product);
+            patchLoader.DownloadPatchArchives(cdnConfig, patch);
+            patchLoader.DownloadPatchFiles(cdnConfig);
             patchLoader.DownloadFullPatchArchives(cdnConfig);
 
             cdn.DownloadQueuedRequests();
@@ -83,11 +88,20 @@ namespace BuildBackup
 
             var comparisonUtil = new ComparisonUtil(console);
             var result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
+
+            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\missing.json", JsonConvert.SerializeObject(result.Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
+           // File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\excess.json", JsonConvert.SerializeObject(result.UnnecessaryRequests));
             return result;
         }
 
-        private static bool GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns, Logic logic)
+        private static void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns, Logic logic)
         {
+            // Not required by these products
+            if (product == TactProducts.Starcraft1)
+            {
+                return;
+            }
+
             if (cdnConfig.builds != null)
             {
                 BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
@@ -95,6 +109,7 @@ namespace BuildBackup
 
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
+                // Starcraft 2 calls this
                 cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
             }
 
@@ -117,8 +132,6 @@ namespace BuildBackup
             //{
             //    cdn.isEncrypted = false;
             //}
-
-            return false;
         }
     }
 }

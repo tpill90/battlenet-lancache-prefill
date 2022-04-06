@@ -30,6 +30,7 @@ namespace BuildBackup.DataAccess
             Console.Write("Processing individual, unarchived files ... ");
 
             var timer = Stopwatch.StartNew();
+
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
             foreach (var indexEntry in archiveIndexDictionary)
             {

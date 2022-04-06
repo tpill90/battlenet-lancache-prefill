@@ -34,47 +34,93 @@ namespace BuildBackup.DataAccess
             var installFile = ParseInstallFile(cdns.entries[0].path, encodingTable.installKey);
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
-
-            //TODO lookup why these are missing
-            List<InstallFileEntry> hashLookupMisses = new List<InstallFileEntry>();
-
+            
             // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
             var archiveIndexDownloads = new List<InstallFileMatch>();
             var fileIndexDownloads = new List<InstallFileMatch>();
 
             var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
 
-            foreach (var file in installFile.entries.ToList())
+            foreach (var file in installFile.entries)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
-                if (reverseLookupDictionary.ContainsKey(file.contentHashString.ToUpper()))
+                if (!reverseLookupDictionary.ContainsKey(file.contentHashString))
                 {
-                    // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
-                    var upperHash = reverseLookupDictionary[file.contentHashString].ToUpper();
-
-                    if (archiveIndexDictionary.ContainsKey(upperHash))
-                    {
-                        IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
-                        archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex, InstallFileEntry = file });
-                    }
-                    else if (fileIndexList.ContainsKey(upperHash))
-                    {
-                        IndexEntry indexMatch = fileIndexList[upperHash];
-                        fileIndexDownloads.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
-                        //TODO Not sure what needs to be done here
-                        //Debugger.Break();
-                    }
-                    else
-                    {
-                        hashLookupMisses.Add(file);
-                    }
+                    continue;
                 }
-                else
+
+				//TODO make multi region
+                if (!file.tags.Contains("1=enUS"))
                 {
-                    hashLookupMisses.Add(file);
+                    continue;
+                }
+
+                // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
+                var upperHash = reverseLookupDictionary[file.contentHashString].ToUpper();
+
+                if (archiveIndexDictionary.ContainsKey(upperHash))
+                {
+                    IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
+                    archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex, InstallFileEntry = file });
+                    //Debugger.Break();
+                }
+                else if (fileIndexList.ContainsKey(upperHash))
+                {
+                    IndexEntry indexMatch = fileIndexList[upperHash];
+                    fileIndexDownloads.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
+                    //TODO Not sure what needs to be done here
+                    //Debugger.Break();
                 }
             }
 
+            //foreach (var file in fileIndexList)
+            //{
+            //    if (reverseLookupDictionary.ContainsKey(file.Key))
+            //    {
+            //        var entry = reverseLookupDictionary[file.Key];
+
+            //        if (archiveIndexDictionary.ContainsKey(entry))
+            //        {
+            //            Debugger.Break();
+            //        }
+
+            //    }
+            //    if (archiveIndexDictionary.ContainsKey(file.Key))
+            //    {
+            //        Debugger.Break();
+            //    }
+            //    if (encodingTable.EncodingDictionary.ContainsKey(file.Key))
+            //    {
+            //        var entry = encodingTable.EncodingDictionary[file.Key];
+            //        if (archiveIndexDictionary.ContainsKey(entry))
+            //        {
+            //            Debugger.Break();
+            //        }
+                    
+            //    }
+            //}
+         
+            //foreach (var file in fileIndexDownloads)
+            //{
+            //    if (reverseLookupDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
+            //    {
+            //        var entry = reverseLookupDictionary[file.InstallFileEntry.contentHashString];
+
+            //        if (archiveIndexDictionary.ContainsKey(entry))
+            //        {
+            //            Debugger.Break();
+            //        }
+                    
+            //    }
+            //    if (archiveIndexDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
+            //    {
+            //        Debugger.Break();
+            //    }
+            //    if (encodingTable.EncodingDictionary.ContainsKey(file.InstallFileEntry.contentHashString))
+            //    {
+            //        Debugger.Break();
+            //    }
+            //}
 
             var requests = archiveIndexDownloads.Select(e => new Request
             {
@@ -176,7 +222,7 @@ namespace BuildBackup.DataAccess
                 {
                     continue;
                 }
-                
+
                 IndexEntry e = archiveIndexDictionary[current.hash];
 
                 // Need to subtract 1, since the byte range is "inclusive"

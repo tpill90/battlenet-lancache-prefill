@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ByteSizeLib;
 using Konsole;
+using Newtonsoft.Json;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -28,10 +30,13 @@ namespace BuildBackup.DebugUtil
             var timer = Stopwatch.StartNew();
 
             //TODO sometimes seems to incorrectly combine requests.
-            //allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
+            allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
 
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
+
+            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
+            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
 
             var comparisonResult = new ComparisonResult
             {
@@ -53,6 +58,9 @@ namespace BuildBackup.DebugUtil
             comparisonResult.UnnecessaryRequests = allRequestsMade;
 
             comparisonResult.PrintOutput();
+
+            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\missing.json", JsonConvert.SerializeObject(comparisonResult.Misses));
+            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\excess.json", JsonConvert.SerializeObject(comparisonResult.UnnecessaryRequests));
 
             Console.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
@@ -93,11 +101,13 @@ namespace BuildBackup.DebugUtil
                     request.UpperByteRange = fileSizeProvider.GetContentLength(request) - 1;
                 }
             }
-            
         }
         
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
+            CompareRangeMatches(generatedRequests, originalRequests);
+            CompareRangeMatches(originalRequests, generatedRequests);
+
             // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
             var requestsToProcess = new List<Request>(originalRequests.Count);
             foreach (var request in originalRequests)
@@ -110,7 +120,70 @@ namespace BuildBackup.DebugUtil
             while(requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
-                
+
+                var partialMatchesLower = generatedRequests.Where(e => e.Uri == current.Uri
+                                                                  && current.LowerByteRange <= e.UpperByteRange
+                                                                  && current.UpperByteRange >= e.UpperByteRange).ToList();
+                if (partialMatchesLower.Any())
+                {
+                    // Case where the request we are testing against satisfies the whole match - lower end match
+                    var generatedRequest = partialMatchesLower[0];
+
+                    // Store the originals, since we need to swap them
+                    var originalUpper = generatedRequest.UpperByteRange;
+                    var originalLower = current.LowerByteRange;
+
+                    // Now swap them
+                    generatedRequest.UpperByteRange = originalLower - 1;
+                    current.LowerByteRange = originalUpper + 1;
+
+                    continue;
+                }
+
+                var partialMatchesUpper = generatedRequests.Where(e => e.Uri == current.Uri
+                                                                       && current.UpperByteRange >= e.LowerByteRange
+                                                                       && current.LowerByteRange <= e.LowerByteRange).ToList();
+                if (partialMatchesUpper.Any())
+                {
+                    // Store the originals, since we need to swap them
+                    var originalUpper = current.UpperByteRange;
+                    var originalLower = partialMatchesUpper[0].LowerByteRange;
+
+                    // Now swap them
+                    partialMatchesUpper[0].LowerByteRange = originalUpper + 1;
+                    current.UpperByteRange = originalLower - 1;
+
+                    continue;
+                }
+
+                //TODO figure out why this is happening
+                if (current.TotalBytes == 0)
+                {
+                    requestsToProcess.RemoveAt(0);
+                    continue;
+                }
+
+                // No match found - Put it back into the original array, as a "miss"
+                requestsToProcess.RemoveAt(0);
+                originalRequests.Add(current);
+            }
+        }
+
+        private void CompareRangeMatches(List<Request> generatedRequests, List<Request> originalRequests)
+        {
+            // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
+            var requestsToProcess = new List<Request>(originalRequests.Count);
+            foreach (var request in originalRequests)
+            {
+                requestsToProcess.Add(request);
+            }
+            originalRequests.Clear();
+
+            // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
+            while (requestsToProcess.Any())
+            {
+                var current = requestsToProcess.First();
+
                 // Special case for indexes
                 if (current.Uri.Contains(".index"))
                 {
@@ -154,50 +227,6 @@ namespace BuildBackup.DebugUtil
                     generatedRequests.AddRange(SplitRequests(match, current));
                     generatedRequests.Remove(match);
 
-                    requestsToProcess.RemoveAt(0);
-                    continue;
-                }
-
-
-
-                var partialMatchesLower = generatedRequests.Where(e => e.Uri == current.Uri 
-                                                                  && current.LowerByteRange <= e.UpperByteRange
-                                                                  && current.UpperByteRange >= e.UpperByteRange).ToList();
-                if (partialMatchesLower.Any())
-                {
-                    // Case where the request we are testing against satisfies the whole match - lower end match
-                    var generatedRequest = partialMatchesLower[0];
-                    
-                    // Store the originals, since we need to swap them
-                    var originalUpper = generatedRequest.UpperByteRange;
-                    var originalLower = current.LowerByteRange;
-
-                    // Now swap them
-                    generatedRequest.UpperByteRange = originalLower - 1;
-                    current.LowerByteRange = originalUpper + 1;
-                    
-                    continue;
-                }
-
-                var partialMatchesUpper = generatedRequests.Where(e => e.Uri == current.Uri
-                                                                       && current.UpperByteRange >= e.LowerByteRange
-                                                                       && current.LowerByteRange <= e.LowerByteRange).ToList();
-                if (partialMatchesUpper.Any())
-                {
-                    // Store the originals, since we need to swap them
-                    var originalUpper = current.UpperByteRange;
-                    var originalLower = partialMatchesUpper[0].LowerByteRange; 
-
-                    // Now swap them
-                    partialMatchesUpper[0].LowerByteRange = originalUpper + 1;
-                    current.UpperByteRange = originalLower - 1;
-                    
-                    continue;
-                }
-
-                //TODO figure out why this is happening
-                if (current.TotalBytes == 0)
-                {
                     requestsToProcess.RemoveAt(0);
                     continue;
                 }
