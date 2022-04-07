@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using Shared;
+using BuildBackup;
+using BuildBackup.DebugUtil;
 using Colors = Shared.Colors;
 
 namespace RequestReplayer

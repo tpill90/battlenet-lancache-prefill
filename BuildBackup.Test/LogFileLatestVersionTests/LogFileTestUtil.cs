@@ -1,9 +1,7 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
+using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
 using Konsole;
-using Shared;
 
 namespace BuildBackup.Test.LogFileLatestVersionTests
 {
@@ -14,13 +12,7 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
 
         public static string GetLatestLogFileVersion(TactProduct product)
         {
-            // Finding the most recent log file version
-            var latestLogFile = new DirectoryInfo($@"{LogFileBasePath}\{product.DisplayName}")
-                .GetFiles()
-                .Where(e => !e.Name.Contains("coalesced"))
-                .OrderByDescending(e => e.LastWriteTime)
-                .FirstOrDefault();
-            return latestLogFile.Name.Replace(".log", "");
+            return NginxLogParser.GetLatestLogVersionForProduct(LogFileBasePath, product);
         }
 
         public static VersionsEntry GetLatestCdnVersion(TactProduct product)

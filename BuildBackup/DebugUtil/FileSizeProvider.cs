@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using BuildBackup.DebugUtil.Models;
 using Newtonsoft.Json;
-using Shared;
-using Shared.Models;
 
 namespace BuildBackup.DebugUtil
 {

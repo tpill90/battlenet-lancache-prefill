@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BuildBackup.DebugUtil;
+using BuildBackup.DebugUtil.Models;
 using NUnit.Framework;
-using Shared.Models;
 
 namespace BuildBackup.Test.DebugUtilTests
 {

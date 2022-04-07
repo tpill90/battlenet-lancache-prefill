@@ -1,7 +1,7 @@
 ﻿using System;
 using ByteSizeLib;
 
-namespace Shared.Models
+namespace BuildBackup.DebugUtil.Models
 {
     /// <summary>
     /// Model that represents a request that could be made to a CDN.  

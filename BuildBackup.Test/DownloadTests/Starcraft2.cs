@@ -1,9 +1,9 @@
 ﻿using System.Linq;
+using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
 using NUnit.Framework;
 using Shared;
-using Shared.Models;
 
 namespace BuildBackup.Test.DownloadTests
 {

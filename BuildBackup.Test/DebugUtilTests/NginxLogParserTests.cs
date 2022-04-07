@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using BuildBackup.DebugUtil;
+using BuildBackup.DebugUtil.Models;
 using NUnit.Framework;
-using Shared.Models;
 
-namespace Shared.Test
+namespace BuildBackup.Test.DebugUtilTests
 {
     [TestFixture]
     public class NginxLogParserTests

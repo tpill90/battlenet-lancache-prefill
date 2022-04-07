@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using MoreLinq;
+using BuildBackup.DebugUtil.Models;
 using Newtonsoft.Json;
-using Shared.Models;
 
-namespace Shared
+namespace BuildBackup.DebugUtil
 {
     public static class NginxLogParser
     {
@@ -75,7 +73,6 @@ namespace Shared
                 string byteRange = matches[matches.Count - 1].Value
                     .Replace("bytes=", "")
                     .Replace("\"", "");
-
 
                 var parsedRequest = new Request()
                 {

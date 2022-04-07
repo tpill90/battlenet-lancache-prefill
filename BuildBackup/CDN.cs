@@ -7,10 +7,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BuildBackup.DebugUtil;
+using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
-using Shared;
-using Shared.Models;
 using Colors = Shared.Colors;
 
 namespace BuildBackup

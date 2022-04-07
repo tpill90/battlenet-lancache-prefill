@@ -1,4 +1,4 @@
-﻿namespace Shared
+﻿namespace BuildBackup
 {
     //TODO convert to smart enum
     /// <summary>

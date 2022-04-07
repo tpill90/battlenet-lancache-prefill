@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
+using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
 using Konsole;
 using Shared;
-using Shared.Models;
 using Colors = Shared.Colors;
 
 namespace BuildBackup

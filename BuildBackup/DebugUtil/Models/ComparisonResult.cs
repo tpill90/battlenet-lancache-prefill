@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using ByteSizeLib;
+using Shared;
 using Spectre.Console;
 
-namespace Shared.Models
+namespace BuildBackup.DebugUtil.Models
 {
     //TODO comment what these fields mean
     public class ComparisonResult

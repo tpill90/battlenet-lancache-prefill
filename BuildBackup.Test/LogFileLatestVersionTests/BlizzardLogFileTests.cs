@@ -1,7 +1,5 @@
 ﻿using BuildBackup.Structs;
 using NUnit.Framework;
-using Shared;
-
 namespace BuildBackup.Test.LogFileLatestVersionTests
 {
     //TODO comment
