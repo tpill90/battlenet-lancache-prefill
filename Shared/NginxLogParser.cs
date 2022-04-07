@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -42,6 +43,7 @@ namespace Shared
 
             if (latestFile.FullName.Contains("coalesced"))
             {
+				//TODO this might not be any faster than just re-parsing the logs.  Do some more testing
                 return JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
             }
             else
@@ -59,8 +61,6 @@ namespace Shared
         //TODO comment
         public static List<Request> ParseRequestLogs(string[] rawRequests)
         {
-            //Console.WriteLine($"Found {Colors.Cyan(rawRequests.Length)} total requests in file");
-
             var parsedRequests = new List<Request>();
 
             // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
@@ -98,32 +98,27 @@ namespace Shared
                 parsedRequests.Add(parsedRequest);
             }
 
-            //Console.WriteLine($"     {Colors.Cyan(parsedRequests.Count)} raw requests parsed");
-
             return parsedRequests;
         }
 
         //TODO comment + unit test
-        //TODO switch to internal/private
-        //TODO i think this is sometimes incorrectly combining results
+        //TODO move this into a different class
         public static List<Request> CoalesceRequests(List<Request> initialRequests)
         {
+            //TODO handle the case where there are "whole file downloads".  If there is a whole file download, then any other requests should just be removed at this step
             // Initial De-duplicating requests
             var dedupedRequests = initialRequests.DistinctBy(e => new
                 {
                     e.Uri, 
                     e.LowerByteRange, 
-                    e.UpperByteRange, 
-                    e.DownloadWholeFile
+                    e.UpperByteRange
                 })
                 .OrderBy(e => e.Uri)
                 .ThenBy(e => e.LowerByteRange)
                 .ToList();
 
-
             //Coalescing any requests to the same URI that have sequential byte ranges.  
             var coalesced = new List<Request>();
-            
             var requestsGroupedByUri = dedupedRequests.GroupBy(e => e.Uri).ToList();
             foreach (var grouping in requestsGroupedByUri)
             {
@@ -152,7 +147,17 @@ namespace Shared
                 // Have to add our final loop iteration otherwise we'll skip it by accident
                 coalesced.Add(current);
             }
-            
+
+            // Removing byte ranges that overlap
+            var requestsGroupedByUri3 = coalesced.GroupBy(e => e.Uri).ToList();
+            coalesced.Clear();
+            foreach (var grouping in requestsGroupedByUri3)
+            {
+                var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping().ToList();
+
+                coalesced.AddRange(merged);
+            }
+
             // Deduplicating again
             coalesced = coalesced.DistinctBy(e => new
                 {
@@ -164,6 +169,33 @@ namespace Shared
                 .ToList();
 
             return coalesced;
+        }
+
+        public static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source)
+        {
+            using (var enumerator = source.GetEnumerator())
+            {
+                if (!enumerator.MoveNext())
+                {
+                    yield break;
+                }
+
+                var previousInterval = enumerator.Current;
+                while (enumerator.MoveNext())
+                {
+                    var nextInterval = enumerator.Current;
+                    if (!previousInterval.Overlaps(nextInterval))
+                    {
+                        yield return previousInterval;
+                        previousInterval = nextInterval;
+                    }
+                    else
+                    {
+                        previousInterval = previousInterval.MergeWith(nextInterval);
+                    }
+                }
+                yield return previousInterval;
+            }
         }
     }
 }

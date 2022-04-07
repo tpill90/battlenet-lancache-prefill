@@ -1,4 +1,5 @@
-﻿using ByteSizeLib;
+﻿using System;
+using ByteSizeLib;
 
 namespace Shared.Models
 {
@@ -39,6 +40,35 @@ namespace Shared.Models
             
             var size = ByteSize.FromBytes((double)TotalBytes);
             return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
+        }
+
+        //TODO write some individual unit tests for this
+        public bool Overlaps(Request request2)
+        {
+            if (LowerByteRange <= request2.LowerByteRange)
+            {
+                var overlaps = UpperByteRange >= request2.LowerByteRange;
+                return overlaps;
+            }
+            else
+            {
+                return request2.UpperByteRange >= LowerByteRange;
+            }
+        }
+
+        //TODO write some individual unit tests for this
+        public Request MergeWith(Request request2)
+        {
+            return new Request
+            {
+                Uri = Uri,
+                LowerByteRange = Math.Min(LowerByteRange, request2.LowerByteRange),
+                UpperByteRange = Math.Max(UpperByteRange, request2.UpperByteRange),
+
+                WriteToDevNull = WriteToDevNull,
+                //TODO this might not be right
+                DownloadWholeFile = DownloadWholeFile
+            };
         }
     }
 }

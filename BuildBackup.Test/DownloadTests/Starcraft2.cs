@@ -40,8 +40,7 @@ namespace BuildBackup.Test.DownloadTests
         [Test]
         public void Misses()
         {
-            //TODO Improve this
-            Assert.LessOrEqual(1522, _results.MissCount);
+            Assert.LessOrEqual(0, _results.MissCount);
         }
     }
 }

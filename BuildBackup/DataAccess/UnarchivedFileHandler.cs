@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.Structs;
 using Konsole;
+using Newtonsoft.Json;
+using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -26,21 +28,29 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable)
+        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable, TactProduct product)
         {
             Console.Write("Processing individual, unarchived files ... ");
 
             var timer = Stopwatch.StartNew();
 
-            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn);
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
+            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, Config.BattleNetPatchUri);
+
             foreach (var indexEntry in archiveIndexDictionary)
             {
                 encodingTable.EncodingDictionary.Remove(indexEntry.Key.FromHexString().ToMD5());
             }
-
+            
             foreach (var entry in encodingTable.EncodingDictionary)
             {
-                _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key.ToString(), writeToDevNull: true);
+                if (fileIndexList.ContainsKey(entry.Key.ToString()))
+                {
+                    var file = fileIndexList[entry.Key.ToString()];
+                    var startBytes = file.offset;
+                    var endBytes = file.offset + file.size;
+                    _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key.ToString(), startBytes, endBytes, writeToDevNull: true);
+                }
             }
 
             timer.Stop();

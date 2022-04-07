@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ByteSizeLib;
 using Konsole;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Shared;
 using Shared.Models;
 using Colors = Shared.Colors;
@@ -35,9 +36,12 @@ namespace BuildBackup.DebugUtil
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
 
-            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
-            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange)));
-
+            //string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
+            //File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange), 
+            //        Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+            //File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+            //    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+            
             var comparisonResult = new ComparisonResult
             {
                 RequestMadeCount = allRequestsMade.Count,
@@ -45,7 +49,7 @@ namespace BuildBackup.DebugUtil
 
                 RealRequestsTotalSize = ByteSize.FromBytes((double)realRequests.Sum(e => e.TotalBytes)),
 
-                RequestsWithoutSize = allRequestsMade.Count(e => e.DownloadWholeFile),
+                RequestsWithoutSize = allRequestsMade.Where(e => !e.Uri.Contains(".index")).Count(e => e.DownloadWholeFile),
                 RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
             };
 
@@ -57,10 +61,10 @@ namespace BuildBackup.DebugUtil
             comparisonResult.Misses = realRequests;
             comparisonResult.UnnecessaryRequests = allRequestsMade;
 
-            comparisonResult.PrintOutput();
+            //File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(comparisonResult.Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+            //    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
 
-            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\missing.json", JsonConvert.SerializeObject(comparisonResult.Misses));
-            //File.WriteAllText($@"C:\Users\Tim\Dropbox\Programming\dotnet-public\excess.json", JsonConvert.SerializeObject(comparisonResult.UnnecessaryRequests));
+            comparisonResult.PrintOutput();
 
             Console.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
@@ -105,6 +109,9 @@ namespace BuildBackup.DebugUtil
         
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
+            CompareRangeMatches(generatedRequests, originalRequests);
+            CompareRangeMatches(originalRequests, generatedRequests);
+            //TODO not sure why this is required.  but it is
             CompareRangeMatches(generatedRequests, originalRequests);
             CompareRangeMatches(originalRequests, generatedRequests);
 

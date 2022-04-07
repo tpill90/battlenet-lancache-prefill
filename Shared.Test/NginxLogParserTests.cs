@@ -74,35 +74,21 @@ namespace Shared.Test
         }
 
         [Test]
-        public void RequestsThatDontMatch_OnUpperByteRange_WontGetCombined()
+        public void RequestsThatOverlap_OnUpperByteRange_GetCombined()
         {
             var requests = new List<Request>
             {
-                // Requests differ by UpperByteRange, won't be combined
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 999999, DownloadWholeFile = true }
+                // Overlap on the upper byte range
+                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
+                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 999999 }
             };
 
             var result = NginxLogParser.CoalesceRequests(requests);
 
-            // Expect 2 results, since they wont get combined
-            Assert.AreEqual(2, result.Count);
-        }
-
-        [Test]
-        public void RequestsThatDontMatch_OnDownloadWholeFile_WontGetCombined()
-        {
-            var requests = new List<Request>
-            {
-                // Requests differ by DownloadWholeFile, won't be combined
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = false }
-            };
-
-            var result = NginxLogParser.CoalesceRequests(requests);
-
-            // Expect 2 results, since they wont get combined
-            Assert.AreEqual(2, result.Count);
+            // Expect 1 results, since they got combined
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(0, result[0].LowerByteRange);
+            Assert.AreEqual(999999, result[0].UpperByteRange);
         }
 
         [Test]
@@ -148,6 +134,46 @@ namespace Shared.Test
             var secondRequest = results.Single(e => e.Uri == "DifferentUri");
             Assert.AreEqual(101, secondRequest.LowerByteRange);
             Assert.AreEqual(200, secondRequest.UpperByteRange);
+        }
+
+        [Test]
+        public void OverlappingByteRanges_WillBeCombined()
+        {
+            var requests = new List<Request>
+            {
+                // These two requests have byte ranges that overlap, so they should be combined into a single entry
+                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 50 },
+                new Request { Uri = "SampleUri", LowerByteRange = 25, UpperByteRange = 100 }
+            };
+
+            var results = NginxLogParser.CoalesceRequests(requests);
+
+            // Expect 1 result, with the byte range being the combination of the two
+            Assert.AreEqual(1, results.Count);
+
+            var combinedResult = results.FirstOrDefault();
+            Assert.AreEqual(0, combinedResult.LowerByteRange);
+            Assert.AreEqual(100, combinedResult.UpperByteRange);
+        }
+
+        [Test]
+        public void OverlappingByteRanges_WillBeCombined_Reversed()
+        {
+            var requests = new List<Request>
+            {
+                // These two requests have byte ranges that overlap, so they should be combined into a single entry
+                new Request { Uri = "SampleUri", LowerByteRange = 260046848, UpperByteRange = 268435455 },
+                new Request { Uri = "SampleUri", LowerByteRange = 264241152, UpperByteRange = 269484031 }
+            };
+
+            var results = NginxLogParser.CoalesceRequests(requests);
+
+            // Expect 1 result, with the byte range being the combination of the two
+            Assert.AreEqual(1, results.Count);
+
+            var combinedResult = results.FirstOrDefault();
+            Assert.AreEqual(260046848, combinedResult.LowerByteRange);
+            Assert.AreEqual(269484031, combinedResult.UpperByteRange);
         }
     }
 }

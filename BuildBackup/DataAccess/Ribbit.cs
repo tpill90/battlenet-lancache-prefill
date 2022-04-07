@@ -187,18 +187,20 @@ namespace BuildBackup.DataAccess
 
                 var mask = cdnConfigFile.archives[e.index].mask;
 
-                for (int j = (int)blockStart; j < blockEnd; ++j)
+                //TODO fix this.  sometimes happens when running all unit tests.  Might not even be needed
+                if (mask != null)
                 {
-                    var condition2 = (mask[j / 8] & (1 << (j & 7)) ) != 0;
-                    if (j / 8 >= mask.Length || condition2)
+                    for (int j = (int)blockStart; j < blockEnd; ++j)
                     {
-                        getStart = (uint)Math.Max(getStart, i);
-                        getEnd = (uint)Math.Max(getEnd, i + 1);
+                        var condition2 = (mask[j / 8] & (1 << (j & 7))) != 0;
+                        if (j / 8 >= mask.Length || condition2)
+                        {
+                            getStart = (uint)Math.Max(getStart, i);
+                            getEnd = (uint)Math.Max(getEnd, i + 1);
+                        }
                     }
                 }
-
                 
-
 
                 //if (getStart < getEnd)
                 //{
