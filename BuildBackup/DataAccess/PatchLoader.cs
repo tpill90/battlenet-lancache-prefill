@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
-using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -19,14 +18,27 @@ namespace BuildBackup.DataAccess
         private CdnsFile _cdns;
         private readonly IConsole _console;
         private readonly TactProduct _currentProduct;
+        private readonly CDNConfigFile _cdnConfig;
 
-        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console, TactProduct currentProduct)
+        List<TactProduct> productsToSkip = new List<TactProduct> 
+        {
+            TactProducts.Diablo3,
+            TactProducts.Hearthstone,
+            TactProducts.HeroesOfTheStorm,
+            TactProducts.Overwatch,
+            TactProducts.Starcraft1,
+            TactProducts.Starcraft2,
+            TactProducts.WorldOfWarcraft
+        };
+
+        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console, TactProduct currentProduct, CDNConfigFile cdnConfig)
         {
             _cdn = cdn;
             Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
             _cdns = cdns;
             _console = console;
             _currentProduct = currentProduct;
+            _cdnConfig = cdnConfig;
         }
 
         //TODO comment
@@ -43,6 +55,19 @@ namespace BuildBackup.DataAccess
             }
 
             return new PatchFile();
+        }
+
+        public void HandlePatches(PatchFile patch)
+        {
+            Console.Write("Handling patches...".PadRight(Config.PadRight));
+            var timer = Stopwatch.StartNew();
+            
+
+            DownloadPatchArchives(patch);
+            DownloadPatchFiles(_cdnConfig);
+            DownloadFullPatchArchives(_cdnConfig);
+
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         private PatchFile GetPatchFile(string url, string hash)
@@ -119,10 +144,9 @@ namespace BuildBackup.DataAccess
         public void DownloadPatchFiles(CDNConfigFile cdnConfig)
         {
             var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
-
-            // For whatever reason, Starcraft1 does not use these patch files.
-            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2
-                                                           || _currentProduct == TactProducts.Hearthstone)
+            
+            // For whatever reason, the following products do not use these patch files.
+            if (productsToSkip.Contains(_currentProduct))
             {
                 return;
             }
@@ -155,16 +179,17 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadPatchArchives(CDNConfigFile cdnConfig, PatchFile patchFile)
+        public void DownloadPatchArchives(PatchFile patchFile)
         {
-            Console.WriteLine("Downloading patch archives...");
+            if (_cdnConfig.patchArchives == null)
+            {
+                return;
+            }
 
-            Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Count())} patch archive indexes..");
-            var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, cdnConfig.patchArchives);
-
+            var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, _cdnConfig.patchArchives);
+            
             // For whatever reason, the following products do not use these patch files.
-            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2 
-                                                           || _currentProduct == TactProducts.Hearthstone)
+            if (productsToSkip.Contains(_currentProduct))
             {
                 return;
             }
@@ -196,19 +221,23 @@ namespace BuildBackup.DataAccess
                 return;
             }
 
-            Console.Write($"     Downloading {Colors.Cyan(unarchivedPatchKeyList.Count)} unarchived patch files..");
+            Console.Write($"     Downloading {Colors.Cyan(unarchivedPatchKeyList.Count)} unarchived patch files..".PadRight(Config.PadRight));
             foreach (var entry in unarchivedPatchKeyList)
             {
                 _cdn.Get($"{_cdns.entries[0].path}/patch/", entry, writeToDevNull: true);
             }
-
-            Console.Write("..done\n");
+            
         }
 
         public void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
         {
-            // Skipping products where this isn't required
-            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2)
+            if (cdnConfig.patchArchives == null)
+            {
+                return;
+            }
+
+            // For whatever reason, the following products do not use these patch files.
+            if (productsToSkip.Contains(_currentProduct))
             {
                 return;
             }
