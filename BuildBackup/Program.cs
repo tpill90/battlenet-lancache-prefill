@@ -41,7 +41,10 @@ namespace BuildBackup
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
-            CDN cdn = new CDN(console, Config.BattleNetPatchUri) { DebugMode = useDebugMode };
+            CDN cdn = new CDN(console, Config.BattleNetPatchUri) 
+            { 
+                DebugMode = useDebugMode
+            };
             Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
 
             // Loading CDNs

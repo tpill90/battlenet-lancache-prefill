@@ -13,12 +13,10 @@ namespace BuildBackup.DataAccess
     public class CdnFileHandler
     {
         private CDN cdn;
-        private readonly Uri _battleNetPatchUri;
 
         public CdnFileHandler(CDN cdn, Uri battleNetPatchUri)
         {
             this.cdn = cdn;
-            _battleNetPatchUri = battleNetPatchUri;
         }
 
         public CdnsFile ParseCdnsFile(TactProduct tactProduct)
@@ -33,30 +31,9 @@ namespace BuildBackup.DataAccess
         //TODO should this be part of the CDN class?
         public CdnsFile GetCDNs(TactProduct tactProduct)
         {
-            var cacheFile = $"{Config.CacheDir}/cdns-{tactProduct.ProductCode}.json";
-
-            // Load cached version, only valid for 1 hour
-            if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
-            {
-                return JsonConvert.DeserializeObject<CdnsFile>(File.ReadAllText(cacheFile));
-            }
-
-            string content;
+            string content = cdn.MakePatchRequest(tactProduct);
 
             CdnsFile cdns = new CdnsFile();
-
-            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/cdns")).Result)
-            {
-                if (response.IsSuccessStatusCode)
-                {
-                    using HttpContent res = response.Content;
-                    content = res.ReadAsStringAsync().Result;
-                }
-                else
-                {
-                    throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
-                }
-            }
 
             var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -129,11 +106,7 @@ namespace BuildBackup.DataAccess
                 Console.WriteLine($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
                 throw new Exception($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
             }
-            Console.WriteLine($"Loaded {Colors.Cyan(cdns.entries.Count())} CDNs");
-
-            // Writes results to disk, to be used as cache later
-            File.WriteAllText(cacheFile, JsonConvert.SerializeObject(cdns));
-
+            
             return cdns;
         }
     }

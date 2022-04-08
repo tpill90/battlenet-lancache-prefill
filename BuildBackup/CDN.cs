@@ -19,6 +19,7 @@ namespace BuildBackup
     public class CDN
     {
         private readonly IConsole _console;
+        private readonly Uri _battleNetPatchUri;
 
         //TODO make these all private
         public readonly HttpClient client;
@@ -36,9 +37,10 @@ namespace BuildBackup
         /// </summary>
         public bool DebugMode = false;
 
-        public CDN(IConsole console)
+        public CDN(IConsole console, Uri BattleNetPatchUri)
         {
             _console = console;
+            _battleNetPatchUri = BattleNetPatchUri;
             client = new HttpClient
             {
                 Timeout = new TimeSpan(0, 5, 0)
@@ -95,18 +97,18 @@ namespace BuildBackup
             return Get(uri);
         }
 
+        //TODO nicer progress bar
         public void DownloadQueuedRequests()
         {
-            int count = 0;
             var timer = Stopwatch.StartNew();
 
 			//TODO log time that coalescing takes.  Figure out how many requests there are before and after.
 			//TODO need to calculate the actual file size, for full file downloads.
-
             var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests).ToList();
+
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
-
+            int count = 0;
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
             Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
             {
@@ -224,6 +226,31 @@ namespace BuildBackup
 
             Console.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!");
             return Array.Empty<byte>();
+        }
+
+        //TODO comment
+        public string MakePatchRequest(TactProduct tactProduct)
+        {
+            var cacheFile = $"{Config.CacheDir}/cdns-{tactProduct.ProductCode}.txt";
+
+            // Load cached version, only valid for 1 hour
+            if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
+            {
+                return File.ReadAllText(cacheFile);
+            }
+
+            using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/cdns")).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                using HttpContent res = response.Content;
+                string content = res.ReadAsStringAsync().Result;
+
+                // Writes results to disk, to be used as cache later
+                File.WriteAllText(cacheFile, content);
+                return content;
+            }
+
+            throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
         }
     }
 }
