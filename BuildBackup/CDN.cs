@@ -97,12 +97,15 @@ namespace BuildBackup
 
         public void DownloadQueuedRequests()
         {
+            int count = 0;
+            var timer = Stopwatch.StartNew();
+
+			//TODO log time that coalescing takes.  Figure out how many requests there are before and after.
+			//TODO need to calculate the actual file size, for full file downloads.
+
             var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests).ToList();
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
-
-            int count = 0;
-            var timer = Stopwatch.StartNew();
 
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
             Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>

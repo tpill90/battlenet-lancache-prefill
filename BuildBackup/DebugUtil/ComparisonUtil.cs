@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
-using Shared;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DebugUtil
@@ -33,12 +35,12 @@ namespace BuildBackup.DebugUtil
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
 
-            //string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
-            //File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange), 
-            //        Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
-            //File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-            //    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
-            
+            string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
+            File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+            File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+
             var comparisonResult = new ComparisonResult
             {
                 RequestMadeCount = allRequestsMade.Count,
@@ -58,8 +60,11 @@ namespace BuildBackup.DebugUtil
             comparisonResult.Misses = realRequests;
             comparisonResult.UnnecessaryRequests = allRequestsMade;
 
-            //File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(comparisonResult.Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-            //    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+            File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(comparisonResult.Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+
+            File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(comparisonResult.UnnecessaryRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
 
             comparisonResult.PrintOutput();
 

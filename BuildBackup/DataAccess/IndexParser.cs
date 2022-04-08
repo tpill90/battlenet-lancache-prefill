@@ -105,16 +105,11 @@ namespace BuildBackup.DataAccess
             return returnDict;
         }
 
-        private static Dictionary<string, IndexEntry> _archiveIndexDictionary;
-
+        //TODO get URI from settings
         public static Dictionary<string, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn, TactProduct product, Uri blizzardCdnUri)
         {
             int CHUNK_SIZE = 4096;
             uint BlockSize = (1 << 20);
-            if (_archiveIndexDictionary != null)
-            {
-                return _archiveIndexDictionary;
-            }
 
             Console.Write("Building archive indexes...");
             var timer = Stopwatch.StartNew();
@@ -217,21 +212,22 @@ namespace BuildBackup.DataAccess
             });
 
             // Building mask sizes
-            for (int i = 0; i < cdnConfig.archives.Length; i++)
-            {
-                var hashId = cdnConfig.archives[i].hashId.ToLower();
-                var uri = $"{url}/data/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-                var contentLength = fileSizeProvider.GetContentLength(new Request() { Uri = uri });
+            //TODO reenable later
+            //for (int i = 0; i < cdnConfig.archives.Length; i++)
+            //{
+            //    var hashId = cdnConfig.archives[i].hashId.ToLower();
+            //    var uri = $"{url}/data/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            //    var contentLength = fileSizeProvider.GetContentLength(new Request() { Uri = uri });
 
-                long chunks = (contentLength + BlockSize - 1) / BlockSize;
-                var size = (chunks + 7) / 8;
-                cdnConfig.archives[i].mask = new byte[(int)size];
+            //    long chunks = (contentLength + BlockSize - 1) / BlockSize;
+            //    var size = (chunks + 7) / 8;
+            //    cdnConfig.archives[i].mask = new byte[(int)size];
 
-                for (int k = 0; k < size; k++)
-                {
-                    cdnConfig.archives[i].mask[k] = 0xFF;
-                }
-            }
+            //    for (int k = 0; k < size; k++)
+            //    {
+            //        cdnConfig.archives[i].mask[k] = 0xFF;
+            //    }
+            //}
             
 
             timer.Stop();
@@ -239,8 +235,7 @@ namespace BuildBackup.DataAccess
 
             fileSizeProvider.Save();
 
-            _archiveIndexDictionary = indexDictionary.ToDictionary();
-            return _archiveIndexDictionary;
+            return indexDictionary.ToDictionary();
         }
 
         private static List<string> ParsePatchFileIndex(string url, string hash, CDN cdn)

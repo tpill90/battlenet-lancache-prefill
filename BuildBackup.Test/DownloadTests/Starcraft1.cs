@@ -6,6 +6,8 @@ using NUnit.Framework;
 
 namespace BuildBackup.Test.DownloadTests
 {
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class Starcraft1
     {
         private ComparisonResult _results;
@@ -34,7 +36,7 @@ namespace BuildBackup.Test.DownloadTests
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(1600);
+            var expected = ByteSize.FromMegaBytes(100);
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);

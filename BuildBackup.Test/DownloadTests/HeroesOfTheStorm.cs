@@ -6,6 +6,8 @@ using NUnit.Framework;
 
 namespace BuildBackup.Test.DownloadTests
 {
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class HeroesOfTheStorm
     {
         private ComparisonResult _results;

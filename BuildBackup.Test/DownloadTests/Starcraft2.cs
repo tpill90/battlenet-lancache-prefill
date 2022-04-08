@@ -3,10 +3,11 @@ using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
 using NUnit.Framework;
-using Shared;
 
 namespace BuildBackup.Test.DownloadTests
 {
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class Starcraft2
     {
         private ComparisonResult _results;

@@ -6,6 +6,8 @@ using NUnit.Framework;
 
 namespace BuildBackup.Test.DownloadTests
 {
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class Diablo3
     {
         private ComparisonResult _results;

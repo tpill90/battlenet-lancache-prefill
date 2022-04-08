@@ -121,7 +121,8 @@ namespace BuildBackup.DataAccess
             var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
 
             // For whatever reason, Starcraft1 does not use these patch files.
-            if (_currentProduct == TactProducts.Starcraft1)
+            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2
+                                                           || _currentProduct == TactProducts.Hearthstone)
             {
                 return;
             }
@@ -161,8 +162,9 @@ namespace BuildBackup.DataAccess
             Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Count())} patch archive indexes..");
             var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, cdnConfig.patchArchives);
 
-            // For whatever reason, Starcraft1 does not use these patch files.
-            if (_currentProduct == TactProducts.Starcraft1)
+            // For whatever reason, the following products do not use these patch files.
+            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2 
+                                                           || _currentProduct == TactProducts.Hearthstone)
             {
                 return;
             }
@@ -206,7 +208,7 @@ namespace BuildBackup.DataAccess
         public void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
         {
             // Skipping products where this isn't required
-            if (_currentProduct == TactProducts.Starcraft1)
+            if (_currentProduct == TactProducts.Starcraft1 || _currentProduct == TactProducts.Starcraft2)
             {
                 return;
             }
