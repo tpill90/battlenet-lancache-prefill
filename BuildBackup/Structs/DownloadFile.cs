@@ -27,5 +27,10 @@ namespace BuildBackup.Structs
         public string Name;
         public short Type;
         public BitArray Bits;
+
+        public override string ToString()
+        {
+            return $"{Name} {Type}";
+        }
     }
 }

@@ -89,7 +89,6 @@ namespace BuildBackup
         }
 
         //TODO comment
-        //TODO this takes about 200ms.  Can it be sped up?
         public VersionsEntry GetVersionEntry(TactProduct tactProduct)
         {
             var timer = Stopwatch.StartNew();
@@ -104,31 +103,8 @@ namespace BuildBackup
 
         public VersionsFile GetVersions(TactProduct tactProduct)
         {
-            var cacheFile = $"{Config.CacheDir}/versions-{tactProduct.ProductCode}.json";
-            
-            // Load cached version.  
-            if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
-            {
-                return JsonConvert.DeserializeObject<VersionsFile>(File.ReadAllText(cacheFile));
-            }
-
-            string content;
+            string content = cdn.MakePatchRequest(tactProduct, "versions");
             var versions = new VersionsFile();
-
-            var url = $"{_battleNetPatchUri}{tactProduct.ProductCode}/versions";
-            using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(url)).Result)
-            {
-                if (response.IsSuccessStatusCode)
-                {
-                    using HttpContent res = response.Content;
-                    content = res.ReadAsStringAsync().Result;
-                }
-                else
-                {
-                    Console.WriteLine("Error during retrieving HTTP versions: Received bad HTTP code " + response.StatusCode);
-                    return versions;
-                }
-            }
 
             content = content.Replace("\0", "");
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -192,14 +168,9 @@ namespace BuildBackup
                 }
             }
 
-            // Writes results to disk, to be used as cache later
-            File.WriteAllText(cacheFile, JsonConvert.SerializeObject(versions));
-
             return versions;
         }
-
         
-
         public GameBlobFile GetGameBlob(string program)
         {
             string content;

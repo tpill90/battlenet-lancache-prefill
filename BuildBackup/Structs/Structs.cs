@@ -101,8 +101,7 @@ namespace BuildBackup
     public struct InstallFileEntry
     {
         public string name;
-        public byte[] contentHash;
-        public string contentHashString;
+        public MD5Hash contentHash;
         public uint size;
         public List<string> tags;
 

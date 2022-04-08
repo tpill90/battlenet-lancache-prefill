@@ -81,7 +81,7 @@ namespace BuildBackup
         public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
             hashId = hashId.ToLower();
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
 
             if (startBytes != null && endBytes != null)
             {
@@ -106,7 +106,8 @@ namespace BuildBackup
 
         public byte[] Get(RootFolder rootPath, string hashId, bool writeToDevNull = false)
         {
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            hashId = hashId.ToLower();
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
             return Get(uri, writeToDevNull);
         }
 
@@ -119,11 +120,12 @@ namespace BuildBackup
         public byte[] GetIndex(RootFolder rootPath, string hashId)
         {
             //TODO indexes should have a size
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
             return Get(uri);
         }
 
         //TODO nicer progress bar
+        //TODO this doesn't max out my connection at 300mbs
         public void DownloadQueuedRequests()
         {
             var timer = Stopwatch.StartNew();
@@ -140,17 +142,17 @@ namespace BuildBackup
             {
                 if (entry.DownloadWholeFile)
                 {
-                    Get(entry.Uri, entry.WriteToDevNull, startBytes: null, null);
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull);
                 }
                 else
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, startBytes: entry.LowerByteRange, entry.UpperByteRange);
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange);
                 }
 
                 if (!DebugMode)
                 {
                     // Skip refreshing the progress bar when debugging.  Slows things down
-                    progressBar.Refresh(count, $"     ");
+                    progressBar.Refresh(count, "");
                 }
                 
                 count++;
@@ -217,6 +219,7 @@ namespace BuildBackup
                     requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
                 }
 
+                //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
                 using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
                 using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
 
@@ -255,9 +258,9 @@ namespace BuildBackup
         }
 
         //TODO comment
-        public string MakePatchRequest(TactProduct tactProduct)
+        public string MakePatchRequest(TactProduct tactProduct, string target)
         {
-            var cacheFile = $"{Config.CacheDir}/cdns-{tactProduct.ProductCode}.txt";
+            var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 1 hour
             if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
@@ -265,7 +268,7 @@ namespace BuildBackup
                 return File.ReadAllText(cacheFile);
             }
 
-            using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/cdns")).Result;
+            using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/{target}")).Result;
             if (response.IsSuccessStatusCode)
             {
                 using HttpContent res = response.Content;

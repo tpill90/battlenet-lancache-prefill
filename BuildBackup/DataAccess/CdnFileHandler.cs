@@ -31,7 +31,7 @@ namespace BuildBackup.DataAccess
         //TODO should this be part of the CDN class?
         public CdnsFile GetCDNs(TactProduct tactProduct)
         {
-            string content = cdn.MakePatchRequest(tactProduct);
+            string content = cdn.MakePatchRequest(tactProduct, "cdns");
 
             CdnsFile cdns = new CdnsFile();
 
