@@ -33,12 +33,12 @@ namespace BuildBackup.DataAccess
             Console.Write("Processing individual, unarchived files ... ".PadRight(Config.PadRight));
 
             var timer = Stopwatch.StartNew();
-            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, new Uri("http://level3.blizzard.com"));
+            Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, new Uri("http://level3.blizzard.com"));
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
 
             foreach (var indexEntry in archiveIndexDictionary)
             {
-                encodingTable.EncodingDictionary.Remove(indexEntry.Key.FromHexString().ToMD5());
+                encodingTable.EncodingDictionary.Remove(indexEntry.Key);
             }
             
             foreach (var entry in encodingTable.EncodingDictionary)

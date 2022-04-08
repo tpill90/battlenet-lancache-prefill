@@ -25,7 +25,7 @@ namespace BuildBackup.DataAccess
 
         //TODO comment
         public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns,
-            Dictionary<string, IndexEntry> archiveIndexDictionary)
+            Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary)
         {
             Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
@@ -60,7 +60,7 @@ namespace BuildBackup.DataAccess
                 }
                 
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
-                var upperHash = reverseLookupDictionary[file.contentHashString.FromHexString().ToMD5()].ToString().ToUpper();
+                MD5Hash upperHash = reverseLookupDictionary[file.contentHashString.FromHexString().ToMD5()];
 
                 if (!archiveIndexDictionary.ContainsKey(upperHash))
                 {
@@ -78,14 +78,14 @@ namespace BuildBackup.DataAccess
                     cdn.QueueRequest($"{cdns.entries[0].path}/data/", archiveIndex.IndexId, lowerByteRange, upperByteRange, true);
                     count++;
                 }
-                else if (encodingTable.EncodingDictionary.ContainsKey(upperHash.FromHexString().ToMD5()))
+                else if (encodingTable.EncodingDictionary.ContainsKey(upperHash))
                 {
-                    var encodingMatch = encodingTable.EncodingDictionary[upperHash.FromHexString().ToMD5()];
+                    var encodingMatch = encodingTable.EncodingDictionary[upperHash];
                     //Console.WriteLine(encodingMatch.ToString());
 
 
-                    MD5Hash asd = encodingTable.EncodingDictionary[upperHash.FromHexString().ToMD5()];
-                    IndexEntry indexMatch = fileIndexList[upperHash];
+                    MD5Hash asd = encodingTable.EncodingDictionary[upperHash];
+                    IndexEntry indexMatch = fileIndexList[upperHash.ToString().ToUpper()];
                     var startBytes2 = indexMatch.offset;
                     var endBytes2 = indexMatch.offset + file.size - 1;
                     _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", encodingMatch.ToString(), startBytes2, endBytes2, writeToDevNull: true);
@@ -155,7 +155,7 @@ namespace BuildBackup.DataAccess
             return install;
         }
 
-        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
             EncodingTable encodingTable)
         {
             Console.Write("Parsing download file list...".PadRight(Config.PadRight));
@@ -171,14 +171,14 @@ namespace BuildBackup.DataAccess
 
             for (var i = 0; i < download.entries.Length; i++)
             {
-                var current = download.entries[i];
+                DownloadEntry current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 if (tagToUse.Bits[i] == false || tagToUse2.Bits[i] == false)
                 {
                     continue;
                 }
-                if (!archiveIndexDictionary.ContainsKey(current.hash))
+                if (!archiveIndexDictionary.ContainsKey(current.hash.FromHexString().ToMD5()))
                 {
                     // Handles unarchived files
                     if (encodingTable.EncodingDictionary.ContainsKey(current.hash.FromHexString().ToMD5()))
@@ -192,7 +192,7 @@ namespace BuildBackup.DataAccess
                     continue;
                 }
                 
-                IndexEntry e = archiveIndexDictionary[current.hash];
+                IndexEntry e = archiveIndexDictionary[current.hash.FromHexString().ToMD5()];
                 uint blockSize = 1048576;
 
                 uint offset = e.offset;

@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using BuildBackup.DebugUtil;
-using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
+using BuildBackup.Utils;
 using MoreLinq;
 using Shared;
 
@@ -106,16 +105,15 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO get URI from settings
-        public static Dictionary<string, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn, TactProduct product, Uri blizzardCdnUri)
+        public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn, TactProduct product, Uri blizzardCdnUri)
         {
             int CHUNK_SIZE = 4096;
             uint BlockSize = (1 << 20);
 
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
-            var indexDictionary = new ConcurrentDictionary<string, IndexEntry>();
 
-            var fileSizeProvider = new FileSizeProvider(product, blizzardCdnUri.ToString());
+            var indexDictionary = new ConcurrentDictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
 
             Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (archive, state, i) =>
             {
@@ -188,9 +186,9 @@ namespace BuildBackup.DataAccess
                             offset = br.ReadUInt32(true),
                             IndexId = cdnConfig.archives[i].hashId
                         };
-                        if (!indexDictionary.ContainsKey(key.ToString()))
+                        if (!indexDictionary.ContainsKey(key))
                         {
-                            if (indexDictionary.TryAdd(key.ToString(), entry))
+                            if (indexDictionary.TryAdd(key, entry))
                             {
                             }
                             else
@@ -211,8 +209,10 @@ namespace BuildBackup.DataAccess
                 }
             });
 
+
             // Building mask sizes
             //TODO reenable later
+            //var fileSizeProvider = new FileSizeProvider(product, blizzardCdnUri.ToString());
             //for (int i = 0; i < cdnConfig.archives.Length; i++)
             //{
             //    var hashId = cdnConfig.archives[i].hashId.ToLower();
@@ -228,12 +228,12 @@ namespace BuildBackup.DataAccess
             //        cdnConfig.archives[i].mask[k] = 0xFF;
             //    }
             //}
-            
+            //fileSizeProvider.Save();
 
             timer.Stop();
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
-            fileSizeProvider.Save();
+            
 
             return indexDictionary.ToDictionary();
         }
