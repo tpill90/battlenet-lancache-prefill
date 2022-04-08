@@ -6,6 +6,8 @@
     /// </summary>
     public static class TactProducts 
     {
+        //TODO eventually get the rest of blizzards games, for testing
+
         public static readonly TactProduct Diablo3 = new TactProduct { DisplayName = "Diablo 3", ProductCode = "d3" };
 
         public static readonly TactProduct Hearthstone = new TactProduct { DisplayName = "Hearthstone", ProductCode = "hsb" };

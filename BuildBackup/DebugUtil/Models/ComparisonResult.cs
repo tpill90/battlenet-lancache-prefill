@@ -51,12 +51,6 @@ namespace BuildBackup.DebugUtil.Models
             //TODO log wasted bandwidth
 
             Console.WriteLine();
-
-            var missedGroups = Misses.GroupBy(e => e.Uri).OrderByDescending(e => e.Count()).ToList();
-            foreach (var group in missedGroups)
-            {
-                //Console.WriteLine($"Missed {Colors.Yellow(group.Count())} requests for uri {Colors.Magenta(group.Key)} Size : {ByteSize.FromBytes(group.Sum(e => e.TotalBytes))}");
-            }
         }
     }
 }

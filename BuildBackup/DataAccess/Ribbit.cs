@@ -27,7 +27,7 @@ namespace BuildBackup.DataAccess
         public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns,
             Dictionary<string, IndexEntry> archiveIndexDictionary)
         {
-            Console.Write("Parsing install file list...");
+            Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             var installFile = ParseInstallFile(cdns.entries[0].path, encodingTable.installKey);
@@ -92,7 +92,7 @@ namespace BuildBackup.DataAccess
 
                 }
             }
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         public InstallFile ParseInstallFile(string url, string hash)
@@ -158,7 +158,7 @@ namespace BuildBackup.DataAccess
         public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
             EncodingTable encodingTable)
         {
-            Console.Write("Parsing download file list...");
+            Console.Write("Parsing download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfigFile.fileIndex, _cdn, "data");
@@ -249,8 +249,8 @@ namespace BuildBackup.DataAccess
                 //TODO should be 14931
                 indexDownloads++;
             }
-            
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
     }
 }

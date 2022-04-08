@@ -512,7 +512,7 @@ namespace BuildBackup
                 return;
             }
 
-            Console.Write("Loading encryption...");
+            Console.Write("Loading encryption...".PadRight(Config.PadRight));
 
             if (cdnConfig.builds != null)
             {
@@ -545,7 +545,7 @@ namespace BuildBackup
             //    cdn.isEncrypted = false;
             //}
 
-            Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
     }
 }

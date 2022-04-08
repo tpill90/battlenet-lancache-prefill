@@ -33,7 +33,10 @@ namespace BuildBackup.DebugUtil
             allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
 
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
+
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
+            PreLoadHeaderSizes(realRequests, fileSizeProvider);
+            GetRequestSizes(realRequests, fileSizeProvider);
 
             string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
             File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
@@ -92,7 +95,7 @@ namespace BuildBackup.DebugUtil
                 count++;
             });
             fileSizeProvider.Save();
-            Console.WriteLine($"    Complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         private void GetRequestSizes(List<Request> allRequestsMade, FileSizeProvider fileSizeProvider)

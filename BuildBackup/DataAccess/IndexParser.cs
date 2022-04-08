@@ -111,7 +111,7 @@ namespace BuildBackup.DataAccess
             int CHUNK_SIZE = 4096;
             uint BlockSize = (1 << 20);
 
-            Console.Write("Building archive indexes...");
+            Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
             var indexDictionary = new ConcurrentDictionary<string, IndexEntry>();
 
@@ -231,7 +231,7 @@ namespace BuildBackup.DataAccess
             
 
             timer.Stop();
-            Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
             fileSizeProvider.Save();
 

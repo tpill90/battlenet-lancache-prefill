@@ -30,7 +30,7 @@ namespace BuildBackup.DataAccess
         //TODO comment
         public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable, TactProduct product)
         {
-            Console.Write("Processing individual, unarchived files ... ");
+            Console.Write("Processing individual, unarchived files ... ".PadRight(Config.PadRight));
 
             var timer = Stopwatch.StartNew();
             Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, new Uri("http://level3.blizzard.com"));
@@ -53,7 +53,7 @@ namespace BuildBackup.DataAccess
             }
 
             timer.Stop();
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         public void DownloadUnarchivedIndexFiles(CDNConfigFile cdnConfig)
