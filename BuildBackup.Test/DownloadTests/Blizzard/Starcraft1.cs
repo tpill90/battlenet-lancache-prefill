@@ -4,11 +4,11 @@ using ByteSizeLib;
 using Konsole;
 using NUnit.Framework;
 
-namespace BuildBackup.Test.DownloadTests
+namespace BuildBackup.Test.DownloadTests.Blizzard
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
-    public class HeroesOfTheStorm
+    public class Starcraft1
     {
         private ComparisonResult _results;
 
@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests
         public void Setup()
         {
             // Run the download process only once
-            _results = Program.ProcessProduct(TactProducts.HeroesOfTheStorm, new MockConsole(120, 50), true);
+            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace BuildBackup.Test.DownloadTests
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(1600);
+            var expected = ByteSize.FromMegaBytes(100);
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);
