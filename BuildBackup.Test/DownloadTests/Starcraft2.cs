@@ -19,12 +19,16 @@ namespace BuildBackup.Test.DownloadTests
         }
 
         [Test]
+        public void Misses()
+        {
+            Assert.LessOrEqual(0, _results.MissCount);
+        }
+
+        [Test]
         public void MissedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(2);
-
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.Less(missedBandwidth.Bytes, expected.Bytes);
+            Assert.AreEqual(missedBandwidth.Bytes, 0);
         }
 
         [Test]
@@ -35,12 +39,6 @@ namespace BuildBackup.Test.DownloadTests
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);
-        }
-
-        [Test]
-        public void Misses()
-        {
-            Assert.LessOrEqual(0, _results.MissCount);
         }
     }
 }

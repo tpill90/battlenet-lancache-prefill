@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace BuildBackup.Test.DownloadTests
 {
-    public class Starcraft1
+    public class HeroesOfTheStorm
     {
         private ComparisonResult _results;
 
@@ -14,7 +14,7 @@ namespace BuildBackup.Test.DownloadTests
         public void Setup()
         {
             // Run the download process only once
-            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true);
+            _results = Program.ProcessProduct(TactProducts.HeroesOfTheStorm, new MockConsole(120, 50), true);
         }
 
         [Test]
