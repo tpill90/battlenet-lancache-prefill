@@ -10,6 +10,8 @@ namespace BuildBackup.DebugUtil.Models
     //TODO comment what these fields mean
     public class ComparisonResult
     {
+        public TimeSpan ElapsedTime { get; set; }
+
         public int RequestMadeCount { get; set; }
         public int DuplicateRequests { get; set; }
 

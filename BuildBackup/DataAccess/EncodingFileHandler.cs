@@ -71,7 +71,6 @@ namespace BuildBackup.DataAccess
 
         private EncodingFile GetEncoding(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
-            string url = _cdns.entries[0].path;
             var hash = buildConfig.encoding[1];
             int encodingSize = 0;
             if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
@@ -85,11 +84,11 @@ namespace BuildBackup.DataAccess
 
             var encoding = new EncodingFile();
 
-            byte[] content = _cdn.Get($"{url}/data/", hash);
+            byte[] content = _cdn.Get($"{_cdns.entries[0].path}/data/", hash);
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = _cdn.Get($"{url}/data/", hash);
+                content = _cdn.Get($"{_cdns.entries[0].path}/data/", hash);
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {

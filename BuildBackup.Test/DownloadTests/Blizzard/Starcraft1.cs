@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
@@ -30,6 +31,14 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         {
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
             Assert.AreEqual(missedBandwidth.Bytes, 0);
+        }
+
+        //TODO copy this to the rest of the tests
+        [Test]
+        public void TotalTime()
+        {
+            var expectedMilliseconds = 600;
+            Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
         }
 
         [Test]

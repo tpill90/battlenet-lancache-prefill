@@ -40,8 +40,7 @@ namespace BuildBackup.DataAccess
             var fileIndexDownloads = new List<InstallFileMatch>();
 
             var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
-
-            // TODO this should be 767, instead of 751
+            
             int count = 0;
             int missCount = 0;
             //TODO try rewriting this in a different order.  Iterate through each item in the index.
@@ -181,10 +180,10 @@ namespace BuildBackup.DataAccess
                 {
                     continue;
                 }
-                if (!archiveIndexDictionary.ContainsKey(current.hash.FromHexString().ToMD5()))
+                if (!archiveIndexDictionary.ContainsKey(current.hash))
                 {
                     // Handles unarchived files
-                    if (encodingTable.EncodingDictionary.ContainsKey(current.hash.FromHexString().ToMD5()))
+                    if (encodingTable.EncodingDictionary.ContainsKey(current.hash))
                     {
                         indexDownloads++;
                         var file = fileIndexList[current.hash.ToString()];
@@ -195,7 +194,7 @@ namespace BuildBackup.DataAccess
                     continue;
                 }
                 
-                IndexEntry e = archiveIndexDictionary[current.hash.FromHexString().ToMD5()];
+                IndexEntry e = archiveIndexDictionary[current.hash];
                 uint blockSize = 1048576;
 
                 uint offset = e.offset;

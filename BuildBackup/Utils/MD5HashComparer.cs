@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using BuildBackup.Structs;
 
-namespace CASCLib
+namespace BuildBackup.Utils
 {
     public class MD5HashComparer : IEqualityComparer<MD5Hash>
     {

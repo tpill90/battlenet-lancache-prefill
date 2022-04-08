@@ -13,12 +13,12 @@ namespace BuildBackup.Structs
 
     public struct DownloadEntry
     {
-        public string hash;
+        public MD5Hash hash;
         public byte[] unk;
 
         public override string ToString()
         {
-            return hash;
+            return hash.ToString();
         }
     }
 

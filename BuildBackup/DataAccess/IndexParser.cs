@@ -3,12 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
 using BuildBackup.Utils;
-using MoreLinq;
 using Shared;
 
 namespace BuildBackup.DataAccess
@@ -114,41 +112,18 @@ namespace BuildBackup.DataAccess
 
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
-
-            Dictionary<MD5Hash, IndexEntry>[] dictionaryList = new Dictionary<MD5Hash, IndexEntry>[cdnConfig.archives.Length];
-            for (var index = 0; index < dictionaryList.Length; index++)
-            {
-                dictionaryList[index] = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
-            }
-
-            //Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (archive, state, i) =>
-            //{
-            //    // Requests the actual index contents, and parses them into a useable format
-            //    ProcessArchive(url, cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
-            //});
+            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
 
             for (int i = 0; i < cdnConfig.archives.Length; i++)
             {
-                ProcessArchive(url, cdnConfig, cdn, i, CHUNK_SIZE, dictionaryList[i]);
+                ProcessArchive(url, cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
             }
-
-            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
-            foreach (var dict in dictionaryList)
-            {
-                foreach (var entry in dict)
-                {
-                    indexDictionary.TryAdd(entry.Key, entry.Value);
-                }
-
-            }
-
             //TODO reenable later
             //BuildMaskSize(url, cdnConfig, product, blizzardCdnUri, BlockSize);
 
             timer.Stop();
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-
-
+            
             return indexDictionary;
         }
 

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using BuildBackup.Structs;
 
 namespace BuildBackup.DataAccess
@@ -51,7 +49,7 @@ namespace BuildBackup.DataAccess
                 download.entries = new DownloadEntry[download.numEntries];
                 for (int i = 0; i < download.numEntries; i++)
                 {
-                    download.entries[i].hash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                    download.entries[i].hash = bin.Read<MD5Hash>();
                     bin.ReadBytes(10);
                 }
 
@@ -75,26 +73,6 @@ namespace BuildBackup.DataAccess
             }
 
             return download;
-        }
-
-        /// <summary>
-        /// Downloads all of the currently listed "archive" files from Battle.Net's CDN.  Each archive file is 256mb.
-        ///
-        /// More details on archive files : https://wowdev.wiki/TACT#Archives
-        /// </summary>
-        public static void DownloadFullArchives(CDNConfigFile cdnConfig, CDN _cdn, CdnsFile _cdns)
-        {
-            Console.WriteLine("Downloading full archive files....");
-
-            int count = 0;
-            var timer = Stopwatch.StartNew();
-
-            Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 10 }, (entry) =>
-            {
-                _cdn.Get($"{_cdns.entries[0].path}/data/", entry.hashId, writeToDevNull: true);
-                count++;
-            });
-            timer.Stop();
         }
     }
 }
