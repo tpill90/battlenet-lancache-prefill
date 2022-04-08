@@ -26,8 +26,13 @@ namespace BuildBackup.DebugUtil
         
         public ComparisonResult CompareAgainstRealRequests(List<Request> allRequestsMade, TactProduct product)
         {
+            string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
+
             Console.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
+
+            File.WriteAllText($@"{baseUri}\generatedUncombined.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
 
             //TODO sometimes seems to incorrectly combine requests.
             allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
@@ -38,7 +43,7 @@ namespace BuildBackup.DebugUtil
             PreLoadHeaderSizes(realRequests, fileSizeProvider);
             GetRequestSizes(realRequests, fileSizeProvider);
 
-            string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
+           
             File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
                     Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
             File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),

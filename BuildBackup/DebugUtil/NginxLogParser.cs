@@ -30,6 +30,7 @@ namespace BuildBackup.DebugUtil
         /// <param name="logBasePath">Root folder where all log files are stored.</param>
         /// <param name="product">Target product to be parsed.  Used to determine subfolder to search for files</param>
         /// <returns></returns>
+        //TODO make all of the logs be compressed in zip files -> unzipped -> coalesed.  So that I can push changes up to github without hitting the file limit
         public static List<Request> ParseRequestLogs(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayName}";
