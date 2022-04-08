@@ -51,7 +51,7 @@ namespace BuildBackup.DebugUtil
 
                 RealRequestsTotalSize = ByteSize.FromBytes((double)realRequests.Sum(e => e.TotalBytes)),
 
-                RequestsWithoutSize = allRequestsMade.Where(e => !e.Uri.Contains(".index")).Count(e => e.DownloadWholeFile),
+                RequestsWithoutSize = allRequestsMade.Count(e => e.DownloadWholeFile),
                 RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
             };
 

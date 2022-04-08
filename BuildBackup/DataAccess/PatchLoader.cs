@@ -15,7 +15,6 @@ namespace BuildBackup.DataAccess
     public class PatchLoader
     {
         private CDN _cdn;
-        private CdnsFile _cdns;
         private readonly IConsole _console;
         private readonly TactProduct _currentProduct;
         private readonly CDNConfigFile _cdnConfig;
@@ -31,11 +30,9 @@ namespace BuildBackup.DataAccess
             TactProducts.WorldOfWarcraft
         };
 
-        public PatchLoader(CDN cdn, CdnsFile cdns, IConsole console, TactProduct currentProduct, CDNConfigFile cdnConfig)
+        public PatchLoader(CDN cdn, IConsole console, TactProduct currentProduct, CDNConfigFile cdnConfig)
         {
             _cdn = cdn;
-            Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
-            _cdns = cdns;
             _console = console;
             _currentProduct = currentProduct;
             _cdnConfig = cdnConfig;
@@ -46,12 +43,12 @@ namespace BuildBackup.DataAccess
         {
             if (!string.IsNullOrEmpty(buildConfig.patchConfig))
             {
-                _cdn.Get($"{_cdns.entries[0].path}/config/", buildConfig.patchConfig);
+                _cdn.Get(RootFolder.config, buildConfig.patchConfig);
             }
 
             if (!string.IsNullOrEmpty(buildConfig.patch))
             {
-                return GetPatchFile(_cdns.entries[0].path, buildConfig.patch);
+                return GetPatchFile(buildConfig.patch);
             }
 
             return new PatchFile();
@@ -70,11 +67,11 @@ namespace BuildBackup.DataAccess
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        private PatchFile GetPatchFile(string url, string hash)
+        private PatchFile GetPatchFile(string hash)
         {
             var patchFile = new PatchFile();
 
-            byte[] content = _cdn.Get($"{url}/patch/", hash);
+            byte[] content = _cdn.Get(RootFolder.patch, hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
             {
@@ -143,7 +140,7 @@ namespace BuildBackup.DataAccess
 
         public void DownloadPatchFiles(CDNConfigFile cdnConfig)
         {
-            var patchFileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.patchFileIndex, _cdn, "patch");
+            var patchFileIndexList = IndexParser.ParseIndex(cdnConfig.patchFileIndex, _cdn, RootFolder.patch);
             
             // For whatever reason, the following products do not use these patch files.
             if (productsToSkip.Contains(_currentProduct))
@@ -170,8 +167,8 @@ namespace BuildBackup.DataAccess
             // Download the files and update onscreen status
             Parallel.ForEach(patchFileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
             {
-                _cdn.Get($"{_cdns.entries[0].path}/patch/", entry,  writeToDevNull: true);
-                progressBar2.Refresh(count, $"     {_cdns.entries[0].path}/patch/{entry}");
+                _cdn.Get(RootFolder.patch, entry,  writeToDevNull: true);
+                progressBar2.Refresh(count, $"     patch/{entry}");
                 count++;
             });
             timer.Stop();
@@ -186,7 +183,7 @@ namespace BuildBackup.DataAccess
                 return;
             }
 
-            var patchIndexDictionary = GetPatchIndexes(_cdns.entries[0].path, _cdnConfig.patchArchives);
+            var patchIndexDictionary = GetPatchIndexes(_cdnConfig.patchArchives);
             
             // For whatever reason, the following products do not use these patch files.
             if (productsToSkip.Contains(_currentProduct))
@@ -224,7 +221,7 @@ namespace BuildBackup.DataAccess
             Console.Write($"     Downloading {Colors.Cyan(unarchivedPatchKeyList.Count)} unarchived patch files..".PadRight(Config.PadRight));
             foreach (var entry in unarchivedPatchKeyList)
             {
-                _cdn.Get($"{_cdns.entries[0].path}/patch/", entry, writeToDevNull: true);
+                _cdn.Get(RootFolder.patch, entry, writeToDevNull: true);
             }
             
         }
@@ -245,16 +242,16 @@ namespace BuildBackup.DataAccess
             Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
             foreach (var patchId in cdnConfig.patchArchives)
             {
-                _cdn.QueueRequest($"{_cdns.entries[0].path}/patch/", patchId, writeToDevNull: true);
+                _cdn.QueueRequest(RootFolder.patch, patchId, writeToDevNull: true);
             }
         }
 
-        private Dictionary<string, IndexEntry> GetPatchIndexes(string url, string[] archives)
+        private Dictionary<string, IndexEntry> GetPatchIndexes(string[] archives)
         {
             var indexDictionary = new Dictionary<string, IndexEntry>();
             for (int i = 0; i < archives.Length; i++)
             {
-                byte[] indexContent = _cdn.GetIndex($"{url}/patch/", archives[i]);
+                byte[] indexContent = _cdn.GetIndex(RootFolder.patch, archives[i]);
 
                 using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
                 {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,9 +12,9 @@ namespace BuildBackup.DataAccess
 {
     public static class IndexParser
     {
-        public static Dictionary<string, IndexEntry> ParseIndex(string url, string hashId, CDN cdn, string folder)
+        public static Dictionary<string, IndexEntry> ParseIndex(string hashId, CDN cdn, RootFolder folder)
         {
-            byte[] indexContent = cdn.GetIndex($"{url}/{folder}/", hashId);
+            byte[] indexContent = cdn.GetIndex(folder, hashId);
 
             var returnDict = new Dictionary<string, IndexEntry>();
 
@@ -105,7 +104,7 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO get URI from settings
-        public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(string url, CDNConfigFile cdnConfig, CDN cdn, TactProduct product, Uri blizzardCdnUri)
+        public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(CDNConfigFile cdnConfig, CDN cdn)
         {
             int CHUNK_SIZE = 4096;
             uint BlockSize = (1 << 20);
@@ -116,7 +115,7 @@ namespace BuildBackup.DataAccess
 
             for (int i = 0; i < cdnConfig.archives.Length; i++)
             {
-                ProcessArchive(url, cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
+                ProcessArchive(cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
             }
             //TODO reenable later
             //BuildMaskSize(url, cdnConfig, product, blizzardCdnUri, BlockSize);
@@ -150,9 +149,9 @@ namespace BuildBackup.DataAccess
             fileSizeProvider.Save();
         }
 
-        private static void ProcessArchive(string url, CDNConfigFile cdnConfig, CDN cdn, long i, int CHUNK_SIZE, Dictionary<MD5Hash, IndexEntry> indexDictionary)
+        private static void ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, long i, int CHUNK_SIZE, Dictionary<MD5Hash, IndexEntry> indexDictionary)
         {
-            byte[] indexContent = cdn.GetIndex($"{url}/data/", cdnConfig.archives[i].hashId);
+            byte[] indexContent = cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId);
 
             using (var stream = new MemoryStream(indexContent))
             using (BinaryReader br = new BinaryReader(stream))
@@ -243,9 +242,9 @@ namespace BuildBackup.DataAccess
             }
         }
 
-        private static List<string> ParsePatchFileIndex(string url, string hash, CDN cdn)
+        private static List<string> ParsePatchFileIndex(string hash, CDN cdn)
         {
-            byte[] indexContent = cdn.Get(url + "/patch/", hash);
+            byte[] indexContent = cdn.Get(RootFolder.patch, hash);
 
             var list = new List<string>();
 

@@ -22,13 +22,13 @@ namespace BuildBackup
             _battleNetPatchUri = battleNetPatchUri;
         }
 
-        public CDNConfigFile GetCDNconfig(string url, VersionsEntry targetVersion)
+        public CDNConfigFile GetCDNconfig(VersionsEntry targetVersion)
         {
             var timer = Stopwatch.StartNew();
 
             var cdnConfig = new CDNConfigFile();
 
-            var content = Encoding.UTF8.GetString(cdn.Get($"{url}/config/", targetVersion.cdnConfig));
+            var content = Encoding.UTF8.GetString(cdn.Get(RootFolder.config, targetVersion.cdnConfig));
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
@@ -243,9 +243,9 @@ namespace BuildBackup
             return gblob;
         }
 
-        public GameBlobFile GetProductConfig(string url, string hash)
+        public GameBlobFile GetProductConfig(string hash)
         {
-            string content = Encoding.UTF8.GetString(cdn.Get(url, hash));
+            string content = Encoding.UTF8.GetString(cdn.GetConfigs(hash));
          
             if (string.IsNullOrEmpty(content))
             {
@@ -262,7 +262,7 @@ namespace BuildBackup
             return gblob;
         }
         
-        public string GetDecryptionKeyName(CdnsFile cdns, TactProduct tactProduct, VersionsEntry targetVersion)
+        public string GetDecryptionKeyName(TactProduct tactProduct, VersionsEntry targetVersion)
         {
             string decryptionKeyName = null;
 
@@ -274,7 +274,7 @@ namespace BuildBackup
 
             if (!string.IsNullOrEmpty(targetVersion.productConfig))
             {
-                var productConfig = GetProductConfig(cdns.entries[0].configPath + "/", targetVersion.productConfig);
+                var productConfig = GetProductConfig(targetVersion.productConfig);
                 if (!string.IsNullOrEmpty(productConfig.decryptionKeyName))
                 {
                     decryptionKeyName = productConfig.decryptionKeyName;
@@ -284,7 +284,7 @@ namespace BuildBackup
             return decryptionKeyName;
         }
 
-        public RootFile GetRoot(string url, string hash, bool parseIt = false)
+        public RootFile GetRoot(string hash, bool parseIt = false)
         {
             var root = new RootFile
             {
@@ -292,7 +292,7 @@ namespace BuildBackup
                 entriesFDID = new MultiDictionary<uint, RootEntry>()
             };
 
-            byte[] content = cdn.Get($"{url}/data/", hash);
+            byte[] content = cdn.Get(RootFolder.data, hash);
             if (!parseIt) return root;
 
             var hasher = new Jenkins96();
@@ -392,7 +392,7 @@ namespace BuildBackup
             return root;
         }
 
-        public void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn, CdnsFile cdns)
+        public void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn)
         {
             var timer = Stopwatch.StartNew();
             // Not required by these products
@@ -411,7 +411,7 @@ namespace BuildBackup
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
                 // Starcraft 2 calls this
-                cdn.Get($"{cdns.entries[0].path}/config/", targetVersion.keyRing);
+                cdn.Get(RootFolder.config, targetVersion.keyRing);
             }
 
             //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.

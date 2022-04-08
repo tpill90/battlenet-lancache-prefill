@@ -41,40 +41,37 @@ namespace BuildBackup
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
+            // Loading CDNs
             CDN cdn = new CDN(console, Config.BattleNetPatchUri) 
             { 
                 DebugMode = useDebugMode
             };
-            Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
-
-            // Loading CDNs
-            var cdnFileHandler = new CdnFileHandler(cdn, Config.BattleNetPatchUri);
-            CdnsFile cdnsFile = cdnFileHandler.ParseCdnsFile(product);
+            cdn.LoadCdnsFile(product);
             
-
             // Initializing other classes, now that we have our CDN info loaded
-            var encodingFileHandler = new EncodingFileHandler(cdnsFile, cdn);
+            var encodingFileHandler = new EncodingFileHandler(cdn);
 
             // Finding the latest version of the game
+            Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
-            BuildConfigFile buildConfig = Requests.GetBuildConfig(cdnsFile.entries[0].path, targetVersion, cdn);
+            BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
             //TODO put this into a method
-            cdn.QueueRequest($"{cdnsFile.entries[0].path}/data/", buildConfig.size[1], writeToDevNull: true);
+            cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
 
-            CDNConfigFile cdnConfig = logic.GetCDNconfig(cdnsFile.entries[0].path, targetVersion);
+            CDNConfigFile cdnConfig = logic.GetCDNconfig(targetVersion);
 
-            logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdnsFile);
+            logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn);
             
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
-            DownloadFile downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdnsFile.entries[0].path, buildConfig.download[1].ToString());
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnsFile.entries[0].path, cdnConfig, cdn, product, new Uri("http://level3.blizzard.com"));
+            DownloadFile downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, buildConfig.download[1].ToString().ToLower());
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
             // Starting the download
-            var ribbit = new Ribbit(cdn, cdnsFile);
-            ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, cdnsFile, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(cdn, cdnsFile, downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
+            var ribbit = new Ribbit(cdn);
+            ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, archiveIndexDictionary);
+            ribbit.HandleDownloadFile(cdn, downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
 
-            var patchLoader = new PatchLoader(cdn, cdnsFile, console, product, cdnConfig);
+            var patchLoader = new PatchLoader(cdn, console, product, cdnConfig);
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.HandlePatches(patch);
 

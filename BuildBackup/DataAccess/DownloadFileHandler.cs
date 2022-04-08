@@ -8,11 +8,11 @@ namespace BuildBackup.DataAccess
 {
     public static class DownloadFileHandler
     {
-        public static DownloadFile ParseDownloadFile(CDN cdn, string url, string hash)
+        public static DownloadFile ParseDownloadFile(CDN cdn, string hash)
         {
             var download = new DownloadFile();
 
-            byte[] content = cdn.Get($"{url}/data/", hash);
+            byte[] content = cdn.Get(RootFolder.data, hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {

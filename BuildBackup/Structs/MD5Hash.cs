@@ -15,7 +15,8 @@ namespace BuildBackup.Structs
         public override string ToString()
         {
             return (BitConverter.ToString(BitConverter.GetBytes(lowPart)) 
-                    + BitConverter.ToString(BitConverter.GetBytes(highPart))).Replace("-", "");
+                    + BitConverter.ToString(BitConverter.GetBytes(highPart)))
+                    .Replace("-", "");
         }
 
         public static bool operator ==(MD5Hash obj1, MD5Hash obj2)

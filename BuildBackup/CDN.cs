@@ -7,8 +7,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
+using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
 using Colors = Shared.Colors;
@@ -30,6 +32,8 @@ namespace BuildBackup
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         private readonly List<Request> _queuedRequests = new List<Request>();
+
+        private CdnsFile _cdnsFile;
 
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
@@ -57,11 +61,27 @@ namespace BuildBackup
             };
         }
 
+        public void LoadCdnsFile(TactProduct currentProduct)
+        {
+            // Loading CDNs
+            var cdnFileHandler = new CdnFileHandler(this, Config.BattleNetPatchUri);
+            _cdnsFile = cdnFileHandler.ParseCdnsFile(currentProduct);
+
+            // Adds any missing cdn hosts
+            foreach (var host in _cdnsFile.entries.SelectMany(e => e.hosts))
+            {
+                if (!cdnList.Contains(host))
+                {
+                    cdnList.Add(host);
+                }
+            }
+        }
+
         //TODO finish making everything use this
-        public void QueueRequest(string rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
+        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
             hashId = hashId.ToLower();
-            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
 
             if (startBytes != null && endBytes != null)
             {
@@ -84,16 +104,22 @@ namespace BuildBackup
             }
         }
 
-        public byte[] Get(string rootPath, string hashId, bool writeToDevNull = false)
+        public byte[] Get(RootFolder rootPath, string hashId, bool writeToDevNull = false)
         {
-            hashId = hashId.ToLower();
-            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            return Get(uri, writeToDevNull);
+        }
+
+        public byte[] GetConfigs(string hashId, bool writeToDevNull = false)
+        {
+            var uri = $"{_cdnsFile.entries[0].configPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
             return Get(uri, writeToDevNull);
         }
         
-        public byte[] GetIndex(string rootPath, string hashId)
+        public byte[] GetIndex(RootFolder rootPath, string hashId)
         {
-            var uri = $"{rootPath}{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
+            //TODO indexes should have a size
+            var uri = $"{_cdnsFile.entries[0].path}/{rootPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
             return Get(uri);
         }
 

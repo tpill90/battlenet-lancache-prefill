@@ -89,16 +89,6 @@ namespace BuildBackup.DataAccess
                     }
                 }
 
-                foreach (var subcdn in cdns.entries)
-                {
-                    foreach (var cdnHost in subcdn.hosts)
-                    {
-                        if (!cdn.cdnList.Contains(cdnHost))
-                        {
-                            cdn.cdnList.Add(cdnHost);
-                        }
-                    }
-                }
             }
 
             if (cdns.entries == null || !cdns.entries.Any())

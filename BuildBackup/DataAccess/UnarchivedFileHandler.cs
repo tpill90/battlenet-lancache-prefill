@@ -28,13 +28,13 @@ namespace BuildBackup.DataAccess
         }
 
         //TODO comment
-        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable, TactProduct product)
+        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable)
         {
             Console.Write("Processing individual, unarchived files ... ".PadRight(Config.PadRight));
 
             var timer = Stopwatch.StartNew();
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, new Uri("http://level3.blizzard.com"));
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, _cdn);
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfig.fileIndex, _cdn, RootFolder.data);
 
             foreach (var indexEntry in archiveIndexDictionary)
             {
@@ -48,7 +48,7 @@ namespace BuildBackup.DataAccess
                     var file = fileIndexList[entry.Key.ToString()];
                     var startBytes = file.offset;
                     var endBytes = file.offset + file.size - 1;
-                    _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key.ToString(), startBytes, endBytes, writeToDevNull: true);
+                    _cdn.QueueRequest(RootFolder.data, entry.Key.ToString(), startBytes, endBytes, writeToDevNull: true);
                 }
             }
 
@@ -58,7 +58,7 @@ namespace BuildBackup.DataAccess
 
         public void DownloadUnarchivedIndexFiles(CDNConfigFile cdnConfig)
         {
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfig.fileIndex, _cdn, RootFolder.data);
 
             Console.WriteLine($"     Downloading {Colors.Cyan(fileIndexList.Count())} unarchived files from file index..");
 
@@ -67,7 +67,7 @@ namespace BuildBackup.DataAccess
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, fileIndexList.Count, 50);
             Parallel.ForEach(fileIndexList, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
             {
-                _cdn.Get($"{_cdns.entries[0].path}/data/", entry.Key, writeToDevNull: true);
+                _cdn.Get(RootFolder.data, entry.Key, writeToDevNull: true);
                 //progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
                 count++;
             });

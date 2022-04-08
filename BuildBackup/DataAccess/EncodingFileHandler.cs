@@ -11,12 +11,10 @@ namespace BuildBackup.DataAccess
 {
     public class EncodingFileHandler
     {
-        private readonly CdnsFile _cdns;
         private readonly CDN _cdn;
 
-        public EncodingFileHandler(CdnsFile cdns, CDN cdn)
+        public EncodingFileHandler(CDN cdn)
         {
-            _cdns = cdns;
             _cdn = cdn;
         }
 
@@ -84,11 +82,11 @@ namespace BuildBackup.DataAccess
 
             var encoding = new EncodingFile();
 
-            byte[] content = _cdn.Get($"{_cdns.entries[0].path}/data/", hash);
+            byte[] content = _cdn.Get(RootFolder.data, hash);
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = _cdn.Get($"{_cdns.entries[0].path}/data/", hash);
+                content = _cdn.Get(RootFolder.data, hash);
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {

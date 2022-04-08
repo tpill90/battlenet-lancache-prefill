@@ -1,7 +1,6 @@
 ﻿using BuildBackup.Structs;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,26 +13,22 @@ namespace BuildBackup.DataAccess
     public class Ribbit
     {
         private CDN _cdn;
-        private CdnsFile _cdns;
 
-        public Ribbit(CDN cdn, CdnsFile cdns)
+        public Ribbit(CDN cdn)
         {
             _cdn = cdn;
-
-            Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
-            _cdns = cdns;
         }
 
         //TODO comment
-        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn, CdnsFile cdns,
+        public void HandleInstallFile(CDNConfigFile cdnConfig, EncodingTable encodingTable, CDN cdn,
             Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary)
         {
             Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
-            var installFile = ParseInstallFile(cdns.entries[0].path, encodingTable.installKey);
+            var installFile = ParseInstallFile(encodingTable.installKey);
 
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfig.fileIndex, _cdn, RootFolder.data);
 
             // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
             var archiveIndexDownloads = new List<InstallFileMatch>();
@@ -75,7 +70,7 @@ namespace BuildBackup.DataAccess
                     var lowerByteRange = (int)archiveIndex.offset;
                     // Need to subtract 1, since the byte range is "inclusive"
                     var upperByteRange = ((int)archiveIndex.offset + (int)archiveIndex.size - 1);
-                    cdn.QueueRequest($"{cdns.entries[0].path}/data/", archiveIndex.IndexId, lowerByteRange, upperByteRange, true);
+                    cdn.QueueRequest(RootFolder.data, archiveIndex.IndexId, lowerByteRange, upperByteRange, true);
                     count++;
                 }
                 else if (encodingTable.EncodingDictionary.ContainsKey(upperHash))
@@ -88,18 +83,18 @@ namespace BuildBackup.DataAccess
                     IndexEntry indexMatch = fileIndexList[upperHash.ToString().ToUpper()];
                     var startBytes2 = indexMatch.offset;
                     var endBytes2 = indexMatch.offset + file.size - 1;
-                    _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", encodingMatch.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                    _cdn.QueueRequest(RootFolder.data, encodingMatch.ToString(), startBytes2, endBytes2, writeToDevNull: true);
 
                 }
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        public InstallFile ParseInstallFile(string url, string hash)
+        public InstallFile ParseInstallFile(string hash)
         {
             var install = new InstallFile();
 
-            byte[] content = _cdn.Get($"{url}/data/", hash);
+            byte[] content = _cdn.Get(RootFolder.data, hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
@@ -155,14 +150,14 @@ namespace BuildBackup.DataAccess
             return install;
         }
 
-        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, 
+        public void HandleDownloadFile(CDN cdn, DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, 
             CDNConfigFile cdnConfigFile,
             EncodingTable encodingTable)
         {
             Console.Write("Parsing download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfigFile.fileIndex, _cdn, "data");
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfigFile.fileIndex, _cdn, RootFolder.data);
 
             var indexDownloads = 0;
 
@@ -189,7 +184,7 @@ namespace BuildBackup.DataAccess
                         var file = fileIndexList[current.hash.ToString()];
                         var startBytes2 = file.offset;
                         var endBytes2 = file.offset + file.size - 1;
-                        _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                        _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
                     }
                     continue;
                 }
@@ -247,7 +242,7 @@ namespace BuildBackup.DataAccess
                 uint numChunks = (e.offset + e.size - 1) / chunkSize;
                 uint upperByteRange2 = ((numChunks + 1) * chunkSize) ;
                 uint upperByteRange = (e.offset + e.size - 1) + 4096;
-                cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
+                cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
                 
                 indexDownloads++;
             }
