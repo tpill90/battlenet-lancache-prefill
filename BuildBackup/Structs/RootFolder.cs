@@ -1,11 +1,14 @@
 ﻿namespace BuildBackup.Structs
 {
     //TODO comment
-    public enum RootFolder
+    public class RootFolder : EnumBase<RootFolder>
     {
-        //TODO these being converted to a string might be slowing things down. Precompute them?
-        data,
-        config,
-        patch
+        public static readonly RootFolder data = new RootFolder("data");
+        public static readonly RootFolder config = new RootFolder("config");
+        public static readonly RootFolder patch = new RootFolder("patch");
+
+        private RootFolder(string name) : base(name)
+        {
+        }
     }
 }
