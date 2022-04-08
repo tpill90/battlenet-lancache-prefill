@@ -103,67 +103,16 @@ namespace BuildBackup.DebugUtil
         public static List<Request> CoalesceRequests(List<Request> initialRequests)
         {
             //TODO handle the case where there are "whole file downloads".  If there is a whole file download, then any other requests should just be removed at this step
-            // Initial De-duplicating requests
-            var dedupedRequests = initialRequests.DistinctBy(e => new
-                {
-                    e.Uri, 
-                    e.LowerByteRange, 
-                    e.UpperByteRange
-                })
-                .OrderBy(e => e.Uri)
-                .ThenBy(e => e.LowerByteRange)
-                .ToList();
-
-            //Coalescing any requests to the same URI that have sequential byte ranges.  
             var coalesced = new List<Request>();
-            var requestsGroupedByUri = dedupedRequests.GroupBy(e => e.Uri).ToList();
+
+            //Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
+            var requestsGroupedByUri = initialRequests.GroupBy(e => e.Uri).ToList();
             foreach (var grouping in requestsGroupedByUri)
-            {
-                var requestsToProcess = grouping.ToList();
-                // Pulling out our first node
-                var current = requestsToProcess[0];
-                requestsToProcess.RemoveAt(0);
-
-                // Iterate through the list until there is nothing left to combine
-                while (requestsToProcess.Any())
-                {
-                    var matched = requestsToProcess.FirstOrDefault(e => e.Uri == current.Uri && e.LowerByteRange == (current.UpperByteRange + 1));
-                    if (matched != null)
-                    {
-                        current.UpperByteRange = matched.UpperByteRange;
-                        requestsToProcess.Remove(matched);
-                    }
-                    else
-                    {
-                        coalesced.Add(current);
-                        current = requestsToProcess[0];
-                        requestsToProcess.RemoveAt(0);
-                    }
-                }
-
-                // Have to add our final loop iteration otherwise we'll skip it by accident
-                coalesced.Add(current);
-            }
-
-            // Removing byte ranges that overlap
-            var requestsGroupedByUri3 = coalesced.GroupBy(e => e.Uri).ToList();
-            coalesced.Clear();
-            foreach (var grouping in requestsGroupedByUri3)
             {
                 var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping().ToList();
 
                 coalesced.AddRange(merged);
             }
-
-            // Deduplicating again
-            coalesced = coalesced.DistinctBy(e => new
-                {
-                    e.Uri,
-                    e.LowerByteRange,
-                    e.UpperByteRange,
-                    e.DownloadWholeFile
-                })
-                .ToList();
 
             return coalesced;
         }
