@@ -1,12 +1,11 @@
-﻿using System;
+﻿using BuildBackup.Structs;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BuildBackup.DebugUtil.Models;
-using BuildBackup.Structs;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -41,49 +40,57 @@ namespace BuildBackup.DataAccess
 
             var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
 
+            // TODO this should be 767, instead of 751
+            int count = 0;
+            int missCount = 0;
+            //TODO try rewriting this in a different order.  Iterate through each item in the index.
+
             foreach (var file in installFile.entries)
             {
-                //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
-                if (!reverseLookupDictionary.ContainsKey(file.contentHashString.FromHexString().ToMD5()))
-                {
-                    continue;
-                }
-
                 //TODO make multi region
                 if (!file.tags.Contains("1=enUS"))
                 {
                     continue;
                 }
-
+                
+                //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
+                if (!reverseLookupDictionary.ContainsKey(file.contentHashString.FromHexString().ToMD5()))
+                {
+                    continue;
+                }
+                
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                 var upperHash = reverseLookupDictionary[file.contentHashString.FromHexString().ToMD5()].ToString().ToUpper();
+
+                if (!archiveIndexDictionary.ContainsKey(upperHash))
+                {
+                    continue;
+                }
 
                 if (archiveIndexDictionary.ContainsKey(upperHash))
                 {
                     IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
                     archiveIndexDownloads.Add(new InstallFileMatch { IndexEntry = archiveIndex, InstallFileEntry = file });
-                    //Debugger.Break();
+
+                    var lowerByteRange = (int)archiveIndex.offset;
+                    // Need to subtract 1, since the byte range is "inclusive"
+                    var upperByteRange = ((int)archiveIndex.offset + (int)archiveIndex.size - 1);
+                    cdn.QueueRequest($"{cdns.entries[0].path}/data/", archiveIndex.IndexId, lowerByteRange, upperByteRange, true);
+                    count++;
                 }
-                else if (fileIndexList.ContainsKey(upperHash))
+                else if (encodingTable.EncodingDictionary.ContainsKey(upperHash.FromHexString().ToMD5()))
                 {
+                    var encodingMatch = encodingTable.EncodingDictionary[upperHash.FromHexString().ToMD5()];
+                    //Console.WriteLine(encodingMatch.ToString());
+
+
+                    MD5Hash asd = encodingTable.EncodingDictionary[upperHash.FromHexString().ToMD5()];
                     IndexEntry indexMatch = fileIndexList[upperHash];
-                    fileIndexDownloads.Add(new InstallFileMatch() { IndexEntry = indexMatch, InstallFileEntry = file });
-                    //TODO Not sure what needs to be done here
-                    //Debugger.Break();
+                    var startBytes2 = indexMatch.offset;
+                    var endBytes2 = indexMatch.offset + file.size - 1;
+                    _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", encodingMatch.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+
                 }
-            }
-
-            var requests = archiveIndexDownloads.Select(e => new Request
-            {
-                Uri = e.IndexEntry.IndexId,
-                LowerByteRange = (int)e.IndexEntry.offset,
-                // Need to subtract 1, since the byte range is "inclusive"
-                UpperByteRange = ((int)e.IndexEntry.offset + (int)e.IndexEntry.size - 1)
-            }).ToList();
-
-            foreach (var indexDownload in requests)
-            {
-                cdn.QueueRequest($"{cdns.entries[0].path}/data/", indexDownload.Uri, indexDownload.LowerByteRange, indexDownload.UpperByteRange, true);
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
@@ -148,32 +155,42 @@ namespace BuildBackup.DataAccess
             return install;
         }
 
-        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile)
+        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<string, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+            EncodingTable encodingTable)
         {
             Console.Write("Parsing download file list...");
             var timer = Stopwatch.StartNew();
 
+            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfigFile.fileIndex, _cdn, "data");
+
             var indexDownloads = 0;
-            var totalBytes = 0L;
 
             //TODO make this more flexible.  Perhaps pass in the region by name?
             var tagToUse = download.tags.Single(e => e.Name.Contains("enUS"));
-            var tagToUse2 = download.tags.Single(e => e.Name.Contains("Windows"));
-
+          
             for (var i = 0; i < download.entries.Length; i++)
             {
                 var current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
-                if (tagToUse.Bits[i] == false || tagToUse2.Bits[i] == false)
+                if (tagToUse.Bits[i] == false)
                 {
                     continue;
                 }
                 if (!archiveIndexDictionary.ContainsKey(current.hash))
                 {
+                    // Handles unarchived files
+                    if (encodingTable.EncodingDictionary.ContainsKey(current.hash.FromHexString().ToMD5()))
+                    {
+                        indexDownloads++;
+                        var file = fileIndexList[current.hash.ToString()];
+                        var startBytes2 = file.offset;
+                        var endBytes2 = file.offset + file.size - 1;
+                        _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                    }
                     continue;
                 }
-
+                
                 IndexEntry e = archiveIndexDictionary[current.hash];
                 uint blockSize = 1048576;
 
@@ -201,7 +218,6 @@ namespace BuildBackup.DataAccess
                     }
                 }
                 
-
                 //if (getStart < getEnd)
                 //{
                 //    var startBytes = getStart * blockSize;
@@ -214,19 +230,24 @@ namespace BuildBackup.DataAccess
                     var excessBlocks = 1;
                     var startBytesBlock = Math.Max(((int)blockStart - excessBlocks) * blockSize, 0);
                     var endBytesBlock = ((blockEnd + excessBlocks) * blockSize) - 1;
-                    cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytesBlock, endBytesBlock, writeToDevNull: true);
+                    //cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytesBlock, endBytesBlock, writeToDevNull: true);
                 }
                 else
                 {
                     Debugger.Break();
                 }
-                
 
 
+                uint chunkSize = 4096;
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
-                int upperByteRange = ((int)e.offset + (int)e.size - 1);
-                //cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
+                uint numChunks = (e.offset + e.size - 1) / chunkSize;
+                uint upperByteRange2 = ((numChunks + 1) * chunkSize) ;
+                uint upperByteRange = (e.offset + e.size - 1) + 4096;
+                cdn.QueueRequest($"{cdns.entries[0].path}/data/", e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
+
+                //TODO should be 14931
+                indexDownloads++;
             }
             
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");

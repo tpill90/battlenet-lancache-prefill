@@ -61,6 +61,8 @@ namespace BuildBackup.DataAccess
                 }
             }
 
+            encodingTable.encodingFile = encodingFile;
+
             timer.Stop();
             Console.WriteLine($" Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 

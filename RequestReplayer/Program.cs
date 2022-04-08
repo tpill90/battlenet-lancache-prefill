@@ -20,6 +20,7 @@ namespace RequestReplayer
             TactProducts.CodVanguard,
             // Blizzard
             TactProducts.Diablo3,
+            //TODO estimated download time left is displayed wrong
             TactProducts.Hearthstone,
             TactProducts.HeroesOfTheStorm,
             TactProducts.Overwatch,

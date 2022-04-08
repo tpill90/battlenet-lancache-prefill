@@ -33,9 +33,8 @@ namespace BuildBackup.DataAccess
             Console.Write("Processing individual, unarchived files ... ");
 
             var timer = Stopwatch.StartNew();
-
+            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, new Uri("http://level3.blizzard.com"));
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(_cdns.entries[0].path, cdnConfig.fileIndex, _cdn, "data");
-            Dictionary<string, IndexEntry> archiveIndexDictionary = IndexParser.BuildArchiveIndexes(_cdns.entries[0].path, cdnConfig, _cdn, product, Config.BattleNetPatchUri);
 
             foreach (var indexEntry in archiveIndexDictionary)
             {
@@ -48,7 +47,7 @@ namespace BuildBackup.DataAccess
                 {
                     var file = fileIndexList[entry.Key.ToString()];
                     var startBytes = file.offset;
-                    var endBytes = file.offset + file.size;
+                    var endBytes = file.offset + file.size - 1;
                     _cdn.QueueRequest($"{_cdns.entries[0].path}/data/", entry.Key.ToString(), startBytes, endBytes, writeToDevNull: true);
                 }
             }

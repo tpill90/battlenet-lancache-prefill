@@ -11,6 +11,8 @@ namespace BuildBackup.Structs
         public string rootKey = "";
         public string downloadKey = "";
         public string installKey = "";
+
+        public EncodingFile encodingFile;
     }
 
     public struct EncodingFile

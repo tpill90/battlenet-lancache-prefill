@@ -6,7 +6,6 @@ using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
 using Konsole;
-using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -62,23 +61,22 @@ namespace BuildBackup
             CDNConfigFile cdnConfig = logic.GetCDNconfig(cdns.entries[0].path, targetVersion);
 
             logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn, cdns);
+            cdn.QueueRequest($"{cdns.entries[0].path}/data/", buildConfig.size[1], writeToDevNull: true);
 
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
             var downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, cdns.entries[0].path, encodingTable.downloadKey);
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn, product, Config.BattleNetPatchUri);
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdns.entries[0].path, cdnConfig, cdn, product, new Uri("http://level3.blizzard.com"));
 
             // Starting the download
             ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, cdns, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary, cdnConfig);
+            ribbit.HandleDownloadFile(cdn, cdns, downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
 
-            unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, product);
+            //unarchivedFileHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, product);
 
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.DownloadPatchArchives(cdnConfig, patch);
             patchLoader.DownloadPatchFiles(cdnConfig);
             patchLoader.DownloadFullPatchArchives(cdnConfig);
-
-            //DownloadFileHandler.DownloadFullArchives(cdnConfig, cdn, cdns);
 
             cdn.DownloadQueuedRequests();
 

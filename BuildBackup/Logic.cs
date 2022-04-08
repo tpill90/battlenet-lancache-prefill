@@ -112,7 +112,7 @@ namespace BuildBackup
             var cacheFile = $"{Config.CacheDir}/versions-{tactProduct.ProductCode}.json";
             
             // Load cached version.  
-            if (File.Exists(cacheFile) && File.GetLastWriteTime(cacheFile) < DateTime.Now.AddHours(1))
+            if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
             {
                 return JsonConvert.DeserializeObject<VersionsFile>(File.ReadAllText(cacheFile));
             }

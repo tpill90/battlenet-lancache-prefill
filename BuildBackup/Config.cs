@@ -13,7 +13,7 @@ namespace BuildBackup
             }
         }
 
-        public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119/");
+        public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
 
         //TODO comment
         public static string CacheDir => "cache";
