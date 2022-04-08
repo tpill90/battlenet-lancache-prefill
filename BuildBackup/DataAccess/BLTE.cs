@@ -14,7 +14,10 @@ namespace BuildBackup
             using (var result = new MemoryStream())
             using (var bin = new BinaryReader(new MemoryStream(content)))
             {
-                if (bin.ReadUInt32() != 0x45544c42) { throw new Exception("Not a BLTE file"); }
+                if (bin.ReadUInt32() != 0x45544c42)
+                {
+                    throw new Exception("Not a BLTE file");
+                }
 
                 var blteSize = bin.ReadUInt32(true);
 
@@ -113,6 +116,7 @@ namespace BuildBackup
                     throw new Exception("Unsupported mode " + data[0].ToString("X") + "!");
             }
         }
+        
         private static string ReturnEncryptionKeyName(byte[] data)
         {
             byte keyNameSize = data[0];
@@ -130,6 +134,7 @@ namespace BuildBackup
 
             return BitConverter.ToString(keyNameBytes).Replace("-", "");
         }
+
         private static byte[] Decrypt(byte[] data, int index)
         {
             byte keyNameSize = data[1];

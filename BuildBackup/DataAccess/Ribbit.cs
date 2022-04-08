@@ -1,6 +1,7 @@
 ﻿using BuildBackup.Structs;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -155,7 +156,8 @@ namespace BuildBackup.DataAccess
             return install;
         }
 
-        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+        public void HandleDownloadFile(CDN cdn, CdnsFile cdns, DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, 
+            CDNConfigFile cdnConfigFile,
             EncodingTable encodingTable)
         {
             Console.Write("Parsing download file list...".PadRight(Config.PadRight));
@@ -167,14 +169,15 @@ namespace BuildBackup.DataAccess
 
             //TODO make this more flexible.  Perhaps pass in the region by name?
             var tagToUse = download.tags.Single(e => e.Name.Contains("enUS"));
-            var tagToUse2 = download.tags.Single(e => e.Name.Contains("Windows"));
+
+            var tagToUse2 = download.tags.FirstOrDefault(e => e.Name.Contains("Windows"));
 
             for (var i = 0; i < download.entries.Length; i++)
             {
                 DownloadEntry current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
-                if (tagToUse.Bits[i] == false || tagToUse2.Bits[i] == false)
+                if (tagToUse.Bits[i] == false || tagToUse2?.Bits[i] == false)
                 {
                     continue;
                 }
