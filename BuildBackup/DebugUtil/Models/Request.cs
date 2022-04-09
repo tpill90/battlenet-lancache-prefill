@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using ByteSizeLib;
 
 namespace BuildBackup.DebugUtil.Models
@@ -48,6 +49,14 @@ namespace BuildBackup.DebugUtil.Models
             if (LowerByteRange <= request2.LowerByteRange)
             {
                 var overlaps = UpperByteRange >= request2.LowerByteRange;
+                if (!overlaps)
+                {
+                    // Seeing if adjacent ranges can be combined
+                    if (UpperByteRange + 1 >= request2.LowerByteRange)
+                    {
+                        return true;
+                    }
+                }
                 return overlaps;
             }
             else

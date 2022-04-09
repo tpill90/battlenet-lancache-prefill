@@ -41,11 +41,13 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
             Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
         }
 
+        //TODO make a test that checks for the # of requests w\o size
+
         [Test]
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(100);
+            var expected = ByteSize.FromMegaBytes(5);
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);

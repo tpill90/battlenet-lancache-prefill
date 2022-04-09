@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BuildBackup.DebugUtil.Models;
 using Newtonsoft.Json;
+using Shared;
 
 namespace BuildBackup.DebugUtil
 {
@@ -42,16 +45,20 @@ namespace BuildBackup.DebugUtil
 
             if (latestFile.FullName.Contains("coalesced"))
             {
-				//TODO this might not be any faster than just re-parsing the logs.  Do some more testing
+                //TODO this might not be any faster than just re-parsing the logs.  Do some more testing
                 return JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
             }
             else
             {
+                var timer = Stopwatch.StartNew();
+
                 var rawLogs = ParseRequestLogs(File.ReadAllLines(latestFile.FullName));
                 List<Request> requestsToReplay = CoalesceRequests(rawLogs);
 
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".log", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay));
+
+                Console.WriteLine($"Log coalescing took {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
                 return requestsToReplay;
             }

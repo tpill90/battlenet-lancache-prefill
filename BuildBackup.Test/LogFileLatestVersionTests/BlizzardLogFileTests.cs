@@ -76,17 +76,16 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
             Assert.AreEqual(cdnVersion.versionsName, latestLogFile);
         }
 
-        //TODO reenable
-        //[Test]
-        //public void WorldOfWarcraft_UpToDate()
-        //{
-        //    var product = TactProducts.WorldOfWarcraft;
+        [Test]
+        public void WorldOfWarcraft_UpToDate()
+        {
+            var product = TactProducts.WorldOfWarcraft;
 
-        //    VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
-        //    var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
+            VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
+            var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
 
-        //    Assert.AreEqual(cdnVersion.versionsName, latestLogFile);
-        //}
+            Assert.AreEqual(cdnVersion.versionsName, latestLogFile);
+        }
 
         [Test]
         public void WowClassic_UpToDate()
