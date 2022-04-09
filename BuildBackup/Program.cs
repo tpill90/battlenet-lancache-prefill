@@ -17,7 +17,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft2 };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.CodVanguard };
 
         public static bool UseCdnDebugMode = true;
         
@@ -68,12 +68,23 @@ namespace BuildBackup
 
             // Starting the download
             var ribbit = new Ribbit(cdn);
-            ribbit.HandleInstallFile(cdnConfig, encodingTable, cdn, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(cdn, downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
+            ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary);
+            ribbit.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
 
             var patchLoader = new PatchLoader(cdn, console, product, cdnConfig);
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
             patchLoader.HandlePatches(patch);
+
+            if (product == TactProducts.CodWarzone || product == TactProducts.CodBlackOpsColdWar 
+                                                   || product == TactProducts.CodVanguard 
+                                                   || product == TactProducts.WorldOfWarcraft)
+            {
+                var unarchivedHandler = new UnarchivedFileHandler(cdn, console);
+                unarchivedHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, archiveIndexDictionary);
+                unarchivedHandler.DownloadUnarchivedIndexFiles(cdnConfig, downloadFile, encodingTable);
+            }
+            
+
 
             cdn.DownloadQueuedRequests();
 
@@ -87,6 +98,5 @@ namespace BuildBackup
 
             return result;
         }
-        
     }
 }

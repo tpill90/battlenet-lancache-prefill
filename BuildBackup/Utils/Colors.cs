@@ -35,5 +35,10 @@
         {
             return $"[blue]{inputText}[/]";
         }
+
+        public static string Yellow(string inputText)
+        {
+            return $"[yellow]{inputText}[/]";
+        }
     }
 }

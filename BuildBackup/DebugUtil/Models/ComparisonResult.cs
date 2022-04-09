@@ -13,7 +13,6 @@ namespace BuildBackup.DebugUtil.Models
         public TimeSpan ElapsedTime { get; set; }
 
         public int RequestMadeCount { get; set; }
-        public int DuplicateRequests { get; set; }
 
         public int RealRequestCount { get; set; }
 
@@ -35,23 +34,18 @@ namespace BuildBackup.DebugUtil.Models
             table.AddColumn(new TableColumn("").LeftAligned());
             table.AddColumn(new TableColumn(SpectreColors.Blue("Current")).Centered());
             table.AddColumn(new TableColumn(SpectreColors.Blue("Expected")).Centered());
-            //TODO
-            // table.AddColumn(new TableColumn(SpectreColors.Blue("Matches")).Centered()); , ((char)0x2713).ToString()
 
             table.AddRow("Requests made", RequestMadeCount.ToString(), RealRequestCount.ToString());
             table.AddRow("Bandwidth required", RequestTotalSize.ToString(), RealRequestsTotalSize.ToString());
-            table.AddRow("Requests missing size", RequestsWithoutSize.ToString(), RealRequestsWithoutSize.ToString());
+            table.AddRow("Requests missing size", SpectreColors.Yellow(RequestsWithoutSize.ToString()), RealRequestsWithoutSize.ToString());
             AnsiConsole.Write(table);
 
-            Console.WriteLine($"Total Misses : {Colors.Red(MissCount)}");
-            Console.WriteLine($"Misses Bandwidth : {Colors.Yellow(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
+            Console.WriteLine($"Total Misses     : {Colors.Red(MissCount)}");
+            Console.WriteLine($"Misses Bandwidth : {Colors.Red(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
             Console.WriteLine();
 
             Console.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
-            Console.WriteLine($"Wasted bandwidth : {Colors.Yellow(ByteSize.FromBytes(UnnecessaryRequests.Sum(e => e.TotalBytes)))}");
-            Console.WriteLine($"Total Dupes : {Colors.Yellow(DuplicateRequests)}");
-            //TODO log wasted bandwidth
-
+            Console.WriteLine($"Wasted bandwidth     : {Colors.Yellow(ByteSize.FromBytes(UnnecessaryRequests.Sum(e => e.TotalBytes)))}");
             Console.WriteLine();
         }
     }

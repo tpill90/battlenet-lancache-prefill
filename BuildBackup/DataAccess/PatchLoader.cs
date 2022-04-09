@@ -21,12 +21,15 @@ namespace BuildBackup.DataAccess
 
         List<TactProduct> productsToSkip = new List<TactProduct> 
         {
+            TactProducts.CodVanguard,
+
             TactProducts.Diablo3,
             TactProducts.Hearthstone,
             TactProducts.HeroesOfTheStorm,
             TactProducts.Overwatch,
             TactProducts.Starcraft1,
             TactProducts.Starcraft2,
+            TactProducts.WowClassic,
             TactProducts.WorldOfWarcraft
         };
 
@@ -158,21 +161,17 @@ namespace BuildBackup.DataAccess
 
             Console.WriteLine($"     Downloading {Colors.Cyan(patchFileIndexList.Count)} unarchived patch files from patch file index...");
             Console.WriteLine($"     Total archive size : {Colors.Magenta(downloadSize.ToString())}");
-
-            // Progress bar setup
-            var progressBar2 = new ProgressBar(_console, PbStyle.SingleLine, patchFileIndexList.Keys.Count);
-            int count = 0;
+            
             var timer = Stopwatch.StartNew();
 
             // Download the files and update onscreen status
-            Parallel.ForEach(patchFileIndexList.Keys, new ParallelOptions { MaxDegreeOfParallelism = 20 }, (entry) =>
+            foreach(var entry in patchFileIndexList)
             {
-                _cdn.Get(RootFolder.patch, entry,  writeToDevNull: true);
-                progressBar2.Refresh(count, $"     patch/{entry}");
-                count++;
-            });
+                var file = entry.Value;
+                _cdn.QueueRequest(RootFolder.patch, entry.Key, file.offset, file.offset + file.size - 1, writeToDevNull: true);
+            }
             timer.Stop();
-            progressBar2.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         //TODO comment

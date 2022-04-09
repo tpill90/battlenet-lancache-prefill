@@ -93,7 +93,7 @@ namespace BuildBackup.DebugUtil
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, wholeFileRequests.Count, 50);
             int count = 0;
             // Speeding up by pre-caching the content-length headers in parallel.
-            Parallel.ForEach(wholeFileRequests, new ParallelOptions { MaxDegreeOfParallelism = 30 }, request =>
+            Parallel.ForEach(wholeFileRequests, new ParallelOptions { MaxDegreeOfParallelism = 25 }, request =>
             {
                 fileSizeProvider.GetContentLength(request);
                 progressBar.Refresh(count, $"Getting request sizes.  {Colors.Cyan(wholeFileRequests.Count - count)} remaining");

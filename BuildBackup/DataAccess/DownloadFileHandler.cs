@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using BuildBackup.Structs;
 
 namespace BuildBackup.DataAccess
@@ -73,6 +75,26 @@ namespace BuildBackup.DataAccess
             }
 
             return download;
+        }
+
+        /// <summary>
+        /// Downloads all of the currently listed "archive" files from Battle.Net's CDN.  Each archive file is 256mb.
+        ///
+        /// More details on archive files : https://wowdev.wiki/TACT#Archives
+        /// </summary>
+        public static void DownloadFullArchives(CDNConfigFile cdnConfig, CDN _cdn)
+        {
+            Console.WriteLine("Downloading full archive files....");
+
+            int count = 0;
+            var timer = Stopwatch.StartNew();
+
+            Parallel.ForEach(cdnConfig.archives, new ParallelOptions { MaxDegreeOfParallelism = 10 }, (entry) =>
+            {
+                _cdn.Get(RootFolder.data, entry.hashId, writeToDevNull: true);
+                count++;
+            });
+            timer.Stop();
         }
     }
 }
