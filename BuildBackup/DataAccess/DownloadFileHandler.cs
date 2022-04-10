@@ -33,35 +33,36 @@ namespace BuildBackup.DataAccess
                 download.numEntries = bin.ReadUInt32(true);
                 download.numTags = bin.ReadUInt16(true);
 
-                int numMaskBytes = (int)((download.numEntries + 7) / 8);
+                
 
-                //TODO implement
-                //uint32 entryExtra = 6;
-                //if (has_checksum_in_entry)
-                //{
-                //    entryExtra += 4;
-                //}
-                //if (version >= 2)
-                //{
-                //    uint8 number_of_flag_bytes = file.read8();
-                //    entryExtra += number_of_flag_bytes;
-                //    if (version >= 3)
-                //    {
-                //        file.seek(4, SEEK_CUR);
-                //    }
-                //}
+                int entryExtra = 6;
+                if (has_checksum_in_entry > 0)
+                {
+                    entryExtra += 4;
+                }
+                if (version >= 2)
+                {
+                    byte number_of_flag_bytes = bin.ReadBytes(1)[0];
+                    entryExtra += number_of_flag_bytes;
+                    if (version >= 3)
+                    {
+                        bin.BaseStream.Seek(16, SeekOrigin.Begin);
+                    }
+                }
 
                 // Reading the download entries
-                bin.BaseStream.Seek(16, SeekOrigin.Begin);
+                //bin.BaseStream.Seek(16, SeekOrigin.Begin);
                 download.entries = new DownloadEntry[download.numEntries];
                 for (int i = 0; i < download.numEntries; i++)
                 {
                     download.entries[i].hash = bin.Read<MD5Hash>();
-                    bin.ReadBytes(10);
+                    bin.ReadBytes(entryExtra);
                 }
 
                 // Reading the tags
+                int numMaskBytes = (int)((download.numEntries + 7) / 8);
                 download.tags = new DownloadTag[download.numTags];
+
                 for (int i = 0; i < download.numTags; i++)
                 {
                     DownloadTag tag = new DownloadTag();
@@ -102,7 +103,8 @@ namespace BuildBackup.DataAccess
             timer.Stop();
         }
 
-        public static void HandleDownloadFile(DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile, CDN _cdn)
+        public static void HandleDownloadFile(DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary,
+            CDNConfigFile cdnConfigFile, CDN _cdn, TactProduct targetProduct)
         {
             Console.Write("Parsing download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
@@ -111,20 +113,34 @@ namespace BuildBackup.DataAccess
 
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
-            var enUsTag = download.tags.Single(e => e.Name.Contains("enUS"));
-            var tagToUse2 = download.tags.FirstOrDefault(e => e.Name.Contains("Windows"));
-            var x86Tag = download.tags.FirstOrDefault(e => e.Name.Contains("x86"));
-            var noIgrTag = download.tags.FirstOrDefault(e => e.Name.Contains("noigr"));
+            List<DownloadTag> tagsToUse = new List<DownloadTag>();
+            if (targetProduct.DefaultTags != null)
+            {
+                foreach (var tag in targetProduct.DefaultTags)
+                {
+                    tagsToUse.Add(download.tags.FirstOrDefault(e => e.Name.Contains(tag)));
+                }
+            }
+            else
+            {
+                tagsToUse = download.tags.Where(e => e.Name.Contains("enUS") ||
+                                                     e.Name.Contains("Windows") ||
+                                                     e.Name.Contains("x86") ||
+                                                     e.Name.Contains("noigr")).ToList();
+            }
 
-
+            
+          
+            int downloads = 0;
             for (var i = 0; i < download.entries.Length; i++)
             {
                 DownloadEntry current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 //TODO I don't think this filtering is working correctly for all products
-                if (enUsTag.Bits[i] == false || tagToUse2?.Bits[i] == false || x86Tag?.Bits[i] == false || noIgrTag?.Bits[i] == false)
+                if (!tagsToUse.All(e => e.Bits[i] == true))
                 {
+                    //TODO this is not filtering correctly for wow_classic
                     continue;
                 }
                 if (!archiveIndexDictionary.ContainsKey(current.hash))
@@ -137,6 +153,7 @@ namespace BuildBackup.DataAccess
                         var endBytes2 = file.offset + file.size - 1;
 
                         _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                        downloads++;
                     }
                     continue;
                 }
@@ -149,6 +166,7 @@ namespace BuildBackup.DataAccess
                 uint numChunks = (e.offset + e.size - 1) / chunkSize;
                 uint upperByteRange = (e.offset + e.size - 1) + 4096;
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
+                downloads++;
             }
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));

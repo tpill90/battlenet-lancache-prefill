@@ -31,9 +31,6 @@ namespace BuildBackup.DebugUtil
             Console.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
 
-            File.WriteAllText($@"{baseUri}\generatedUncombined.json", JsonConvert.SerializeObject(allRequestsMade.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
-
             //TODO sometimes seems to incorrectly combine requests.
             allRequestsMade = NginxLogParser.CoalesceRequests(allRequestsMade);
 

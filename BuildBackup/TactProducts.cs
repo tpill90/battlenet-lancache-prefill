@@ -17,8 +17,14 @@
         public static readonly TactProduct Starcraft2 = new TactProduct { DisplayName = "Starcraft 2", ProductCode = "s2" };
 
         public static readonly TactProduct Overwatch = new TactProduct { DisplayName = "Overwatch", ProductCode = "pro" };
+
         public static readonly TactProduct WorldOfWarcraft = new TactProduct { DisplayName = "World Of Warcraft", ProductCode = "wow" };
-        public static readonly TactProduct WowClassic = new TactProduct { DisplayName = "WoW Classic", ProductCode = "wow_classic" };
+        public static readonly TactProduct WowClassic = new TactProduct
+        {
+            DisplayName = "WoW Classic", 
+            ProductCode = "wow_classic", 
+            DefaultTags = new string[]{ "Windows", "enUS" }
+        };
         
         #region Activision
 
@@ -33,5 +39,9 @@
     {
         public string DisplayName { get; init; }
         public string ProductCode { get; init; }
+
+        //TODO convert this to a better type
+        //TODO comment
+        public string[] DefaultTags { get; init; }
     }
 }

@@ -54,7 +54,7 @@ namespace BuildBackup
             // Finding the latest version of the game
             Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
-            logic.GetDecryptionKeyName(product, targetVersion);
+            //logic.GetDecryptionKeyName(product, targetVersion);
 
             BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
             //TODO put this into a method
@@ -71,7 +71,7 @@ namespace BuildBackup
             // Starting the download
             var ribbit = new Ribbit(cdn);
             ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
-            ribbit.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig);
+            DownloadFileHandler.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, cdn, product);
 
             var patchLoader = new PatchLoader(cdn, console, product, cdnConfig);
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
@@ -83,7 +83,7 @@ namespace BuildBackup
             {
                 var unarchivedHandler = new UnarchivedFileHandler(cdn, console);
                 //unarchivedHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, archiveIndexDictionary);
-                unarchivedHandler.DownloadUnarchivedIndexFiles(cdnConfig, downloadFile, encodingTable);
+                //unarchivedHandler.DownloadUnarchivedIndexFiles(cdnConfig, downloadFile, encodingTable);
             }
             
             cdn.DownloadQueuedRequests();
