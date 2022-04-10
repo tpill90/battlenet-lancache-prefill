@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using BuildBackup.Structs;
 using Konsole;
-using Newtonsoft.Json;
-using Shared;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -15,25 +10,20 @@ namespace BuildBackup.DataAccess
     public class UnarchivedFileHandler
     {
         private CDN _cdn;
-        private CdnsFile _cdns;
         private readonly IConsole _console;
 
-        public UnarchivedFileHandler(CDN cdn, CdnsFile cdns, IConsole console)
+        public UnarchivedFileHandler(CDN cdn, IConsole console)
         {
             _cdn = cdn;
-
-            Debug.Assert(cdns.entries != null, "Cdns must be initialized before using");
-            _cdns = cdns;
             _console = console;
         }
 
         //TODO comment
-        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable)
+        public void DownloadUnarchivedFiles(CDNConfigFile cdnConfig, EncodingTable encodingTable, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary)
         {
             Console.Write("Processing individual, unarchived files ... ".PadRight(Config.PadRight));
 
             var timer = Stopwatch.StartNew();
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, _cdn);
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfig.fileIndex, _cdn, RootFolder.data);
 
             foreach (var indexEntry in archiveIndexDictionary)
@@ -56,24 +46,31 @@ namespace BuildBackup.DataAccess
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        public void DownloadUnarchivedIndexFiles(CDNConfigFile cdnConfig)
+        public void DownloadUnarchivedIndexFiles(CDNConfigFile cdnConfig, DownloadFile downloadFile, EncodingTable encodingTable)
         {
+            Console.Write($"Processing unarchived files from file index..");
+            var timer = Stopwatch.StartNew();
+
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfig.fileIndex, _cdn, RootFolder.data);
 
-            Console.WriteLine($"     Downloading {Colors.Cyan(fileIndexList.Count())} unarchived files from file index..");
-
-            int count = 0;
-            var timer = Stopwatch.StartNew();
-            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, fileIndexList.Count, 50);
-            Parallel.ForEach(fileIndexList, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
+            foreach (var download in downloadFile.entries)
             {
-                _cdn.Get(RootFolder.data, entry.Key, writeToDevNull: true);
-                //progressBar.Refresh(count, $"     {_cdns.entries[0].path}/data/{entry}");
-                count++;
-            });
+                if (fileIndexList.ContainsKey(download.hash.ToString()))
+                {
+                    Debugger.Break();
+                }
+            }
+
+            foreach(var entry in fileIndexList)
+            {
+                var file = fileIndexList[entry.Key];
+                var startBytes = file.offset;
+                var endBytes = file.offset + file.size - 1;
+                _cdn.QueueRequest(RootFolder.data, entry.Key, startBytes, endBytes, writeToDevNull: true);
+            }
 
             timer.Stop();
-            progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
     }
 }

@@ -21,8 +21,6 @@ namespace BuildBackup.DataAccess
 
         List<TactProduct> productsToSkip = new List<TactProduct> 
         {
-            TactProducts.CodVanguard,
-
             TactProducts.Diablo3,
             TactProducts.Hearthstone,
             TactProducts.HeroesOfTheStorm,

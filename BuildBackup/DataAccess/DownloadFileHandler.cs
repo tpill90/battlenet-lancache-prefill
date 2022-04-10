@@ -10,9 +10,11 @@ namespace BuildBackup.DataAccess
 {
     public static class DownloadFileHandler
     {
-        public static DownloadFile ParseDownloadFile(CDN cdn, string hash)
+        public static DownloadFile ParseDownloadFile(CDN cdn, BuildConfigFile buildConfig)
         {
             var download = new DownloadFile();
+
+            var hash = buildConfig.download[1].ToString().ToLower();
 
             byte[] content = cdn.Get(RootFolder.data, hash);
 

@@ -21,7 +21,7 @@ namespace BuildBackup.DataAccess
 
         //TODO comment
         //TODO move to a different file, something like InstallFileHandler
-        public void HandleInstallFile(EncodingTable encodingTable, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary)
+        public void HandleInstallFile(EncodingTable encodingTable, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, TactProduct product)
         {
             Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
@@ -31,8 +31,18 @@ namespace BuildBackup.DataAccess
 
             InstallFile installFile = ParseInstallFile(encodingTable.installKey);
 
-            //TODO make this more flexible/multi region
-            var filtered = installFile.entries.Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows")).ToList();
+            
+            List<InstallFileEntry> filtered;
+            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
+            //TODO do a check to make sure that the tags being used are actually valid for the product
+            if (product == TactProducts.CodVanguard)
+            {
+                filtered = installFile.entries.Where(e => e.tags.Contains("2=enUS")).ToList();
+            }
+            else
+            {
+                filtered = installFile.entries.Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows")).ToList();
+            }
 
             foreach (var file in filtered)
             {
@@ -127,71 +137,44 @@ namespace BuildBackup.DataAccess
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfigFile.fileIndex, _cdn, RootFolder.data);
 
-            //TODO make this more flexible.  Perhaps pass in the region by name?
+            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
+            //TODO do a check to make sure that the tags being used are actually valid for the product
             var enUsTag = download.tags.Single(e => e.Name.Contains("enUS"));
             var tagToUse2 = download.tags.FirstOrDefault(e => e.Name.Contains("Windows"));
             var x86Tag = download.tags.FirstOrDefault(e => e.Name.Contains("x86"));
             var noIgrTag = download.tags.FirstOrDefault(e => e.Name.Contains("noigr"));
+
 
             for (var i = 0; i < download.entries.Length; i++)
             {
                 DownloadEntry current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
+                //TODO I don't think this filtering is working correctly for all products
                 if (enUsTag.Bits[i] == false || tagToUse2?.Bits[i] == false || x86Tag?.Bits[i] == false || noIgrTag?.Bits[i] == false)
                 {
                     continue;
-                }
+                }  
                 if (!archiveIndexDictionary.ContainsKey(current.hash))
                 {
-                    // Handles downloading unarchived files unarchived files
-                    var file = fileIndexList[current.hash.ToString()];
-                    var startBytes2 = file.offset;
-                    var endBytes2 = file.offset + file.size - 1;
-                    
-                    _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                    if (fileIndexList.ContainsKey(current.hash.ToString()))
+                    {
+                        // Handles downloading unarchived files unarchived files
+                        var file = fileIndexList[current.hash.ToString()];
+                        var startBytes2 = file.offset;
+                        var endBytes2 = file.offset + file.size - 1;
 
+                        _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                    }
                     continue;
                 }
                 
                 IndexEntry e = archiveIndexDictionary[current.hash];
-                uint blockSize = 1048576;
-
-                uint offset = e.offset;
-                uint size = e.size;
-                uint blockStart = offset / blockSize;
-                uint blockEnd = (offset + size + blockSize - 1) / blockSize;
-
-                uint getStart = blockEnd;
-                uint getEnd = blockStart;
-
-                var mask = cdnConfigFile.archives[e.index].mask;
-
-                //TODO fix this.  sometimes happens when running all unit tests.  Might not even be needed
-                if (mask != null)
-                {
-                    for (int j = (int)blockStart; j < blockEnd; ++j)
-                    {
-                        var condition2 = (mask[j / 8] & (1 << (j & 7))) != 0;
-                        if (j / 8 >= mask.Length || condition2)
-                        {
-                            getStart = (uint)Math.Max(getStart, i);
-                            getEnd = (uint)Math.Max(getEnd, i + 1);
-                        }
-                    }
-                }
-                
                 uint chunkSize = 4096;
                 var startBytes = e.offset;
 
-                if (startBytes == 71093275)
-                {
-                    //Debugger.Break();
-                }
-
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint numChunks = (e.offset + e.size - 1) / chunkSize;
-                uint upperByteRange2 = ((numChunks + 1) * chunkSize) ;
                 uint upperByteRange = (e.offset + e.size - 1) + 4096;
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
             }

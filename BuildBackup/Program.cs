@@ -17,7 +17,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.CodVanguard };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.WorldOfWarcraft };
 
         public static bool UseCdnDebugMode = true;
         
@@ -47,13 +47,15 @@ namespace BuildBackup
                 DebugMode = useDebugMode
             };
             cdn.LoadCdnsFile(product);
-            
+
             // Initializing other classes, now that we have our CDN info loaded
             var encodingFileHandler = new EncodingFileHandler(cdn);
 
             // Finding the latest version of the game
             Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
+            logic.GetDecryptionKeyName(product, targetVersion);
+
             BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
             //TODO put this into a method
             cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
@@ -63,13 +65,13 @@ namespace BuildBackup
             logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn);
             
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
-            DownloadFile downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, buildConfig.download[1].ToString().ToLower());
+            DownloadFile downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, buildConfig);
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
             // Starting the download
             var ribbit = new Ribbit(cdn);
-            ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary);
-            ribbit.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, encodingTable);
+            ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
+            ribbit.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig);
 
             var patchLoader = new PatchLoader(cdn, console, product, cdnConfig);
             PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
@@ -80,12 +82,10 @@ namespace BuildBackup
                                                    || product == TactProducts.WorldOfWarcraft)
             {
                 var unarchivedHandler = new UnarchivedFileHandler(cdn, console);
-                unarchivedHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, archiveIndexDictionary);
+                //unarchivedHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, archiveIndexDictionary);
                 unarchivedHandler.DownloadUnarchivedIndexFiles(cdnConfig, downloadFile, encodingTable);
             }
             
-
-
             cdn.DownloadQueuedRequests();
 
             Console.WriteLine();
