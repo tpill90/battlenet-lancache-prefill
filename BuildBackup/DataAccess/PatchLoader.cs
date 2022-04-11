@@ -48,13 +48,21 @@ namespace BuildBackup.DataAccess
             {
                 _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095, writeToDevNull: true);
             }
+
+            if (_cdnConfig.patchArchives != null)
+            {
+                foreach (var patchIndex in _cdnConfig.patchArchives)
+                {
+                    _cdn.GetIndex(RootFolder.patch, patchIndex);
+                }
+            }
             
 
-            DownloadPatchArchives(patch);
-            //DownloadPatchFiles(_cdnConfig);
-            //DownloadFullPatchArchives(_cdnConfig);
+            //DownloadPatchArchives(patch);
+                //DownloadPatchFiles(_cdnConfig);
+                //DownloadFullPatchArchives(_cdnConfig);
 
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         //TODO comment

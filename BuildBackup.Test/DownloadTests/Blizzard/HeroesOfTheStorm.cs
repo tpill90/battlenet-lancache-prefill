@@ -22,7 +22,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         [Test]
         public void Misses()
         {
-            Assert.LessOrEqual(0, _results.MissCount);
+            Assert.AreEqual(0, _results.MissCount);
         }
 
         [Test]

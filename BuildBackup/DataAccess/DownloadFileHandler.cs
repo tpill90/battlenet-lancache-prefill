@@ -51,12 +51,12 @@ namespace BuildBackup.DataAccess
                 }
 
                 // Reading the download entries
-                //bin.BaseStream.Seek(16, SeekOrigin.Begin);
                 download.entries = new DownloadEntry[download.numEntries];
                 for (int i = 0; i < download.numEntries; i++)
                 {
                     download.entries[i].hash = bin.Read<MD5Hash>();
-                    bin.ReadBytes(entryExtra);
+                    download.entries[i].fileSize = bin.ReadUInt40(true);
+                    bin.ReadBytes(entryExtra - 5);
                 }
 
                 // Reading the tags

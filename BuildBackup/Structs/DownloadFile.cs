@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 
 namespace BuildBackup.Structs
 {
@@ -15,6 +16,7 @@ namespace BuildBackup.Structs
     {
         public MD5Hash hash;
         public byte[] unk;
+        public UInt64 fileSize;
 
         public override string ToString()
         {

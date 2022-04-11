@@ -117,8 +117,6 @@ namespace BuildBackup.DataAccess
             {
                 ProcessArchive(cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
             }
-            //TODO reenable later
-            //BuildMaskSize(url, cdnConfig, product, blizzardCdnUri, BlockSize);
 
             timer.Stop();
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
@@ -126,28 +124,6 @@ namespace BuildBackup.DataAccess
             return indexDictionary;
         }
 
-        private static void BuildMaskSize(string url, CDNConfigFile cdnConfig, TactProduct product, Uri blizzardCdnUri, uint BlockSize)
-        {
-            // Building mask sizes
-            
-            var fileSizeProvider = new FileSizeProvider(product, blizzardCdnUri.ToString());
-            for (int i = 0; i < cdnConfig.archives.Length; i++)
-            {
-                var hashId = cdnConfig.archives[i].hashId.ToLower();
-                var uri = $"{url}/data/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-                var contentLength = fileSizeProvider.GetContentLength(new Request() { Uri = uri });
-
-                long chunks = (contentLength + BlockSize - 1) / BlockSize;
-                var size = (chunks + 7) / 8;
-                cdnConfig.archives[i].mask = new byte[(int)size];
-
-                for (int k = 0; k < size; k++)
-                {
-                    cdnConfig.archives[i].mask[k] = 0xFF;
-                }
-            }
-            fileSizeProvider.Save();
-        }
 
         private static void ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, long i, int CHUNK_SIZE, Dictionary<MD5Hash, IndexEntry> indexDictionary)
         {
