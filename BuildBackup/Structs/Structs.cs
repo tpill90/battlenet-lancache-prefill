@@ -27,7 +27,7 @@ namespace BuildBackup
 
         public override string ToString()
         {
-            return $"{hashId} {mask.Length}";
+            return $"{hashId}";
         }
     }
 

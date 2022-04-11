@@ -26,10 +26,18 @@
         public string buildFixedHash;
         public string buildReplayHash;
         public string buildManifestVersion;
+
         public string patch;
         public string patchSize;
+
         public string patchConfig;
+
+        public string[] patchIndex;
+
         public string partialPriority;
         public string partialPrioritySize;
+
+        public string[] vfsRoot;
+        public int[] vfsRootSize;
     }
 }

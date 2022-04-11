@@ -129,18 +129,23 @@ namespace BuildBackup.DataAccess
                                                      e.Name.Contains("noigr")).ToList();
             }
 
-            
-          
-            int downloads = 0;
+            //TODO document how this works
+            var groupedTags = tagsToUse.GroupBy(e => e.Type).ToList();
+            var computedMask = new BitArray(download.entries.Length);
+            for (int i = 0; i < download.entries.Length; i++)
+            {
+                var result = groupedTags.All(e => e.Any(e2 => e2.Bits[i]));
+                computedMask[i] = result;
+            }
+
             for (var i = 0; i < download.entries.Length; i++)
             {
                 DownloadEntry current = download.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 //TODO I don't think this filtering is working correctly for all products
-                if (!tagsToUse.All(e => e.Bits[i] == true))
+                if (!computedMask[i] == true)
                 {
-                    //TODO this is not filtering correctly for wow_classic
                     continue;
                 }
                 if (!archiveIndexDictionary.ContainsKey(current.hash))
@@ -153,7 +158,6 @@ namespace BuildBackup.DataAccess
                         var endBytes2 = file.offset + file.size - 1;
 
                         _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
-                        downloads++;
                     }
                     continue;
                 }
@@ -166,7 +170,6 @@ namespace BuildBackup.DataAccess
                 uint numChunks = (e.offset + e.size - 1) / chunkSize;
                 uint upperByteRange = (e.offset + e.size - 1) + 4096;
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
-                downloads++;
             }
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));

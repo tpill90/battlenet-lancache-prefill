@@ -22,16 +22,14 @@ namespace BuildBackup.Test.DownloadTests.Activision
         [Test]
         public void Misses()
         {
-            //TODO improve this
-            Assert.LessOrEqual(2, _results.MissCount);
+            Assert.AreEqual(0, _results.MissCount);
         }
 
         [Test]
         public void MissedBandwidth()
         {
-            //TODO improve this
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.Less(missedBandwidth.Bytes, ByteSize.FromMegaBytes(2).Bytes);
+            Assert.AreEqual(0, missedBandwidth.Bytes);
         }
 
         [Test]

@@ -23,14 +23,14 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         [Test]
         public void Misses()
         {
-            Assert.LessOrEqual(0, _results.MissCount);
+            Assert.LessOrEqual(_results.MissCount, 0);
         }
 
         [Test]
         public void MissedBandwidth()
         {
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.AreEqual(missedBandwidth.Bytes, 0);
+            Assert.AreEqual(0, missedBandwidth.Bytes);
         }
 
         //TODO copy this to the rest of the tests

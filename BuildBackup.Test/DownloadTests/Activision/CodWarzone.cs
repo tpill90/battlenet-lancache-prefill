@@ -23,7 +23,7 @@ namespace BuildBackup.Test.DownloadTests.Activision
         public void Misses()
         {
             //TODO improve this
-            Assert.LessOrEqual(_results.MissCount, 2);
+            Assert.LessOrEqual(_results.MissCount, 10);
         }
 
         [Test]
@@ -31,7 +31,7 @@ namespace BuildBackup.Test.DownloadTests.Activision
         {
             //TODO improve this
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.Less(missedBandwidth.Bytes, ByteSize.FromMegaBytes(2).Bytes);
+            Assert.Less(missedBandwidth.Bytes, ByteSize.FromMegaBytes(5).Bytes);
         }
 
         [Test]

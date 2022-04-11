@@ -29,7 +29,18 @@
         #region Activision
 
         public static readonly TactProduct CodWarzone = new TactProduct { DisplayName = "Call of Duty Warzone", ProductCode = "odin" };
-        public static readonly TactProduct CodBlackOpsColdWar = new TactProduct { DisplayName = "Call of Duty Black Ops Cold War", ProductCode = "zeus" };
+        public static readonly TactProduct CodBlackOpsColdWar = new TactProduct
+        {
+            DisplayName = "Call of Duty Black Ops Cold War", 
+            ProductCode = "zeus",
+            DefaultTags = new string[] {
+                "enUS",
+                "cp",
+                "mp",
+                "zm",
+                "zm2"
+            }
+        };
         public static readonly TactProduct CodVanguard = new TactProduct { DisplayName = "Call of Duty Vanguard", ProductCode = "fore" };
 
         #endregion

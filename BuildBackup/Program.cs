@@ -17,7 +17,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.WorldOfWarcraft };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
 
         public static bool UseCdnDebugMode = true;
         
@@ -54,7 +54,6 @@ namespace BuildBackup
             // Finding the latest version of the game
             Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
-            //logic.GetDecryptionKeyName(product, targetVersion);
 
             BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
             //TODO put this into a method
@@ -73,19 +72,14 @@ namespace BuildBackup
             ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
             DownloadFileHandler.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, cdn, product);
 
-            var patchLoader = new PatchLoader(cdn, console, product, cdnConfig);
-            PatchFile patch = patchLoader.DownloadPatchConfig(buildConfig);
-            patchLoader.HandlePatches(patch);
+            var patchLoader = new PatchLoader(cdn, product, cdnConfig);
+            patchLoader.HandlePatches(buildConfig);
 
-            if (product == TactProducts.CodWarzone || product == TactProducts.CodBlackOpsColdWar 
-                                                   || product == TactProducts.CodVanguard 
-                                                   || product == TactProducts.WorldOfWarcraft)
+            if (buildConfig.vfsRoot != null)
             {
-                var unarchivedHandler = new UnarchivedFileHandler(cdn, console);
-                //unarchivedHandler.DownloadUnarchivedFiles(cdnConfig, encodingTable, archiveIndexDictionary);
-                //unarchivedHandler.DownloadUnarchivedIndexFiles(cdnConfig, downloadFile, encodingTable);
+                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
             }
-            
+
             cdn.DownloadQueuedRequests();
 
             Console.WriteLine();

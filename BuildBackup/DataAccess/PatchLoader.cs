@@ -4,10 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using BuildBackup.Structs;
 using ByteSizeLib;
-using Konsole;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -15,12 +13,12 @@ namespace BuildBackup.DataAccess
     public class PatchLoader
     {
         private CDN _cdn;
-        private readonly IConsole _console;
         private readonly TactProduct _currentProduct;
         private readonly CDNConfigFile _cdnConfig;
 
         List<TactProduct> productsToSkip = new List<TactProduct> 
         {
+            TactProducts.CodBlackOpsColdWar,
             TactProducts.Diablo3,
             TactProducts.Hearthstone,
             TactProducts.HeroesOfTheStorm,
@@ -31,12 +29,32 @@ namespace BuildBackup.DataAccess
             TactProducts.WorldOfWarcraft
         };
 
-        public PatchLoader(CDN cdn, IConsole console, TactProduct currentProduct, CDNConfigFile cdnConfig)
+        public PatchLoader(CDN cdn, TactProduct currentProduct, CDNConfigFile cdnConfig)
         {
             _cdn = cdn;
-            _console = console;
             _currentProduct = currentProduct;
             _cdnConfig = cdnConfig;
+        }
+
+        public void HandlePatches(BuildConfigFile buildConfig)
+        {
+            Console.Write("Handling patches...".PadRight(Config.PadRight));
+            var timer = Stopwatch.StartNew();
+
+            PatchFile patch = DownloadPatchConfig(buildConfig);
+            var patchFileIndexList = IndexParser.ParseIndex(_cdnConfig.patchFileIndex, _cdn, RootFolder.patch);
+
+            if (buildConfig.patchIndex != null)
+            {
+                _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095, writeToDevNull: true);
+            }
+            
+
+            DownloadPatchArchives(patch);
+            //DownloadPatchFiles(_cdnConfig);
+            //DownloadFullPatchArchives(_cdnConfig);
+
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         //TODO comment
@@ -54,20 +72,7 @@ namespace BuildBackup.DataAccess
 
             return new PatchFile();
         }
-
-        public void HandlePatches(PatchFile patch)
-        {
-            Console.Write("Handling patches...".PadRight(Config.PadRight));
-            var timer = Stopwatch.StartNew();
-            
-
-            DownloadPatchArchives(patch);
-            DownloadPatchFiles(_cdnConfig);
-            DownloadFullPatchArchives(_cdnConfig);
-
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-        }
-
+        
         private PatchFile GetPatchFile(string hash)
         {
             var patchFile = new PatchFile();

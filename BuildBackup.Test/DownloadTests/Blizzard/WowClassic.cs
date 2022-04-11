@@ -23,7 +23,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Misses()
         {
             //TODO improve this
-            Assert.AreEqual(2, _results.MissCount);
+            Assert.AreEqual(_results.MissCount, 2);
         }
 
         [Test]

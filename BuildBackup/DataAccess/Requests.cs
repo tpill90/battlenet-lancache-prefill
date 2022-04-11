@@ -81,6 +81,9 @@ namespace BuildBackup.DataAccess
                     case "patch-config":
                         buildConfig.patchConfig = cols[1];
                         break;
+                    case "patch-index":
+                        buildConfig.patchIndex = cols[1].Split(' ');
+                        break;
                     case "build-branch": // Overwatch
                         buildConfig.buildBranch = cols[1];
                         break;
@@ -119,6 +122,12 @@ namespace BuildBackup.DataAccess
                         break;
                     case "partial-priority-size":
                         buildConfig.partialPrioritySize = cols[1];
+                        break;
+                    case "vfs-root":
+                        buildConfig.vfsRoot = cols[1].Split(' ');
+                        break;
+                    case "vfs-root-size":
+                        buildConfig.vfsRootSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
                     default:
                         Console.WriteLine("!!!!!!!! Unknown buildconfig variable '" + cols[0] + "'");
