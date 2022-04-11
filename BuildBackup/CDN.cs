@@ -64,7 +64,7 @@ namespace BuildBackup
         public void LoadCdnsFile(TactProduct currentProduct)
         {
             // Loading CDNs
-            var cdnFileHandler = new CdnFileHandler(this, Config.BattleNetPatchUri);
+            var cdnFileHandler = new CdnFileHandler(this);
             _cdnsFile = cdnFileHandler.ParseCdnsFile(currentProduct);
 
             // Adds any missing cdn hosts

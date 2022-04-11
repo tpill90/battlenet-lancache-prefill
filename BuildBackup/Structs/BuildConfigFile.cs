@@ -39,5 +39,13 @@
 
         public string[] vfsRoot;
         public int[] vfsRootSize;
+
+        public string buildBaseContentReleaseManifestFileId;
+        public string buildBaseContentReleaseManifestHash;
+
+        public string buildContentReleaseManifestFileId;
+        public string buildContentReleaseManifestHash;
+
+        public string buildReleaseName;
     }
 }

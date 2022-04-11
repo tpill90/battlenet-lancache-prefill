@@ -193,29 +193,23 @@ namespace BuildBackup.DebugUtil
                 // Special case for indexes
                 if (current.Uri.Contains(".index"))
                 {
-                    var indexMatches = generatedRequests.Where(e => e.Uri == current.Uri).ToList();
-                    if (indexMatches.Any())
+                    var indexMatch = generatedRequests.FirstOrDefault(e => e.Uri == current.Uri);
+                    if (indexMatch != null)
                     {
                         requestsToProcess.RemoveAt(0);
-                        generatedRequests.Remove(indexMatches[0]);
+                        generatedRequests.Remove(indexMatch);
                         continue;
                     }
                 }
 
                 // Exact match, remove from both lists
-                var exactMatches = generatedRequests.Where(e => e.Uri == current.Uri
-                                                              && e.LowerByteRange == current.LowerByteRange
-                                                              && e.UpperByteRange == current.UpperByteRange).ToList();
-                if (exactMatches.Any())
+                var exactMatch = generatedRequests.FirstOrDefault(e => e.Uri == current.Uri
+                                                                         && e.LowerByteRange == current.LowerByteRange
+                                                                         && e.UpperByteRange == current.UpperByteRange);
+                if (exactMatch != null)
                 {
-                    if (exactMatches.Count > 1)
-                    {
-                        //TODO
-                        //Debugger.Break();
-                    }
-
                     requestsToProcess.RemoveAt(0);
-                    generatedRequests.Remove(exactMatches[0]);
+                    generatedRequests.Remove(exactMatch);
                     continue;
                 }
 

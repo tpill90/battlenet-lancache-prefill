@@ -14,7 +14,7 @@ namespace BuildBackup.DataAccess
     {
         private CDN cdn;
 
-        public CdnFileHandler(CDN cdn, Uri battleNetPatchUri)
+        public CdnFileHandler(CDN cdn)
         {
             this.cdn = cdn;
         }

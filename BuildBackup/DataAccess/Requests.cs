@@ -1,29 +1,25 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
+using Shared;
 
 namespace BuildBackup.DataAccess
 {
+    //TODO rename to build config handler
     public static class Requests
     {
         public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn)
         {
-            string content;
+            Console.Write("Parsing Build Config...".PadRight(Config.PadRight));
+            var timer = Stopwatch.StartNew();
 
             var buildConfig = new BuildConfigFile();
 
-            try
-            {
-                content = Encoding.UTF8.GetString(cdn.Get(RootFolder.config, versionsEntry.buildConfig));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error retrieving build config: " + e.Message);
-                return buildConfig;
-            }
-
+            string content = Encoding.UTF8.GetString(cdn.Get(RootFolder.config, versionsEntry.buildConfig));
+            
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
                 Console.WriteLine("Error reading build config!");
@@ -129,6 +125,21 @@ namespace BuildBackup.DataAccess
                     case "vfs-root-size":
                         buildConfig.vfsRootSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
+                    case "build-base-content-release-manifest-file-id":
+                        buildConfig.buildBaseContentReleaseManifestFileId = cols[1];
+                        break;
+                    case "build-base-content-release-manifest-hash":
+                        buildConfig.buildBaseContentReleaseManifestHash = cols[1];
+                        break;
+                    case "build-content-release-manifest-file-id":
+                        buildConfig.buildContentReleaseManifestFileId = cols[1];
+                        break;
+                    case "build-content-release-manifest-hash":
+                        buildConfig.buildContentReleaseManifestHash = cols[1];
+                        break;
+                    case "build-release-name":
+                        buildConfig.buildReleaseName = cols[1];
+                        break;
                     default:
                         Console.WriteLine("!!!!!!!! Unknown buildconfig variable '" + cols[0] + "'");
                         break;
@@ -140,6 +151,8 @@ namespace BuildBackup.DataAccess
                 Console.WriteLine($"Missing buildname in buildConfig, setting build name!");
                 buildConfig.buildName = "UNKNOWN";
             }
+
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
             return buildConfig;
         }
