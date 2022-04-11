@@ -17,15 +17,16 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft1 };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.HeroesOfTheStorm };
 
         public static bool UseCdnDebugMode = true;
+        public static bool WriteOutputFiles = true;
         
         public static void Main()
         {
             foreach (var product in ProductsToProcess)
             {
-                ProcessProduct(product, new Writer(), UseCdnDebugMode);
+                ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles);
             }
             Console.WriteLine("Pre-load Complete!\n");
 
@@ -36,7 +37,7 @@ namespace BuildBackup
             }
         }
 
-        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode)
+        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles)
         {
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
@@ -87,7 +88,7 @@ namespace BuildBackup
             Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
             var comparisonUtil = new ComparisonUtil(console);
-            ComparisonResult result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product);
+            ComparisonResult result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product, writeOutputFiles);
             result.ElapsedTime = timer.Elapsed;
 
             return result;

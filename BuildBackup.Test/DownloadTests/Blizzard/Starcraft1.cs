@@ -17,7 +17,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true);
+            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true, writeOutputFiles: false);
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         [Test]
         public void TotalTime()
         {
-            var expectedMilliseconds = 600;
+            var expectedMilliseconds = 700;
             Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
         }
 

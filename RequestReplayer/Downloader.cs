@@ -28,7 +28,7 @@ namespace RequestReplayer
         private long _bufferSize = 4096 * 2;
         private long readCount = 0L;
 
-        private int _maxConcurrentDownloads = 4;
+        private int _maxConcurrentDownloads = 6;
 
         private Stopwatch _elapsedDownloadTime;
         private ByteSize _totalDownloadSize;
