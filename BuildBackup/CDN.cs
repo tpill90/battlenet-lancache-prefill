@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
@@ -77,10 +78,14 @@ namespace BuildBackup
             }
         }
 
+        public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
+        {
+            QueueRequest(rootPath, hash.ToString().ToLower(), startBytes, endBytes, writeToDevNull);
+        }
+
         //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
-            hashId = hashId.ToLower();
             var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
 
             if (startBytes != null && endBytes != null)

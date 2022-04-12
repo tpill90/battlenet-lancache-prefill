@@ -146,11 +146,11 @@ namespace BuildBackup.Handlers
                     if (fileIndexList.ContainsKey(current.hash.ToString()))
                     {
                         // Handles downloading unarchived files unarchived files
+                        //TODO get rid of .ToString
                         var file = fileIndexList[current.hash.ToString()];
-                        var startBytes2 = file.offset;
-                        var endBytes2 = file.offset + file.size - 1;
 
-                        _cdn.QueueRequest(RootFolder.data, current.hash.ToString(), startBytes2, endBytes2, writeToDevNull: true);
+                        var endBytes2 = file.offset + file.size - 1;
+                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes2, writeToDevNull: true);
                     }
                     continue;
                 }
