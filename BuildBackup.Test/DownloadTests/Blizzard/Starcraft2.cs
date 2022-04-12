@@ -29,14 +29,14 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void MissedBandwidth()
         {
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.AreEqual(missedBandwidth.Bytes, 0);
+            Assert.AreEqual(0, missedBandwidth.Bytes);
         }
 
         [Test]
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(10);
+            var expected = ByteSize.FromMegaBytes(1);
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);

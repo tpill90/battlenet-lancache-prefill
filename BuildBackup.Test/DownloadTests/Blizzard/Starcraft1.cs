@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
@@ -34,23 +33,20 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         }
 
         //TODO copy this to the rest of the tests
-        [Test]
-        public void TotalTime()
-        {
-            var expectedMilliseconds = 700;
-            Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
-        }
+        //[Test]
+        //public void TotalTime()
+        //{
+        //    var expectedMilliseconds = 700;
+        //    Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
+        //}
 
         //TODO make a test that checks for the # of requests w\o size
 
         [Test]
         public void WastedBandwidth()
         {
-            //TODO improve this
-            var expected = ByteSize.FromMegaBytes(5);
-
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
-            Assert.Less(wastedBandwidth.Bytes, expected.Bytes);
+            Assert.AreEqual(0, wastedBandwidth.Bytes);
         }
     }
 }
