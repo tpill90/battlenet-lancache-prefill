@@ -11,17 +11,28 @@ using Shared;
 
 namespace BuildBackup.Handlers
 {
-    public static class DownloadFileHandler
+    //TODO document
+    public class DownloadFileHandler
     {
-        public static DownloadFile ParseDownloadFile(CDN cdn, BuildConfigFile buildConfig)
+        private readonly CDN _cdn;
+
+        private DownloadFile _downloadFile;
+
+        public DownloadFileHandler(CDN cdn)
+        {
+            _cdn = cdn;
+        }
+
+        //TODO document
+        public void ParseDownloadFile(BuildConfigFile buildConfig)
         {
             var timer = Stopwatch.StartNew();
 
-            var download = new DownloadFile();
+            _downloadFile = new DownloadFile();
 
             var hash = buildConfig.download[1].ToString().ToLower();
 
-            byte[] content = cdn.Get(RootFolder.data, hash);
+            byte[] content = _cdn.Get(RootFolder.data, hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {
@@ -32,8 +43,8 @@ namespace BuildBackup.Handlers
                 byte version = bin.ReadBytes(1)[0];
                 byte hash_size_ekey = bin.ReadBytes(1)[0];
                 byte has_checksum_in_entry = bin.ReadBytes(1)[0];
-                download.numEntries = bin.ReadUInt32(true);
-                download.numTags = bin.ReadUInt16(true);
+                _downloadFile.numEntries = bin.ReadUInt32(true);
+                _downloadFile.numTags = bin.ReadUInt16(true);
 
                 int entryExtra = 6;
                 if (has_checksum_in_entry > 0)
@@ -50,19 +61,19 @@ namespace BuildBackup.Handlers
                     }
                 }
 
-                // Reading the download entries
-                download.entries = new DownloadEntry[download.numEntries];
-                for (int i = 0; i < download.numEntries; i++)
+                // Reading the DownloadFile entries
+                _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
+                for (int i = 0; i < _downloadFile.numEntries; i++)
                 {
-                    download.entries[i].hash = bin.Read<MD5Hash>();
+                    _downloadFile.entries[i].hash = bin.Read<MD5Hash>();
                     bin.ReadBytes(entryExtra);
                 }
 
                 // Reading the tags
-                int numMaskBytes = (int)((download.numEntries + 7) / 8);
-                download.tags = new DownloadTag[download.numTags];
+                int numMaskBytes = (int)((_downloadFile.numEntries + 7) / 8);
+                _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
 
-                for (int i = 0; i < download.numTags; i++)
+                for (int i = 0; i < _downloadFile.numTags; i++)
                 {
                     DownloadTag tag = new DownloadTag();
                     tag.Name = bin.ReadCString();
@@ -75,19 +86,19 @@ namespace BuildBackup.Handlers
 
                     tag.Bits = new BitArray(bits);
 
-                    download.tags[i] = tag;
+                    _downloadFile.tags[i] = tag;
                 }
             }
             
             Console.Write("Parsed download file...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-
-            return download;
         }
 
-        public static void HandleDownloadFile(DownloadFile download, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary,
-            CDNConfigFile cdnConfigFile, CDN _cdn, TactProduct targetProduct)
+        //TODO document method
+        public void HandleDownloadFile(Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
+            Debug.Assert(_downloadFile != null);
+
             Console.Write("Parsing download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
@@ -100,29 +111,29 @@ namespace BuildBackup.Handlers
             {
                 foreach (var tag in targetProduct.DefaultTags)
                 {
-                    tagsToUse.Add(download.tags.FirstOrDefault(e => e.Name.Contains(tag)));
+                    tagsToUse.Add(_downloadFile.tags.FirstOrDefault(e => e.Name.Contains(tag)));
                 }
             }
             else
             {
-                tagsToUse = download.tags.Where(e => e.Name.Contains("enUS") ||
-                                                     e.Name.Contains("Windows") ||
-                                                     e.Name.Contains("x86") ||
-                                                     e.Name.Contains("noigr")).ToList();
+                tagsToUse = _downloadFile.tags.Where(e => e.Name.Contains("enUS") ||
+                                                          e.Name.Contains("Windows") ||
+                                                          e.Name.Contains("x86") ||
+                                                          e.Name.Contains("noigr")).ToList();
             }
 
             //TODO document how this works
             var groupedTags = tagsToUse.GroupBy(e => e.Type).ToList();
-            var computedMask = new BitArray(download.entries.Length);
-            for (int i = 0; i < download.entries.Length; i++)
+            var computedMask = new BitArray(_downloadFile.entries.Length);
+            for (int i = 0; i < _downloadFile.entries.Length; i++)
             {
                 var result = groupedTags.All(e => e.Any(e2 => e2.Bits[i]));
                 computedMask[i] = result;
             }
 
-            for (var i = 0; i < download.entries.Length; i++)
+            for (var i = 0; i < _downloadFile.entries.Length; i++)
             {
-                DownloadEntry current = download.entries[i];
+                DownloadEntry current = _downloadFile.entries[i];
 
                 // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 //TODO I don't think this filtering is working correctly for all products

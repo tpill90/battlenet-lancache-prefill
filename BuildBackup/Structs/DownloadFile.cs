@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace BuildBackup.Structs
 {
-    public struct DownloadFile
+    public sealed class DownloadFile
     {
         public byte[] unk;
         public uint numEntries;
