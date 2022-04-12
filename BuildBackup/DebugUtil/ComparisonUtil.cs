@@ -33,7 +33,7 @@ namespace BuildBackup.DebugUtil
             var requestsWithoutSize = generatedRequests.Count(e => e.DownloadWholeFile);
             GetRequestSizes(generatedRequests, fileSizeProvider);
 
-            var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
+            var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product).ToList();
             GetRequestSizes(realRequests, fileSizeProvider);
 
             var comparisonResult = new ComparisonResult

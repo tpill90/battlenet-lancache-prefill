@@ -38,11 +38,8 @@ namespace RequestReplayer
             {
                 string replayLogVersion = NginxLogParser.GetLatestLogVersionForProduct(LogFileBasePath, targetProduct);
                 Console.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
-
-                var timer = Stopwatch.StartNew();
-                var requestsToReplay = NginxLogParser.ParseRequestLogs(LogFileBasePath, targetProduct).ToList();
-                timer.Stop();
-                Console.WriteLine($"Parsed request logs in {Colors.Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
+                
+                var requestsToReplay = NginxLogParser.GetSavedRequestLogs(LogFileBasePath, targetProduct).ToList();
 
                 var downloader = new Downloader(BlizzardCdnBaseUri);
                 downloader.DownloadRequestsParallel(requestsToReplay);

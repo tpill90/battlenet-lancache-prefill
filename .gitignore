@@ -4,5 +4,9 @@ obj
 *.ak
 lockfile
 Properties
+
+*.log
 *.coalesced.log
+
 /BattleNetBackup.sln.DotSettings.user
+
