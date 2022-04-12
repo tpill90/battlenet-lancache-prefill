@@ -33,7 +33,7 @@ namespace BuildBackup
             cdn.LoadCdnsFile(product);
 
             // Initializing other classes, now that we have our CDN info loaded
-            var encodingFileHandler = new EncodingFileHandler(cdn);
+            
             var downloadFileHandler = new DownloadFileHandler(cdn);
             var configFileHandler = new ConfigFileHandler(cdn);
             var installFileHandler = new InstallFileHandler(cdn);
@@ -47,12 +47,13 @@ namespace BuildBackup
             CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
 
-            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
+            
             downloadFileHandler.ParseDownloadFile(buildConfig);
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
             // Start processing to determine which files need to be downloaded
-            installFileHandler.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
+            
+            installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, product);
             downloadFileHandler.HandleDownloadFile(archiveIndexDictionary, cdnConfig, product);
 
             var patchLoader = new PatchLoader(cdn, cdnConfig);

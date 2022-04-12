@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BuildBackup.DataAccess;
 using BuildBackup.Structs;
 using Colors = Shared.Colors;
 
@@ -20,18 +21,14 @@ namespace BuildBackup.Handlers
         }
 
         //TODO comment
-        //TODO move to a different file, something like InstallFileHandler
-        public void HandleInstallFile(EncodingTable encodingTable, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, TactProduct product)
+        public void HandleInstallFile(BuildConfigFile buildConfig, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, TactProduct product)
         {
             Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
-            // Doing a reverse lookup on the manifest to find the index key for each file's content hash.  
-            var reverseLookupDictionary = encodingTable.EncodingDictionary.ToDictionary(e => e.Value, e => e.Key);
+            var installKey = buildConfig.install[1].ToString();
+            InstallFile installFile = ParseInstallFile(installKey);
 
-            InstallFile installFile = ParseInstallFile(encodingTable.installKey);
-
-            
             List<InstallFileEntry> filtered;
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
@@ -44,16 +41,25 @@ namespace BuildBackup.Handlers
                 filtered = installFile.entries.Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows")).ToList();
             }
 
+            if (!filtered.Any())
+            {
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+                return;
+            }
+
+            var encodingFileHandler = new EncodingFileHandler(_cdn);
+            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
+
             foreach (var file in filtered)
             {
                 //The manifest contains pairs of IndexId-ContentHash, reverse lookup for matches based on the ContentHash
-                if (!reverseLookupDictionary.ContainsKey(file.contentHash))
+                if (!encodingTable.ReversedEncodingDictionary.ContainsKey(file.contentHash))
                 {
                     continue;
                 }
-                
+
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
-                MD5Hash upperHash = reverseLookupDictionary[file.contentHash];
+                MD5Hash upperHash = encodingTable.ReversedEncodingDictionary[file.contentHash];
 
                 if (!archiveIndexDictionary.ContainsKey(upperHash))
                 {
@@ -61,16 +67,15 @@ namespace BuildBackup.Handlers
                 }
 
                 IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
-                    
-                var lowerByteRange = (int)archiveIndex.offset;
+
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)archiveIndex.offset + (int)archiveIndex.size - 1);
-                _cdn.QueueRequest(RootFolder.data, archiveIndex.IndexId, lowerByteRange, upperByteRange, true);
+                _cdn.QueueRequest(RootFolder.data, archiveIndex.IndexId, (int)archiveIndex.offset, upperByteRange, true);
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        public InstallFile ParseInstallFile(string hash)
+        private InstallFile ParseInstallFile(string hash)
         {
             var install = new InstallFile();
 

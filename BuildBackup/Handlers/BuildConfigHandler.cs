@@ -155,14 +155,21 @@ namespace BuildBackup.Handlers
             // Making a request to load "size" + "vfsRoot" files.  Not used by anything in our application, however it is called for some reason
             // by the Actual Battle.Net client
             cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+            // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
+            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1], writeToDevNull: true);
+            
             if (buildConfig.vfsRoot != null)
             {
                 cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
             }
 
-            Console.Write("Parsed BuildConfig ...".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-
+            timer.Stop();
+            if (timer.Elapsed.Milliseconds > 10)
+            {
+                Console.Write("Parsed BuildConfig ...".PadRight(Config.PadRight));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            }
+            
             return buildConfig;
         }
     }

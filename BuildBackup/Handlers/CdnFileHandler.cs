@@ -91,8 +91,13 @@ namespace BuildBackup.DataAccess
                 throw new Exception($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
             }
 
-            Console.Write("CDNs File loaded in ".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF")).PadLeft(Config.Padding)}");
+            timer.Stop();
+            if (timer.Elapsed.Milliseconds > 10)
+            {
+                Console.Write("CDNs File loaded in ".PadRight(Config.PadRight));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF")).PadLeft(Config.Padding)}");
+            }
+            
             return cdns;
         }
     }

@@ -164,10 +164,14 @@ namespace BuildBackup
 
             var targetVersion = versions.entries[0];
 
-            
 
-            Console.Write("GetLatestVersion loaded...".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            timer.Stop();
+            if (timer.Elapsed.Milliseconds > 10)
+            {
+                Console.Write("GetLatestVersion loaded...".PadRight(Config.PadRight));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            }
+            
             return targetVersion;
         }
 

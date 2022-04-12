@@ -1,16 +1,12 @@
 ﻿using System.Collections.Generic;
-using BuildBackup.Utils;
 
 namespace BuildBackup.Structs
 {
     //TODO comment
     public class EncodingTable
     {
-        public Dictionary<MD5Hash, MD5Hash> EncodingDictionary;
+        public Dictionary<MD5Hash, MD5Hash> ReversedEncodingDictionary => encodingFile.aEntriesReversed;
 
-        public string rootKey = "";
-        public string downloadKey = "";
-        public string installKey = "";
 
         public EncodingFile encodingFile;
     }
@@ -28,7 +24,9 @@ namespace BuildBackup.Structs
         public ulong stringBlockSize;
         public string[] stringBlockEntries;
         public EncodingHeaderEntry[] aHeaders;
-        public Dictionary<MD5Hash, MD5Hash> aEntries;
+        //public Dictionary<MD5Hash, MD5Hash> aEntries;
+        public Dictionary<MD5Hash, MD5Hash> aEntriesReversed;
+
         public EncodingHeaderEntry[] bHeaders;
         public Dictionary<string, EncodingFileDescEntry> bEntries;
         public string encodingESpec;

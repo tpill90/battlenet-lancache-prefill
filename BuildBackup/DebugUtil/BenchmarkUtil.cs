@@ -17,7 +17,6 @@ namespace BuildBackup.DebugUtil
 
             Warmup(targetProduct, warmupRuns);
 
-
             List<Stopwatch> runResults = new List<Stopwatch>();
             for (int i = 0; i < totalRuns; i++)
             {

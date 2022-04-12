@@ -27,32 +27,6 @@ namespace BuildBackup.DataAccess
             EncodingFile encodingFile = GetEncoding(buildConfig);
 
             EncodingTable encodingTable = new EncodingTable();
-            
-
-            if (buildConfig.install.Length == 2)
-            {
-                encodingTable.installKey = buildConfig.install[1].ToString();
-            }
-
-            if (buildConfig.download.Length == 2)
-            {
-                encodingTable.downloadKey = buildConfig.download[1].ToString();
-            }
-
-            encodingTable.EncodingDictionary = encodingFile.aEntries;
-            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.root))
-            {
-                encodingTable.rootKey = encodingTable.EncodingDictionary[buildConfig.root].ToString().ToLower();
-            }
-            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.download[0]))
-            {
-                encodingTable.downloadKey = encodingTable.EncodingDictionary[buildConfig.download[0]].ToString();
-            }
-            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.install[0]))
-            {
-                encodingTable.installKey = encodingTable.EncodingDictionary[buildConfig.install[0]].ToString();
-            }
-
             encodingTable.encodingFile = encodingFile;
 
             timer.Stop();
@@ -64,7 +38,7 @@ namespace BuildBackup.DataAccess
         private EncodingFile GetEncoding(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
             var hash = buildConfig.encoding[1];
-            int encodingSize = 0;
+            int encodingSize;
             if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
             {
                 encodingSize = 0;
@@ -139,23 +113,23 @@ namespace BuildBackup.DataAccess
 
                 var tableAstart = bin.BaseStream.Position;
 
-                encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
+                //encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
+                encoding.aEntriesReversed = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
                 for (int i = 0; i < encoding.numEntriesA; i++)
                 {
                     ushort keysCount;
                     while ((keysCount = bin.ReadUInt16()) != 0)
                     {
-                        EncodingFileEntry entry = new EncodingFileEntry
-                        {
-                            keyCount = keysCount,
-                            size = bin.ReadUInt32(true),
-                            hash = bin.Read<MD5Hash>(),
-                            key = bin.Read<MD5Hash>()
-                        };
-                        // @TODO add support for multiple encoding keys
-                        bin.BaseStream.Position += (entry.keyCount - 1) * 16;
+                        bin.BaseStream.Position += 4; // Size
+                        var hash2 = bin.Read<MD5Hash>();
+                        var key = bin.Read<MD5Hash>();
+                        var keyCount = keysCount;
 
-                        encoding.aEntries.Add(entry.hash, entry.key);
+                        // @TODO add support for multiple encoding keys
+                        bin.BaseStream.Position += (keyCount - 1) * 16;
+
+                        //encoding.aEntries.Add(hash2, key);
+                        encoding.aEntriesReversed.Add(key, hash2);
                     }
 
                     var remaining = 4096 - ((bin.BaseStream.Position - tableAstart) % 4096);
