@@ -44,15 +44,23 @@ namespace BuildBackup.DebugUtil.Models
         }
 
         //TODO write some individual unit tests for this
-        public bool Overlaps(Request request2)
+        public bool Overlaps(Request request2, bool isBattleNetClient)
         {
+            int overlap = 1;
+            if (isBattleNetClient)
+            {
+                //TODO do some more testing on this?  The client considers anything within 4kb as being combined?
+                //TODO comment why this is even necessary
+                overlap = 4096;
+            }
+
             if (LowerByteRange <= request2.LowerByteRange)
             {
                 var overlaps = UpperByteRange >= request2.LowerByteRange;
                 if (!overlaps)
                 {
                     // Seeing if adjacent ranges can be combined
-                    if (UpperByteRange + 1 >= request2.LowerByteRange)
+                    if (UpperByteRange + overlap >= request2.LowerByteRange)
                     {
                         return true;
                     }

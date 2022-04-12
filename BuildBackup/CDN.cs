@@ -132,7 +132,7 @@ namespace BuildBackup
 
 			//TODO log time that coalescing takes.  Figure out how many requests there are before and after.
 			//TODO need to calculate the actual file size, for full file downloads.
-            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests).ToList();
+            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true).ToList();
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");

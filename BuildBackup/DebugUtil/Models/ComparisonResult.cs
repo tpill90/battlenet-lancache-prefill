@@ -45,6 +45,8 @@ namespace BuildBackup.DebugUtil.Models
                 Formatting.Indented, jsonSettings));
             File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(UnnecessaryRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
                 Formatting.Indented, jsonSettings));
+            File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(RealRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
         }
 
         public void PrintOutput()

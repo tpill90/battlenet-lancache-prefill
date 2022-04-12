@@ -33,15 +33,12 @@ namespace BuildBackup.DebugUtil
 
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
 
-            generatedRequests = NginxLogParser.CoalesceRequests(generatedRequests);
+            generatedRequests = NginxLogParser.CoalesceRequests(generatedRequests, true);
             var requestsWithoutSize = generatedRequests.Count(e => e.DownloadWholeFile);
             GetRequestSizes(generatedRequests, fileSizeProvider);
 
             var realRequests = NginxLogParser.ParseRequestLogs(Config.LogFileBasePath, product).ToList();
             GetRequestSizes(realRequests, fileSizeProvider);
-
-            File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
 
             var comparisonResult = new ComparisonResult
             {

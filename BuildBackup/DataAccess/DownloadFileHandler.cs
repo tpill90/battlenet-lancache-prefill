@@ -57,8 +57,7 @@ namespace BuildBackup.DataAccess
                 for (int i = 0; i < download.numEntries; i++)
                 {
                     download.entries[i].hash = bin.Read<MD5Hash>();
-                    download.entries[i].fileSize = bin.ReadUInt40(true);
-                    bin.ReadBytes(entryExtra - 5);
+                    bin.ReadBytes(entryExtra);
                 }
 
                 // Reading the tags
@@ -152,7 +151,7 @@ namespace BuildBackup.DataAccess
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint numChunks = (e.offset + e.size - 1) / chunkSize;
-                uint upperByteRange = (e.offset + e.size - 1) + 4096;
+                uint upperByteRange = (e.offset + e.size - 1);
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
             }
 

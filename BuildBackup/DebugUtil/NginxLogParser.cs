@@ -53,7 +53,7 @@ namespace BuildBackup.DebugUtil
                 var timer = Stopwatch.StartNew();
 
                 var rawLogs = ParseRequestLogs(File.ReadAllLines(latestFile.FullName));
-                List<Request> requestsToReplay = CoalesceRequests(rawLogs);
+                List<Request> requestsToReplay = CoalesceRequests(rawLogs, false);
 
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".log", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay));
@@ -108,7 +108,7 @@ namespace BuildBackup.DebugUtil
 
         //TODO comment + unit test
         //TODO move this into a different class
-        public static List<Request> CoalesceRequests(List<Request> initialRequests)
+        public static List<Request> CoalesceRequests(List<Request> initialRequests, bool isBattleNetClient = false)
         {
             //TODO handle the case where there are "whole file downloads".  If there is a whole file download, then any other requests should just be removed at this step
             var coalesced = new List<Request>();
@@ -117,7 +117,7 @@ namespace BuildBackup.DebugUtil
             var requestsGroupedByUri = initialRequests.GroupBy(e => e.Uri).ToList();
             foreach (var grouping in requestsGroupedByUri)
             {
-                var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping().ToList();
+                var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping(isBattleNetClient).ToList();
 
                 coalesced.AddRange(merged);
             }
@@ -125,7 +125,7 @@ namespace BuildBackup.DebugUtil
             return coalesced;
         }
 
-        public static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source)
+        public static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source, bool isBattleNetClient)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -138,7 +138,7 @@ namespace BuildBackup.DebugUtil
                 while (enumerator.MoveNext())
                 {
                     var nextInterval = enumerator.Current;
-                    if (!previousInterval.Overlaps(nextInterval))
+                    if (!previousInterval.Overlaps(nextInterval, isBattleNetClient))
                     {
                         yield return previousInterval;
                         previousInterval = nextInterval;

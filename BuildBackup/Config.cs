@@ -20,7 +20,7 @@ namespace BuildBackup
 
         public static readonly string LogFileBasePath = @"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\RequestReplayer\Logs";
 
-        public static int PadRight = 30;
-        public static int Padding = 30;
+        public static int PadRight = 31;
+        public static int Padding = 31;
     }
 }

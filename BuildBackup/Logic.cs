@@ -44,6 +44,9 @@ namespace BuildBackup
                             hashId = e
                         }).ToArray();
                         break;
+                    case "archives-index-size":
+                        cdnConfig.archivesIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
+                        break;
                     case "archive-group":
                         cdnConfig.archiveGroup = cols[1];
                         break;
@@ -74,7 +77,7 @@ namespace BuildBackup
                         cdnConfig.patchFileIndexSize = cols[1];
                         break;
                     default:
-                        //Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
+                        Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
                         break;
                 }
             }
@@ -83,8 +86,9 @@ namespace BuildBackup
             {
                 throw new Exception("Invalid CDNconfig");
             }
-
-            Console.WriteLine($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.  {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            
+            Console.Write($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.".PadRight(Config.PadRight));
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
             return cdnConfig;
         }
 
