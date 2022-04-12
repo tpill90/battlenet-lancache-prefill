@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using BuildBackup.Structs;
 
 namespace BuildBackup
@@ -26,13 +27,19 @@ namespace BuildBackup
         }
     }
 
-    public struct CDNConfigFile
+    public sealed class CDNConfigFile
     {
         /// <summary>
         /// A list of CDN identifiers for all archives
         /// </summary>
         public Archive[] archives;
+
+        // TODO move this to be inside of the Archives[] property
+        /// <summary>
+        /// A list of the number of files inside of each archive.  
+        /// </summary>
         public int[] archivesIndexSize;
+        public int totalArchivedFiles => archivesIndexSize.Sum();
 
         public string archiveGroup;
 
@@ -52,7 +59,12 @@ namespace BuildBackup
     public struct IndexEntry
     {
         public short index;
+
+        /// <summary>
+        /// CdnHash of the archive index that holds this file.
+        /// </summary>
         public string IndexId;
+
         public uint offset;
         public uint size;
 

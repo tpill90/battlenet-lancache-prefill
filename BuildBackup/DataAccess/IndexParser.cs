@@ -104,15 +104,14 @@ namespace BuildBackup.DataAccess
         //TODO get URI from settings
         public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(CDNConfigFile cdnConfig, CDN cdn)
         {
-            int CHUNK_SIZE = 4096;
-
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
             var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
+            //var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(cdnConfig.totalArchivedFiles, MD5HashComparer.Instance);
 
             for (int i = 0; i < cdnConfig.archives.Length; i++)
             {
-                ProcessArchive(cdnConfig, cdn, i, CHUNK_SIZE, indexDictionary);
+                ProcessArchive(cdnConfig, cdn, i, indexDictionary);
             }
 
             timer.Stop();
@@ -122,8 +121,10 @@ namespace BuildBackup.DataAccess
         }
 
 
-        private static void ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, long i, int CHUNK_SIZE, Dictionary<MD5Hash, IndexEntry> indexDictionary)
+        private static void ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, long i, Dictionary<MD5Hash, IndexEntry> indexDictionary)
         {
+            int CHUNK_SIZE = 4096;
+
             byte[] indexContent = cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId);
 
             using (var stream = new MemoryStream(indexContent))
@@ -192,16 +193,8 @@ namespace BuildBackup.DataAccess
                         offset = br.ReadUInt32(true),
                         IndexId = cdnConfig.archives[i].hashId
                     };
-                    if (!indexDictionary.ContainsKey(key))
-                    {
-                        if (indexDictionary.TryAdd(key, entry))
-                        {
-                        }
-                        else
-                        {
-                            Console.WriteLine($"could not add {key.ToString()}, it was already added.");
-                        }
-                    }
+
+                    indexDictionary.Add(key, entry);
 
                     // each chunk is 4096 bytes, and zero padding at the end
                     long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);

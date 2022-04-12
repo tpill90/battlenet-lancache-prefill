@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
@@ -34,10 +35,7 @@ namespace BuildBackup
                 {
                     case "archives":
                         var archives = cols[1].Split(' ');
-                        cdnConfig.archives = archives.Select(e => new Archive()
-                        {
-                            hashId = e
-                        }).ToArray();
+                        cdnConfig.archives = archives.Select(e => new Archive { hashId = e }).ToArray();
                         break;
                     case "archives-index-size":
                         cdnConfig.archivesIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();

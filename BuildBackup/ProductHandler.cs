@@ -58,8 +58,6 @@ namespace BuildBackup
             var patchLoader = new PatchLoader(cdn, cdnConfig);
             patchLoader.HandlePatches(buildConfig);
 
-
-
             // Actually start the download of any deferred requests
             cdn.DownloadQueuedRequests();
 
