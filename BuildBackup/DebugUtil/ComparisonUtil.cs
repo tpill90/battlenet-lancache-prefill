@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
 using Konsole;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DebugUtil

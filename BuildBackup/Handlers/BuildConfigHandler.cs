@@ -6,14 +6,12 @@ using System.Text;
 using BuildBackup.Structs;
 using Shared;
 
-namespace BuildBackup.DataAccess
+namespace BuildBackup.Handlers
 {
-    //TODO rename to build config handler
-    public static class Requests
+    public static class BuildConfigHandler
     {
         public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn)
         {
-            Console.Write("Parsing Build Config...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             var buildConfig = new BuildConfigFile();
@@ -27,10 +25,12 @@ namespace BuildBackup.DataAccess
             }
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
             for (var i = 0; i < lines.Count(); i++)
             {
-                if (lines[i].StartsWith("#") || lines[i].Length == 0) { continue; }
+                if (lines[i].StartsWith("#") || lines[i].Length == 0)
+                {
+                    continue;
+                }
                 var cols = lines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
@@ -152,6 +152,11 @@ namespace BuildBackup.DataAccess
                 buildConfig.buildName = "UNKNOWN";
             }
 
+            // Making a request to load the "size" file.  Not used by anything in our application, however it is called for some reason
+            // by the Actual Battle.Net client
+            cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+
+            Console.Write("Parsed BuildConfig ...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
             return buildConfig;

@@ -35,11 +35,16 @@ namespace BuildBackup
         public int[] archivesIndexSize;
 
         public string archiveGroup;
+
         public string[] patchArchives;
+        public int[] patchArchivesIndexSize;
         public string patchArchiveGroup;
+
         public string[] builds;
+
         public string fileIndex;
         public string fileIndexSize;
+
         public string patchFileIndex;
         public string patchFileIndexSize;
     }

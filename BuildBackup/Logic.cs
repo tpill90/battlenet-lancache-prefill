@@ -71,8 +71,15 @@ namespace BuildBackup
                     case "patch-file-index-size":
                         cdnConfig.patchFileIndexSize = cols[1];
                         break;
+                    case "patch-archives-index-size":
+                        cdnConfig.patchArchivesIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
+                        break;
                     default:
-                        Console.WriteLine("!!!!!!!! Unknown cdnconfig variable '" + cols[0] + "'");
+                        if (cols != null)
+                        {
+                            Console.WriteLine("!!!!!!!! Unknown CdnConfig variable '" + cols[0] + "'");
+                        }
+
                         break;
                 }
             }
@@ -191,26 +198,6 @@ namespace BuildBackup
                 // Starcraft 2 calls this
                 cdn.Get(RootFolder.config, targetVersion.keyRing);
             }
-
-            //Let us ignore this whole encryption thing if archives are set, surely this will never break anything and it'll back it up perfectly fine.
-            //var decryptionKeyName = GetDecryptionKeyName(cdns, product, targetVersion);
-            //if (!string.IsNullOrEmpty(decryptionKeyName) && cdnConfig.archives == null)
-            //{
-            //    if (!File.Exists(decryptionKeyName + ".ak"))
-            //    {
-            //        Console.WriteLine("Decryption key is set and not available on disk, skipping.");
-            //        cdn.isEncrypted = false;
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        cdn.isEncrypted = true;
-            //    }
-            //}
-            //else
-            //{
-            //    cdn.isEncrypted = false;
-            //}
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
