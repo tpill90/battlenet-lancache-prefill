@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Activision
         public void Setup()
         {
             // Run the download process only once
-            _results = ProductHandler.ProcessProduct(TactProducts.CodBlackOpsColdWar, new MockConsole(120, 50), true, writeOutputFiles: false);
+            _results = ProductHandler.ProcessProduct(TactProducts.CodBlackOpsColdWar, new MockConsole(120, 50), true, writeOutputFiles: false, showDebugStats: true);
         }
 
         [Test]

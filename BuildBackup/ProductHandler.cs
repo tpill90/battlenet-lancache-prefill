@@ -18,10 +18,12 @@ namespace BuildBackup
     /// </summary>
     public static class ProductHandler
     {
-        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles)
+        //TODO comment parameters
+        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, 
+            bool useDebugMode, bool writeOutputFiles, bool showDebugStats)
         {
             var timer = Stopwatch.StartNew();
-            Console.WriteLine($"Now starting processing of : {Shared.Colors.Cyan(product.DisplayName)}");
+            Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
             // Loading CDNs
             CDN cdn = new CDN(console, Config.BattleNetPatchUri)
@@ -62,15 +64,19 @@ namespace BuildBackup
 
             cdn.DownloadQueuedRequests();
 
-
             timer.Stop();
             Console.WriteLine();
             Console.WriteLine($"{Shared.Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
 
-            ComparisonResult result = new ComparisonUtil(console).CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product, writeOutputFiles);
-            result.ElapsedTime = timer.Elapsed;
+            if (showDebugStats)
+            {
+                ComparisonResult result = new ComparisonUtil(console).CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product, writeOutputFiles);
+                result.ElapsedTime = timer.Elapsed;
 
-            return result;
+                return result;
+            }
+
+            return null;
         }
     }
 }
