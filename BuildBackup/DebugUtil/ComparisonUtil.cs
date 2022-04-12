@@ -24,8 +24,6 @@ namespace BuildBackup.DebugUtil
         
         public ComparisonResult CompareAgainstRealRequests(List<Request> generatedRequests, TactProduct product, bool writeOutputFiles)
         {
-            string baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
-
             Console.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
 

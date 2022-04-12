@@ -105,7 +105,6 @@ namespace BuildBackup.DataAccess
         public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(CDNConfigFile cdnConfig, CDN cdn)
         {
             int CHUNK_SIZE = 4096;
-            uint BlockSize = (1 << 20);
 
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();

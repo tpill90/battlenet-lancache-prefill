@@ -4,11 +4,7 @@ using Konsole;
 
 namespace BuildBackup
 {
-    /// <summary>
-    /// Documentation :
-    ///   https://wowdev.wiki/TACT
-    ///   https://github.com/d07RiV/blizzget/wiki
-    /// </summary>
+    //TODO figure out why Roslyn analyzers are complaining with a bunch of warnings
     public class Program
     {
         private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft2 };

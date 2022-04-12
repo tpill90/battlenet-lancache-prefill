@@ -8,11 +8,11 @@ using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
-    public class Logic
+    public class ConfigFileHandler
     {
         private CDN cdn;
 
-        public Logic(CDN cdn)
+        public ConfigFileHandler(CDN cdn)
         {
             this.cdn = cdn;
         }
@@ -95,20 +95,10 @@ namespace BuildBackup
         }
 
         //TODO comment
-        public VersionsEntry GetVersionEntry(TactProduct tactProduct)
+        public VersionsEntry GetLatestVersionEntry(TactProduct tactProduct)
         {
             var timer = Stopwatch.StartNew();
-            VersionsFile versions = GetVersions(tactProduct);
 
-            VersionsEntry targetVersion = versions.entries[0];
-
-
-            Console.WriteLine($"GetVersionEntry took {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-            return targetVersion;
-        }
-
-        public VersionsFile GetVersions(TactProduct tactProduct)
-        {
             string content = cdn.MakePatchRequest(tactProduct, "versions");
             var versions = new VersionsFile();
 
@@ -174,31 +164,21 @@ namespace BuildBackup
                 }
             }
 
-            return versions;
+            Console.Write("GetLatestVersion loaded...".PadRight(Config.PadRight));
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            return versions.entries[0];
         }
         
-        public void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn)
+        public void GetBuildConfigAndEncryption(VersionsEntry targetVersion)
         {
             var timer = Stopwatch.StartNew();
-            // Not required by these products
-            if (product == TactProducts.Starcraft1)
-            {
-                return;
-            }
-
-            Console.Write("Loading encryption...".PadRight(Config.PadRight));
-
-            if (cdnConfig.builds != null)
-            {
-                BuildConfigFile[] cdnBuildConfigs = new BuildConfigFile[cdnConfig.builds.Count()];
-            }
-
+           
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
-                // Starcraft 2 calls this
                 cdn.Get(RootFolder.config, targetVersion.keyRing);
             }
 
+            Console.Write("Loaded encryption...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
     }

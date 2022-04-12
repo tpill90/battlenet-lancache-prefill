@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
@@ -14,6 +11,11 @@ using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
+    /// <summary>
+    /// Documentation :
+    ///   https://wowdev.wiki/TACT
+    ///   https://github.com/d07RiV/blizzget/wiki
+    /// </summary>
     public static class ProductHandler
     {
         public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles)
@@ -31,16 +33,15 @@ namespace BuildBackup
             // Initializing other classes, now that we have our CDN info loaded
             var encodingFileHandler = new EncodingFileHandler(cdn);
             var downloadFileHandler = new DownloadFileHandler(cdn);
+            var configFileHandler = new ConfigFileHandler(cdn);
 
             // Finding the latest version of the game
-            Logic logic = new Logic(cdn);
-            VersionsEntry targetVersion = logic.GetVersionEntry(product);
-
+            VersionsEntry targetVersion = configFileHandler.GetLatestVersionEntry(product);
+            // Getting other configuration files for this version, that detail where we can download the required files from.
             BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn);
-            
-            CDNConfigFile cdnConfig = logic.GetCDNconfig(targetVersion);
+            CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
-            logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn);
+            configFileHandler.GetBuildConfigAndEncryption(targetVersion);
 
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
             downloadFileHandler.ParseDownloadFile(buildConfig);

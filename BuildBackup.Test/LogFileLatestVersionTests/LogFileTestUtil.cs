@@ -18,8 +18,8 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
         public static VersionsEntry GetLatestCdnVersion(TactProduct product)
         {
             // Finding the latest version of the game
-            Logic logic = new Logic(new CDN(new MockConsole(120, 50), baseUrl));
-            VersionsEntry cdnVersion = logic.GetVersionEntry(product);
+            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CDN(new MockConsole(120, 50), baseUrl));
+            VersionsEntry cdnVersion = configFileHandler.GetLatestVersionEntry(product);
             return cdnVersion;
         }
     }
