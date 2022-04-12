@@ -152,9 +152,13 @@ namespace BuildBackup.Handlers
                 buildConfig.buildName = "UNKNOWN";
             }
 
-            // Making a request to load the "size" file.  Not used by anything in our application, however it is called for some reason
+            // Making a request to load "size" + "vfsRoot" files.  Not used by anything in our application, however it is called for some reason
             // by the Actual Battle.Net client
             cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+            if (buildConfig.vfsRoot != null)
+            {
+                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
+            }
 
             Console.Write("Parsed BuildConfig ...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));

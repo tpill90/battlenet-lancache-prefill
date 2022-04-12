@@ -164,22 +164,23 @@ namespace BuildBackup
                 }
             }
 
+            var targetVersion = versions.entries[0];
+
+            
+
             Console.Write("GetLatestVersion loaded...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-            return versions.entries[0];
+            return targetVersion;
         }
-        
-        public void GetBuildConfigAndEncryption(VersionsEntry targetVersion)
+
+        public void QueueKeyRingFile(VersionsEntry targetVersion)
         {
-            var timer = Stopwatch.StartNew();
-           
+            // Making a request to load this "Key Ring" file.  Not used by anything in our application, however it is called for some reason
+            // by the Actual Battle.Net client
             if (!string.IsNullOrEmpty(targetVersion.keyRing))
             {
-                cdn.Get(RootFolder.config, targetVersion.keyRing);
+                cdn.QueueRequest(RootFolder.config, targetVersion.keyRing);
             }
-
-            Console.Write("Loaded encryption...".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
     }
 }

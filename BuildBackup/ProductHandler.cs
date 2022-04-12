@@ -39,17 +39,18 @@ namespace BuildBackup
 
             // Finding the latest version of the game
             VersionsEntry targetVersion = configFileHandler.GetLatestVersionEntry(product);
+            configFileHandler.QueueKeyRingFile(targetVersion);
+
             // Getting other configuration files for this version, that detail where we can download the required files from.
             BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn);
             CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
-            configFileHandler.GetBuildConfigAndEncryption(targetVersion);
 
             EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
             downloadFileHandler.ParseDownloadFile(buildConfig);
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
-            // Starting the download
+            // Start processing to determine which files need to be downloaded
             var ribbit = new Ribbit(cdn);
             ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
             downloadFileHandler.HandleDownloadFile(archiveIndexDictionary, cdnConfig, product);
@@ -57,16 +58,14 @@ namespace BuildBackup
             var patchLoader = new PatchLoader(cdn, cdnConfig);
             patchLoader.HandlePatches(buildConfig);
 
-            if (buildConfig.vfsRoot != null)
-            {
-                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
-            }
 
+
+            // Actually start the download of any deferred requests
             cdn.DownloadQueuedRequests();
 
             timer.Stop();
             Console.WriteLine();
-            Console.WriteLine($"{Shared.Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n");
 
             if (showDebugStats)
             {
