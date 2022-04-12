@@ -28,7 +28,7 @@ namespace BuildBackup.Structs
         public ulong stringBlockSize;
         public string[] stringBlockEntries;
         public EncodingHeaderEntry[] aHeaders;
-        public EncodingFileEntry[] aEntries;
+        public Dictionary<MD5Hash, MD5Hash> aEntries;
         public EncodingHeaderEntry[] bHeaders;
         public Dictionary<string, EncodingFileDescEntry> bEntries;
         public string encodingESpec;

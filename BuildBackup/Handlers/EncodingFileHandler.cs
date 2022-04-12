@@ -27,7 +27,7 @@ namespace BuildBackup.DataAccess
             EncodingFile encodingFile = GetEncoding(buildConfig);
 
             EncodingTable encodingTable = new EncodingTable();
-            encodingTable.EncodingDictionary = new Dictionary<MD5Hash, MD5Hash>(encodingFile.aEntries.Length, MD5HashComparer.Instance);
+            
 
             if (buildConfig.install.Length == 2)
             {
@@ -38,25 +38,19 @@ namespace BuildBackup.DataAccess
             {
                 encodingTable.downloadKey = buildConfig.download[1].ToString();
             }
-            
-            foreach (var entry in encodingFile.aEntries)
+
+            encodingTable.EncodingDictionary = encodingFile.aEntries;
+            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.root))
             {
-                if (entry.hash == buildConfig.root)
-                {
-                    encodingTable.rootKey = entry.key.ToString().ToLower();
-                }
-
-                if (encodingTable.downloadKey == "" && entry.hash == buildConfig.download[0])
-                {
-                    encodingTable.downloadKey = entry.key.ToString().ToLower();
-                }
-
-                if (encodingTable.installKey == "" && entry.hash == buildConfig.install[0])
-                {
-                    encodingTable.installKey = entry.key.ToString().ToLower();
-                }
-
-                encodingTable.EncodingDictionary.Add(entry.key, entry.hash);
+                encodingTable.rootKey = encodingTable.EncodingDictionary[buildConfig.root].ToString().ToLower();
+            }
+            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.download[0]))
+            {
+                encodingTable.downloadKey = encodingTable.EncodingDictionary[buildConfig.download[0]].ToString();
+            }
+            if (encodingTable.EncodingDictionary.ContainsKey(buildConfig.install[0]))
+            {
+                encodingTable.installKey = encodingTable.EncodingDictionary[buildConfig.install[0]].ToString();
             }
 
             encodingTable.encodingFile = encodingFile;
@@ -145,8 +139,7 @@ namespace BuildBackup.DataAccess
 
                 var tableAstart = bin.BaseStream.Position;
 
-                List<EncodingFileEntry> entries = new List<EncodingFileEntry>();
-
+                encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
                 for (int i = 0; i < encoding.numEntriesA; i++)
                 {
                     ushort keysCount;
@@ -160,12 +153,9 @@ namespace BuildBackup.DataAccess
                             key = bin.Read<MD5Hash>()
                         };
                         // @TODO add support for multiple encoding keys
-                        for (int key = 0; key < entry.keyCount - 1; key++)
-                        {
-                            bin.ReadBytes(16);
-                        }
+                        bin.BaseStream.Position += (entry.keyCount - 1) * 16;
 
-                        entries.Add(entry);
+                        encoding.aEntries.Add(entry.hash, entry.key);
                     }
 
                     var remaining = 4096 - ((bin.BaseStream.Position - tableAstart) % 4096);
@@ -174,8 +164,6 @@ namespace BuildBackup.DataAccess
                         bin.BaseStream.Position += remaining;
                     }
                 }
-
-                encoding.aEntries = entries.ToArray();
 
                 if (!parseTableB)
                 {
