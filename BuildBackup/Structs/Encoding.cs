@@ -6,7 +6,7 @@ namespace BuildBackup.Structs
     //TODO comment
     public class EncodingTable
     {
-        public Dictionary<MD5Hash, MD5Hash> EncodingDictionary = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
+        public Dictionary<MD5Hash, MD5Hash> EncodingDictionary;
 
         public string rootKey = "";
         public string downloadKey = "";

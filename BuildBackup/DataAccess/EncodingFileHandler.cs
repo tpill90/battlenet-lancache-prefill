@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
+using BuildBackup.Utils;
 using Shared;
 
 namespace BuildBackup.DataAccess
@@ -26,6 +27,8 @@ namespace BuildBackup.DataAccess
             EncodingFile encodingFile = GetEncoding(buildConfig);
 
             EncodingTable encodingTable = new EncodingTable();
+            encodingTable.EncodingDictionary = new Dictionary<MD5Hash, MD5Hash>(encodingFile.aEntries.Length, MD5HashComparer.Instance);
+
             if (buildConfig.install.Length == 2)
             {
                 encodingTable.installKey = buildConfig.install[1].ToString();
@@ -35,7 +38,7 @@ namespace BuildBackup.DataAccess
             {
                 encodingTable.downloadKey = buildConfig.download[1].ToString();
             }
-
+            
             foreach (var entry in encodingFile.aEntries)
             {
                 if (entry.hash == buildConfig.root)
@@ -53,10 +56,7 @@ namespace BuildBackup.DataAccess
                     encodingTable.installKey = entry.key.ToString().ToLower();
                 }
 
-                if (!encodingTable.EncodingDictionary.ContainsKey(entry.key))
-                {
-                    encodingTable.EncodingDictionary.Add(entry.key, entry.hash);
-                }
+                encodingTable.EncodingDictionary.Add(entry.key, entry.hash);
             }
 
             encodingTable.encodingFile = encodingFile;
@@ -169,7 +169,10 @@ namespace BuildBackup.DataAccess
                     }
 
                     var remaining = 4096 - ((bin.BaseStream.Position - tableAstart) % 4096);
-                    if (remaining > 0) { bin.BaseStream.Position += remaining; }
+                    if (remaining > 0)
+                    {
+                        bin.BaseStream.Position += remaining;
+                    }
                 }
 
                 encoding.aEntries = entries.ToArray();
@@ -179,47 +182,7 @@ namespace BuildBackup.DataAccess
                     return encoding;
                 }
 
-                /* Table B */
-                if (checkStuff)
-                {
-                    encoding.bHeaders = new EncodingHeaderEntry[encoding.numEntriesB];
-
-                    for (int i = 0; i < encoding.numEntriesB; i++)
-                    {
-                        encoding.bHeaders[i].firstHash = bin.Read<MD5Hash>();
-                        encoding.bHeaders[i].checksum = bin.Read<MD5Hash>();
-                    }
-                }
-                else
-                {
-                    bin.BaseStream.Position += encoding.numEntriesB * 32;
-                }
-
-                var tableBstart = bin.BaseStream.Position;
-
-                encoding.bEntries = new Dictionary<string, EncodingFileDescEntry>();
-
-                while (bin.BaseStream.Position < tableBstart + 4096 * encoding.numEntriesB)
-                {
-                    var remaining = 4096 - (bin.BaseStream.Position - tableBstart) % 4096;
-
-                    if (remaining < 25)
-                    {
-                        bin.BaseStream.Position += remaining;
-                        continue;
-                    }
-
-                    var key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-                    EncodingFileDescEntry entry = new EncodingFileDescEntry()
-                    {
-                        stringIndex = bin.ReadUInt32(true),
-                        compressedSize = bin.ReadUInt40(true)
-                    };
-
-                    if (entry.stringIndex == uint.MaxValue) break;
-
-                    encoding.bEntries.Add(key, entry);
-                }
+                ParseTableB(checkStuff, encoding, bin);
 
                 // Go to the end until we hit a non-NUL byte
                 while (bin.BaseStream.Position < bin.BaseStream.Length)
@@ -234,6 +197,51 @@ namespace BuildBackup.DataAccess
             }
 
             return encoding;
+        }
+
+        private static void ParseTableB(bool checkStuff, EncodingFile encoding, BinaryReader bin)
+        {
+            /* Table B */
+            if (checkStuff)
+            {
+                encoding.bHeaders = new EncodingHeaderEntry[encoding.numEntriesB];
+
+                for (int i = 0; i < encoding.numEntriesB; i++)
+                {
+                    encoding.bHeaders[i].firstHash = bin.Read<MD5Hash>();
+                    encoding.bHeaders[i].checksum = bin.Read<MD5Hash>();
+                }
+            }
+            else
+            {
+                bin.BaseStream.Position += encoding.numEntriesB * 32;
+            }
+
+            var tableBstart = bin.BaseStream.Position;
+
+            encoding.bEntries = new Dictionary<string, EncodingFileDescEntry>();
+
+            while (bin.BaseStream.Position < tableBstart + 4096 * encoding.numEntriesB)
+            {
+                var remaining = 4096 - (bin.BaseStream.Position - tableBstart) % 4096;
+
+                if (remaining < 25)
+                {
+                    bin.BaseStream.Position += remaining;
+                    continue;
+                }
+
+                var key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
+                EncodingFileDescEntry entry = new EncodingFileDescEntry()
+                {
+                    stringIndex = bin.ReadUInt32(true),
+                    compressedSize = bin.ReadUInt40(true)
+                };
+
+                if (entry.stringIndex == uint.MaxValue) break;
+
+                encoding.bEntries.Add(key, entry);
+            }
         }
     }
 }

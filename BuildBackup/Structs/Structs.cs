@@ -37,6 +37,7 @@ namespace BuildBackup
         /// A list of CDN identifiers for all archives
         /// </summary>
         public Archive[] archives;
+        public int[] archivesIndexSize;
 
         public string archiveGroup;
         public string[] patchArchives;
