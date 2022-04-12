@@ -17,7 +17,7 @@ namespace BuildBackup
     /// </summary>
     public class Program
     {
-        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.HeroesOfTheStorm };
+        private static TactProduct[] ProductsToProcess = new[]{ TactProducts.Starcraft2 };
 
         public static bool UseCdnDebugMode = true;
         public static bool WriteOutputFiles = true;
@@ -53,7 +53,7 @@ namespace BuildBackup
             var encodingFileHandler = new EncodingFileHandler(cdn);
 
             // Finding the latest version of the game
-            Logic logic = new Logic(cdn, Config.BattleNetPatchUri);
+            Logic logic = new Logic(cdn);
             VersionsEntry targetVersion = logic.GetVersionEntry(product);
 
             BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
@@ -73,7 +73,7 @@ namespace BuildBackup
             ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
             DownloadFileHandler.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, cdn, product);
 
-            var patchLoader = new PatchLoader(cdn, product, cdnConfig);
+            var patchLoader = new PatchLoader(cdn, cdnConfig);
             patchLoader.HandlePatches(buildConfig);
 
             if (buildConfig.vfsRoot != null)

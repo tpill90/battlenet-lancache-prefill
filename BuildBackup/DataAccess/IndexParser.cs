@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using BuildBackup.DebugUtil;
-using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
 using BuildBackup.Utils;
 using Shared;
@@ -216,33 +214,6 @@ namespace BuildBackup.DataAccess
                     }
                 }
             }
-        }
-
-        private static List<string> ParsePatchFileIndex(string hash, CDN cdn)
-        {
-            byte[] indexContent = cdn.Get(RootFolder.patch, hash);
-
-            var list = new List<string>();
-
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
-            {
-                int indexEntries = indexContent.Length / 4096;
-
-                for (var b = 0; b < indexEntries; b++)
-                {
-                    for (var bi = 0; bi < 170; bi++)
-                    {
-                        var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-
-                        var size = bin.ReadUInt32(true);
-
-                        list.Add(headerHash);
-                    }
-                    bin.ReadBytes(16);
-                }
-            }
-
-            return list;
         }
     }
 }

@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
-using ByteSizeLib;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
@@ -13,26 +11,11 @@ namespace BuildBackup.DataAccess
     public class PatchLoader
     {
         private CDN _cdn;
-        private readonly TactProduct _currentProduct;
         private readonly CDNConfigFile _cdnConfig;
 
-        List<TactProduct> productsToSkip = new List<TactProduct> 
-        {
-            TactProducts.CodBlackOpsColdWar,
-            TactProducts.Diablo3,
-            TactProducts.Hearthstone,
-            TactProducts.HeroesOfTheStorm,
-            TactProducts.Overwatch,
-            TactProducts.Starcraft1,
-            TactProducts.Starcraft2,
-            TactProducts.WowClassic,
-            TactProducts.WorldOfWarcraft
-        };
-
-        public PatchLoader(CDN cdn, TactProduct currentProduct, CDNConfigFile cdnConfig)
+        public PatchLoader(CDN cdn, CDNConfigFile cdnConfig)
         {
             _cdn = cdn;
-            _currentProduct = currentProduct;
             _cdnConfig = cdnConfig;
         }
 
@@ -57,12 +40,7 @@ namespace BuildBackup.DataAccess
                 }
             }
             
-
-            //DownloadPatchArchives(patch);
-                //DownloadPatchFiles(_cdnConfig);
-                //DownloadFullPatchArchives(_cdnConfig);
-
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         //TODO comment
@@ -150,146 +128,6 @@ namespace BuildBackup.DataAccess
             }
 
             return patchFile;
-        }
-
-        public void DownloadPatchFiles(CDNConfigFile cdnConfig)
-        {
-            var patchFileIndexList = IndexParser.ParseIndex(cdnConfig.patchFileIndex, _cdn, RootFolder.patch);
-            
-            // For whatever reason, the following products do not use these patch files.
-            if (productsToSkip.Contains(_currentProduct))
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(cdnConfig.patchFileIndex))
-            {
-                return;
-            }
-
-            Console.WriteLine("Parsing patch file index..");
-            var downloadSize = ByteSize.FromBytes((double)patchFileIndexList.Sum(e => (decimal)e.Value.size));
-
-            Console.WriteLine($"     Downloading {Colors.Cyan(patchFileIndexList.Count)} unarchived patch files from patch file index...");
-            Console.WriteLine($"     Total archive size : {Colors.Magenta(downloadSize.ToString())}");
-            
-            var timer = Stopwatch.StartNew();
-
-            // Download the files and update onscreen status
-            foreach(var entry in patchFileIndexList)
-            {
-                var file = entry.Value;
-                _cdn.QueueRequest(RootFolder.patch, entry.Key, file.offset, file.offset + file.size - 1, writeToDevNull: true);
-            }
-            timer.Stop();
-            Console.WriteLine($"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-        }
-
-        //TODO comment
-        public void DownloadPatchArchives(PatchFile patchFile)
-        {
-            if (_cdnConfig.patchArchives == null)
-            {
-                return;
-            }
-
-            var patchIndexDictionary = GetPatchIndexes(_cdnConfig.patchArchives);
-            
-            // For whatever reason, the following products do not use these patch files.
-            if (productsToSkip.Contains(_currentProduct))
-            {
-                return;
-            }
-
-            if (patchFile.blocks == null)
-            {
-                return;
-            }
-
-            var unarchivedPatchKeyList = new List<string>();
-
-            foreach (var block in patchFile.blocks)
-            {
-                foreach (var fileBlock in block.files)
-                {
-                    foreach (var patch in fileBlock.patches)
-                    {
-                        var pKey = BitConverter.ToString(patch.patchEncodingKey).Replace("-", "");
-                        if (!patchIndexDictionary.ContainsKey(pKey))
-                        {
-                            unarchivedPatchKeyList.Add(pKey);
-                        }
-                    }
-                }
-            }
-
-            if (unarchivedPatchKeyList.Count <= 0)
-            {
-                return;
-            }
-
-            Console.Write($"     Downloading {Colors.Cyan(unarchivedPatchKeyList.Count)} unarchived patch files..".PadRight(Config.PadRight));
-            foreach (var entry in unarchivedPatchKeyList)
-            {
-                _cdn.Get(RootFolder.patch, entry, writeToDevNull: true);
-            }
-            
-        }
-
-        public void DownloadFullPatchArchives(CDNConfigFile cdnConfig)
-        {
-            if (cdnConfig.patchArchives == null)
-            {
-                return;
-            }
-
-            // For whatever reason, the following products do not use these patch files.
-            if (productsToSkip.Contains(_currentProduct))
-            {
-                return;
-            }
-
-            Console.WriteLine($"     Downloading {Colors.Cyan(cdnConfig.patchArchives.Length)} patch archives..");
-            foreach (var patchId in cdnConfig.patchArchives)
-            {
-                _cdn.QueueRequest(RootFolder.patch, patchId, writeToDevNull: true);
-            }
-        }
-
-        private Dictionary<string, IndexEntry> GetPatchIndexes(string[] archives)
-        {
-            var indexDictionary = new Dictionary<string, IndexEntry>();
-            for (int i = 0; i < archives.Length; i++)
-            {
-                byte[] indexContent = _cdn.GetIndex(RootFolder.patch, archives[i]);
-
-                using (BinaryReader bin = new BinaryReader(new MemoryStream(indexContent)))
-                {
-                    int indexEntries = indexContent.Length / 4096;
-
-                    for (var b = 0; b < indexEntries; b++)
-                    {
-                        for (var bi = 0; bi < 170; bi++)
-                        {
-                            var headerHash = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
-
-                            var entry = new IndexEntry()
-                            {
-                                index = (short)i,
-                                size = bin.ReadUInt32(true),
-                                offset = bin.ReadUInt32(true)
-                            };
-
-                            if (!indexDictionary.ContainsKey(headerHash))
-                            {
-                                indexDictionary.Add(headerHash, entry);
-                            }
-                        }
-                        bin.ReadBytes(16);
-                    }
-                }
-            }
-            return indexDictionary;
         }
     }
 }

@@ -15,11 +15,6 @@ namespace BuildBackup
         public CdnsEntry[] entries;
     }
 
-    public struct GameBlobFile
-    {
-        public string decryptionKeyName;
-    }
-
     public struct Archive
     {
         public string hashId;
@@ -47,12 +42,6 @@ namespace BuildBackup
         public string fileIndexSize;
         public string patchFileIndex;
         public string patchFileIndexSize;
-    }
-
-    public class InstallFileMatch
-    {
-        public InstallFileEntry InstallFileEntry { get; set; }
-        public IndexEntry IndexEntry { get; set; }
     }
 
     public struct IndexEntry
@@ -118,21 +107,6 @@ namespace BuildBackup
         public int compSize;
         public int decompSize;
         public byte[] checkSum;
-    }
-
-    public struct RootFile
-    {
-        public MultiDictionary<ulong, RootEntry> entriesLookup;
-        public MultiDictionary<uint, RootEntry> entriesFDID;
-    }
-
-    public struct RootEntry
-    {
-        public ContentFlags contentFlags;
-        public LocaleFlags localeFlags;
-        public ulong lookup;
-        public uint fileDataID;
-        public byte[] md5;
     }
 
     public struct PatchFile

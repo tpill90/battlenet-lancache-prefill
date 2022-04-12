@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using BuildBackup.Structs;
-using Newtonsoft.Json;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -14,12 +11,10 @@ namespace BuildBackup
     public class Logic
     {
         private CDN cdn;
-        private readonly Uri _battleNetPatchUri;
 
-        public Logic(CDN cdn, Uri battleNetPatchUri)
+        public Logic(CDN cdn)
         {
             this.cdn = cdn;
-            _battleNetPatchUri = battleNetPatchUri;
         }
 
         public CDNConfigFile GetCDNconfig(VersionsEntry targetVersion)
@@ -175,198 +170,6 @@ namespace BuildBackup
             return versions;
         }
         
-        public GameBlobFile GetGameBlob(string program)
-        {
-            string content;
-
-            var gblob = new GameBlobFile();
-
-            try
-            {
-                using (HttpResponseMessage response = cdn.client.GetAsync(new Uri(_battleNetPatchUri + program + "/" + "blob/game")).Result)
-                {
-                    if (response.IsSuccessStatusCode)
-                    {
-                        using (HttpContent res = response.Content)
-                        {
-                            content = res.ReadAsStringAsync().Result;
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception("Bad HTTP code while retrieving");
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error retrieving game blob file: " + e.Message);
-                return gblob;
-            }
-
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Empty gameblob :(");
-                return gblob;
-            }
-
-            dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(content);
-            if (json.all.config.decryption_key_name != null)
-            {
-                gblob.decryptionKeyName = json.all.config.decryption_key_name.Value;
-            }
-            return gblob;
-        }
-
-        public GameBlobFile GetProductConfig(string hash)
-        {
-            string content = Encoding.UTF8.GetString(cdn.GetConfigs(hash));
-         
-            if (string.IsNullOrEmpty(content))
-            {
-                Console.WriteLine("Error reading product config!");
-                return new GameBlobFile();
-            }
-
-            var gblob = new GameBlobFile();
-            dynamic json = JsonConvert.DeserializeObject(content);
-            if (json.all.config.decryption_key_name != null)
-            {
-                gblob.decryptionKeyName = json.all.config.decryption_key_name.Value;
-            }
-            return gblob;
-        }
-        
-        public string GetDecryptionKeyName(TactProduct tactProduct, VersionsEntry targetVersion)
-        {
-            string decryptionKeyName = null;
-
-            var gameblob = GetGameBlob(tactProduct.ProductCode);
-            if (!string.IsNullOrEmpty(gameblob.decryptionKeyName))
-            {
-                decryptionKeyName = gameblob.decryptionKeyName;
-            }
-
-            if (!string.IsNullOrEmpty(targetVersion.productConfig))
-            {
-                var productConfig = GetProductConfig(targetVersion.productConfig);
-                if (!string.IsNullOrEmpty(productConfig.decryptionKeyName))
-                {
-                    decryptionKeyName = productConfig.decryptionKeyName;
-                }
-            }
-
-            return decryptionKeyName;
-        }
-
-        public RootFile GetRoot(string hash, bool parseIt = false)
-        {
-            var root = new RootFile
-            {
-                entriesLookup = new MultiDictionary<ulong, RootEntry>(),
-                entriesFDID = new MultiDictionary<uint, RootEntry>()
-            };
-
-            byte[] content = cdn.Get(RootFolder.data, hash);
-            if (!parseIt) return root;
-
-            var hasher = new Jenkins96();
-
-            var namedCount = 0;
-            var unnamedCount = 0;
-            uint totalFiles = 0;
-            uint namedFiles = 0;
-            var newRoot = false;
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
-            {
-                var header = bin.ReadUInt32();
-
-                if (header == 1296454484)
-                {
-                    totalFiles = bin.ReadUInt32();
-                    namedFiles = bin.ReadUInt32();
-                    newRoot = true;
-                }
-                else
-                {
-                    bin.BaseStream.Position = 0;
-                }
-
-                var blockCount = 0;
-
-                while (bin.BaseStream.Position < bin.BaseStream.Length)
-                {
-                    var count = bin.ReadUInt32();
-                    var contentFlags = (ContentFlags)bin.ReadUInt32();
-                    var localeFlags = (LocaleFlags)bin.ReadUInt32();
-
-                    //Console.WriteLine("[Block " + blockCount + "] " + count + " entries. Content flags: " + contentFlags.ToString() + ", Locale flags: " + localeFlags.ToString());
-                    var entries = new RootEntry[count];
-                    var filedataIds = new int[count];
-
-                    var fileDataIndex = 0;
-                    for (var i = 0; i < count; ++i)
-                    {
-                        entries[i].localeFlags = localeFlags;
-                        entries[i].contentFlags = contentFlags;
-
-                        filedataIds[i] = fileDataIndex + bin.ReadInt32();
-                        entries[i].fileDataID = (uint)filedataIds[i];
-                        fileDataIndex = filedataIds[i] + 1;
-                    }
-
-                    var blockFdids = new List<string>();
-                    if (!newRoot)
-                    {
-                        for (var i = 0; i < count; ++i)
-                        {
-                            entries[i].md5 = bin.ReadBytes(16);
-                            entries[i].lookup = bin.ReadUInt64();
-                            root.entriesLookup.Add(entries[i].lookup, entries[i]);
-                            root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
-                            blockFdids.Add(entries[i].fileDataID.ToString());
-                        }
-                    }
-                    else
-                    {
-                        for (var i = 0; i < count; ++i)
-                        {
-                            entries[i].md5 = bin.ReadBytes(16);
-                        }
-
-                        for (var i = 0; i < count; ++i)
-                        {
-                            if (contentFlags.HasFlag(ContentFlags.NoNames))
-                            {
-                                entries[i].lookup = 0;
-                                unnamedCount++;
-                            }
-                            else
-                            {
-                                entries[i].lookup = bin.ReadUInt64();
-                                root.entriesLookup.Add(entries[i].lookup, entries[i]);
-                                namedCount++;
-                            }
-
-                            root.entriesFDID.Add(entries[i].fileDataID, entries[i]);
-                            blockFdids.Add(entries[i].fileDataID.ToString());
-                        }
-                    }
-
-                    //File.WriteAllLinesAsync("blocks/Block" + blockCount + ".txt", blockFdids);
-                    blockCount++;
-                }
-            }
-
-            if ((namedFiles > 0) && namedFiles != namedCount)
-                throw new Exception("Didn't read correct amount of named files! Read " + namedCount + " but expected " + namedFiles);
-
-            if ((totalFiles > 0) && totalFiles != (namedCount + unnamedCount))
-                throw new Exception("Didn't read correct amount of total files! Read " + (namedCount + unnamedCount) + " but expected " + totalFiles);
-
-            return root;
-        }
-
         public void GetBuildConfigAndEncryption(TactProduct product, CDNConfigFile cdnConfig, VersionsEntry targetVersion, CDN cdn)
         {
             var timer = Stopwatch.StartNew();

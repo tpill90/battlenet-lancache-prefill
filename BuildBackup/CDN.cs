@@ -106,17 +106,12 @@ namespace BuildBackup
 
         public byte[] Get(RootFolder rootPath, string hashId, bool writeToDevNull = false)
         {
+            //TODO remove this ToLower() call
             hashId = hashId.ToLower();
             var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
             return Get(uri, writeToDevNull);
         }
 
-        public byte[] GetConfigs(string hashId, bool writeToDevNull = false)
-        {
-            var uri = $"{_cdnsFile.entries[0].configPath}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            return Get(uri, writeToDevNull);
-        }
-        
         public byte[] GetIndex(RootFolder rootPath, string hashId)
         {
             //TODO indexes should have a size
