@@ -5,16 +5,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BuildBackup.DataAccess;
 using BuildBackup.Structs;
 using Shared;
 
-namespace BuildBackup.DataAccess
+namespace BuildBackup.Handlers
 {
     public static class DownloadFileHandler
     {
         public static DownloadFile ParseDownloadFile(CDN cdn, BuildConfigFile buildConfig)
         {
-            Console.Write("Parsing download file...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             var download = new DownloadFile();
@@ -34,8 +34,6 @@ namespace BuildBackup.DataAccess
                 byte has_checksum_in_entry = bin.ReadBytes(1)[0];
                 download.numEntries = bin.ReadUInt32(true);
                 download.numTags = bin.ReadUInt16(true);
-
-                
 
                 int entryExtra = 6;
                 if (has_checksum_in_entry > 0)
@@ -80,7 +78,8 @@ namespace BuildBackup.DataAccess
                     download.tags[i] = tag;
                 }
             }
-
+            
+            Console.Write("Parsed download file...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
             return download;
@@ -146,9 +145,7 @@ namespace BuildBackup.DataAccess
                 }
 
                 IndexEntry e = archiveIndexDictionary[current.hash];
-                uint chunkSize = 4096;
                 var startBytes = e.offset;
-
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);

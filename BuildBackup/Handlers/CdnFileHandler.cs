@@ -19,18 +19,11 @@ namespace BuildBackup.DataAccess
             this.cdn = cdn;
         }
 
+        //TODO should this be part of the CDN class?
         public CdnsFile ParseCdnsFile(TactProduct tactProduct)
         {
-            var timer2 = Stopwatch.StartNew();
-            var cdns = GetCDNs(tactProduct);
-            Console.WriteLine($"GetCDNs loaded in {Colors.Yellow(timer2.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            var timer = Stopwatch.StartNew();
 
-            return cdns;
-        }
-
-        //TODO should this be part of the CDN class?
-        public CdnsFile GetCDNs(TactProduct tactProduct)
-        {
             string content = cdn.MakePatchRequest(tactProduct, "cdns");
 
             CdnsFile cdns = new CdnsFile();
@@ -83,6 +76,7 @@ namespace BuildBackup.DataAccess
                                 cdns.entries[i - 1].configPath = row[c];
                                 break;
                             default:
+                                //TODO
                                 //Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
                                 break;
                         }
@@ -96,7 +90,9 @@ namespace BuildBackup.DataAccess
                 Console.WriteLine($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
                 throw new Exception($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
             }
-            
+
+            Console.Write("CDNs File loaded in ".PadRight(Config.PadRight));
+            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF")).PadLeft(Config.Padding)}");
             return cdns;
         }
     }
