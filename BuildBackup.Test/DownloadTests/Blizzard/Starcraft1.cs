@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = Program.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true, writeOutputFiles: false);
+            _results = ProductHandler.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true, writeOutputFiles: false);
         }
 
         [Test]

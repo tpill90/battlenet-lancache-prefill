@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using BuildBackup.DataAccess;
-using BuildBackup.DebugUtil;
-using BuildBackup.DebugUtil.Models;
-using BuildBackup.Structs;
 using Konsole;
-using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
@@ -26,7 +20,7 @@ namespace BuildBackup
         {
             foreach (var product in ProductsToProcess)
             {
-                ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles);
+                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles);
             }
             Console.WriteLine("Pre-load Complete!\n");
 
@@ -35,63 +29,6 @@ namespace BuildBackup
                 Console.WriteLine("Press any key to continue . . .");
                 Console.ReadLine();
             }
-        }
-
-        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles)
-        {
-            var timer = Stopwatch.StartNew();
-            Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
-
-            // Loading CDNs
-            CDN cdn = new CDN(console, Config.BattleNetPatchUri) 
-            { 
-                DebugMode = useDebugMode
-            };
-            cdn.LoadCdnsFile(product);
-
-            // Initializing other classes, now that we have our CDN info loaded
-            var encodingFileHandler = new EncodingFileHandler(cdn);
-
-            // Finding the latest version of the game
-            Logic logic = new Logic(cdn);
-            VersionsEntry targetVersion = logic.GetVersionEntry(product);
-
-            BuildConfigFile buildConfig = Requests.GetBuildConfig(targetVersion, cdn);
-            //TODO put this into a method
-            cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
-
-            CDNConfigFile cdnConfig = logic.GetCDNconfig(targetVersion);
-
-            logic.GetBuildConfigAndEncryption(product, cdnConfig, targetVersion, cdn);
-            
-            EncodingTable encodingTable = encodingFileHandler.BuildEncodingTable(buildConfig);
-            DownloadFile downloadFile = DownloadFileHandler.ParseDownloadFile(cdn, buildConfig);
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
-
-            // Starting the download
-            var ribbit = new Ribbit(cdn);
-            ribbit.HandleInstallFile(encodingTable, archiveIndexDictionary, product);
-            DownloadFileHandler.HandleDownloadFile(downloadFile, archiveIndexDictionary, cdnConfig, cdn, product);
-
-            var patchLoader = new PatchLoader(cdn, cdnConfig);
-            patchLoader.HandlePatches(buildConfig);
-
-            if (buildConfig.vfsRoot != null)
-            {
-                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
-            }
-
-            cdn.DownloadQueuedRequests();
-
-            Console.WriteLine();
-            timer.Stop();
-            Console.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-
-            var comparisonUtil = new ComparisonUtil(console);
-            ComparisonResult result = comparisonUtil.CompareAgainstRealRequests(cdn.allRequestsMade.ToList(), product, writeOutputFiles);
-            result.ElapsedTime = timer.Elapsed;
-
-            return result;
         }
     }
 }
