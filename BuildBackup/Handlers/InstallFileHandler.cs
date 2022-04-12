@@ -1,20 +1,20 @@
-﻿using BuildBackup.Structs;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BuildBackup.Structs;
 using Colors = Shared.Colors;
 
-namespace BuildBackup.DataAccess
+namespace BuildBackup.Handlers
 {
-    public class Ribbit
+    public class InstallFileHandler
     {
         private CDN _cdn;
 
-        public Ribbit(CDN cdn)
+        public InstallFileHandler(CDN cdn)
         {
             _cdn = cdn;
         }

@@ -21,7 +21,6 @@ namespace BuildBackup.DataAccess
 
         public void HandlePatches(BuildConfigFile buildConfig)
         {
-            Console.Write("Handling patches...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             PatchFile patch = DownloadPatchConfig(buildConfig);
@@ -39,7 +38,8 @@ namespace BuildBackup.DataAccess
                     _cdn.GetIndex(RootFolder.patch, patchIndex);
                 }
             }
-            
+
+            Console.Write("Handled patches...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
