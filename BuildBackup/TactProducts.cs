@@ -1,29 +1,33 @@
 ﻿namespace BuildBackup
 {
     //TODO convert to smart enum
+    //TODO finish fleshing out the default tags for each product
     /// <summary>
     /// From : https://blizztrack.com/
     /// </summary>
     public static class TactProducts 
     {
         //TODO eventually get the rest of blizzards games, for testing
-
         public static readonly TactProduct Diablo3 = new TactProduct { DisplayName = "Diablo 3", ProductCode = "d3" };
 
-        public static readonly TactProduct Hearthstone = new TactProduct { DisplayName = "Hearthstone", ProductCode = "hsb" };
+        public static readonly TactProduct Hearthstone = new TactProduct
+        {
+            DisplayName = "Hearthstone", ProductCode = "hsb", DefaultTags = new[] { "Windows", "enUS" }
+        };
         public static readonly TactProduct HeroesOfTheStorm = new TactProduct { DisplayName = "Heroes of the Storm", ProductCode = "hero" };
 
         public static readonly TactProduct Starcraft1 = new TactProduct { DisplayName = "Starcraft", ProductCode = "s1" };
-        public static readonly TactProduct Starcraft2 = new TactProduct { DisplayName = "Starcraft 2", ProductCode = "s2" };
+        public static readonly TactProduct Starcraft2 = new TactProduct
+        {
+            DisplayName = "Starcraft 2", ProductCode = "s2", DefaultTags = new[] { "Windows", "enUS" }
+        };
 
         public static readonly TactProduct Overwatch = new TactProduct { DisplayName = "Overwatch", ProductCode = "pro" };
 
         public static readonly TactProduct WorldOfWarcraft = new TactProduct { DisplayName = "World Of Warcraft", ProductCode = "wow" };
         public static readonly TactProduct WowClassic = new TactProduct
         {
-            DisplayName = "WoW Classic", 
-            ProductCode = "wow_classic", 
-            DefaultTags = new string[]{ "Windows", "enUS" }
+            DisplayName = "WoW Classic", ProductCode = "wow_classic", DefaultTags = new[] { "Windows", "enUS", "x86_64" }
         };
         
         #region Activision

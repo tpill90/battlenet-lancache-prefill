@@ -19,8 +19,7 @@ namespace BuildBackup
     public static class ProductHandler
     {
         //TODO comment parameters
-        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, 
-            bool useDebugMode, bool writeOutputFiles, bool showDebugStats)
+        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles, bool showDebugStats)
         {
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
@@ -43,21 +42,18 @@ namespace BuildBackup
             configFileHandler.QueueKeyRingFile(targetVersion);
 
             // Getting other configuration files for this version, that detail where we can download the required files from.
-            BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn);
+            BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn, product);
             CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
-
-            
             downloadFileHandler.ParseDownloadFile(buildConfig);
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
             // Start processing to determine which files need to be downloaded
-            
             installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, product);
             downloadFileHandler.HandleDownloadFile(archiveIndexDictionary, cdnConfig, product);
 
             var patchLoader = new PatchLoader(cdn, cdnConfig);
-            patchLoader.HandlePatches(buildConfig);
+            patchLoader.HandlePatches(buildConfig, product);
 
             // Actually start the download of any deferred requests
             cdn.DownloadQueuedRequests();

@@ -38,7 +38,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(1600);
+            var expected = ByteSize.FromMegaBytes(200);
 
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
             Assert.Less(wastedBandwidth.Bytes, expected.Bytes);
