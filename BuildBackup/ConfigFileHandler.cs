@@ -87,8 +87,13 @@ namespace BuildBackup
                 throw new Exception("Invalid CDNconfig");
             }
             
-            Console.Write($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            timer.Stop();
+            if (timer.Elapsed.TotalMilliseconds > 10)
+            {
+                Console.Write($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.".PadRight(Config.PadRight));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            }
+            
             return cdnConfig;
         }
 

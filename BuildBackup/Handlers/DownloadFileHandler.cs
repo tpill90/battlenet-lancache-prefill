@@ -40,7 +40,7 @@ namespace BuildBackup.Handlers
                 {
                     throw new Exception("Error while parsing download file. Did BLTE header size change?");
                 }
-                byte version = bin.ReadBytes(1)[0];
+                byte version = bin.ReadByte();
                 byte hash_size_ekey = bin.ReadByte();
                 byte has_checksum_in_entry = bin.ReadByte();
                 _downloadFile.numEntries = bin.ReadUInt32(true);
@@ -79,16 +79,15 @@ namespace BuildBackup.Handlers
                     tag.Name = bin.ReadCString();
                     tag.Type = bin.ReadInt16BE();
 
-                    byte[] bits = bin.ReadBytes(numMaskBytes);
+                    tag.Mask = bin.ReadBytes(numMaskBytes);
 
                     for (int j = 0; j < numMaskBytes; j++)
                     {
-                        bits[j] = (byte)((bits[j] * 0x0202020202 & 0x010884422010) % 1023);
+                        var bit = tag.Mask[j];
+                        var result = (bit * 0x0202020202 & 0x010884422010) % 1023;
+                        tag.Mask[j] = (byte)result;
                     }
                        
-
-                    tag.Bits = new BitArray(bits);
-
                     _downloadFile.tags[i] = tag;
                 }
             }
@@ -100,8 +99,6 @@ namespace BuildBackup.Handlers
         //TODO document method
         public void HandleDownloadFile(Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
-            Debug.Assert(_downloadFile != null);
-
             Console.Write("Handling download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
@@ -125,23 +122,15 @@ namespace BuildBackup.Handlers
                                                           e.Name.Contains("noigr")).ToList();
             }
 
-            //TODO document how this works
-            var groupedTags = tagsToUse.GroupBy(e => e.Type).ToList();
-            var computedMask = new BitArray(_downloadFile.entries.Length);
-            //TODO this takes about 200ms on WoW
-            for (int i = 0; i < _downloadFile.entries.Length; i++)
-            {
-                var result = groupedTags.All(e => e.Any(e2 => e2.Bits[i]));
-                computedMask[i] = result;
-            }
+            var computedMask = BuildDownloadMask(tagsToUse);
 
             for (var i = 0; i < _downloadFile.entries.Length; i++)
             {
                 DownloadEntry current = _downloadFile.entries[i];
 
                 //Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
-                //TODO I don't think this filtering is working correctly for all products
-                if (!computedMask[i] == true)
+                //TODO document how this works
+                if ((computedMask.Mask[i/8]  & (1 << (i % 8))) == 0)
                 {
                     continue;
                 }
@@ -168,6 +157,44 @@ namespace BuildBackup.Handlers
             }
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+        }
+
+        //TODO document how this works
+        private static DownloadTag BuildDownloadMask(List<DownloadTag> tagsToUse)
+        {
+            // Need to first pre-process groups of similar tags.  Must be combined using logical OR to determine all files that might be installed.
+            // Games like Call of Duty use these tags to determine which features to install (Campaign, Multiplayer, Zombies, etc.)
+            var groupedTags = tagsToUse.GroupBy(e => e.Type).Where(e => e.Count() > 1).ToList();
+            foreach (var group in groupedTags)
+            {
+                var groupedList = group.ToList();
+                var combinedMask = groupedList.First();
+
+                for (int tagIndex = 1; tagIndex < groupedList.Count(); tagIndex++)
+                {
+                    var current = groupedList[tagIndex];
+                    for (int i = 0; i < combinedMask.Mask.Length; i++)
+                    {
+                        combinedMask.Mask[i] |= current.Mask[i];
+                    }
+
+                    tagsToUse.Remove(current);
+                }
+            }
+
+            // Compute the final mask, which will be used to determine which files to download
+            var computedMask = tagsToUse.First();
+            tagsToUse.RemoveAt(0);
+            
+            foreach (var tag in tagsToUse)
+            {
+                for (int i = 0; i < computedMask.Mask.Length; i++)
+                {
+                    computedMask.Mask[i] &= tag.Mask[i];
+                }
+            }
+
+            return computedMask;
         }
     }
 }

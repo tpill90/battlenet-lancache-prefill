@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace BuildBackup.Structs
 {
+    //TODO document how this works
     public sealed class DownloadFile
     {
         public byte[] unk;
@@ -12,6 +13,7 @@ namespace BuildBackup.Structs
         public DownloadTag[] tags;
     }
 
+    //TODO document how this works
     public struct DownloadEntry
     {
         public MD5Hash hash;
@@ -24,11 +26,12 @@ namespace BuildBackup.Structs
         }
     }
 
+    //TODO document how this works
     public sealed class DownloadTag
     {
         public string Name;
         public short Type;
-        public BitArray Bits;
+        public byte[] Mask;
 
         public override string ToString()
         {

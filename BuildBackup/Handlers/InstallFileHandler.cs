@@ -23,7 +23,6 @@ namespace BuildBackup.Handlers
         //TODO comment
         public void HandleInstallFile(BuildConfigFile buildConfig, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, TactProduct product)
         {
-            Console.Write("Parsing install file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             var installKey = buildConfig.install[1].ToString();
@@ -43,7 +42,11 @@ namespace BuildBackup.Handlers
 
             if (!filtered.Any())
             {
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+                if (timer.Elapsed.TotalMilliseconds > 10)
+                {
+                    Console.Write("Parsed install file...".PadRight(Config.PadRight));
+                    Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+                }
                 return;
             }
 
