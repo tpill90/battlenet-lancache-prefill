@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime;
 using BuildBackup.DebugUtil;
+using ByteSizeLib;
 using Konsole;
 
 namespace BuildBackup
@@ -11,14 +13,20 @@ namespace BuildBackup
     //TODO Repo - Squash old commits + generally cleanup repo history
     //TODO Uncached performance - Improve uncached performance of all applications
     //TODO Performance - Improve overall performance of Overwatch, Wow
+    //TODO Performance - Improve overall performance of parsing archives
     public class Program
     {
         private static TactProduct[] ProductsToProcess = new[]
         {
             //TODO improve performance of these products
+            //TactProducts.CodBlackOpsColdWar,
+            //TactProducts.CodWarzone,
+            //TactProducts.CodVanguard,
             //TactProducts.Diablo3,
+            //TactProducts.Hearthstone,
             //TactProducts.HeroesOfTheStorm,
             //TactProducts.Overwatch,
+            //TactProducts.Starcraft1,
             //TactProducts.Starcraft2,
             TactProducts.WorldOfWarcraft,
             //TactProducts.WowClassic
@@ -26,14 +34,16 @@ namespace BuildBackup
 
         //TODO extract to config file
         public static bool UseCdnDebugMode = true;
-        public static bool WriteOutputFiles = false;
         public static bool ShowDebugStats = false;
+
+        public static bool WriteOutputFiles = false;
 
         public static void Main()
         {
             foreach (var product in ProductsToProcess)
             {
                 //ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
+
                 BenchmarkUtil.Benchmark(product);
             }
             Console.WriteLine("Pre-load Complete!\n");

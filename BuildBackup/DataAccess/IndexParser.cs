@@ -56,6 +56,7 @@ namespace BuildBackup.DataAccess
                 {
                     for (var bi = 0; bi < recordsPerBlock; bi++)
                     {
+                        //TODO get rid of this
                         var headerHash = BitConverter.ToString(bin.ReadBytes(footer.keySizeInBytes)).Replace("-", "");
                         var entry = new IndexEntry();
 
