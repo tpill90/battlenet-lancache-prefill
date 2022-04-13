@@ -83,10 +83,29 @@ namespace BuildBackup
             QueueRequest(rootPath, hash.ToString().ToLower(), startBytes, endBytes, writeToDevNull);
         }
 
+        //TODO better name + comment
+        private Dictionary<string, string> _queuedRequestLookupTable = new Dictionary<string, string>();
+
         //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
         {
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            string uri;
+            if (rootPath == RootFolder.data)
+            {
+                if (_queuedRequestLookupTable.ContainsKey(hashId))
+                {
+                    uri = _queuedRequestLookupTable[hashId];
+                }
+                else
+                {
+                    uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
+                    _queuedRequestLookupTable.Add(hashId, uri);
+                }
+            }
+            else
+            {
+                uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
+            }
 
             if (startBytes != null && endBytes != null)
             {
@@ -132,7 +151,7 @@ namespace BuildBackup
 
 			//TODO log time that coalescing takes.  Figure out how many requests there are before and after.
 			//TODO need to calculate the actual file size, for full file downloads.
-            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true).ToList();
+            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true);
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
@@ -165,15 +184,6 @@ namespace BuildBackup
         //TODO comment
         private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
-            if (startBytes != null && endBytes == null)
-            {
-                throw new ArgumentException("Invalid parameters : endBytes is null when startBytes is not");
-            }
-            if (startBytes == null && endBytes != null)
-            {
-                throw new ArgumentException("Invalid parameters : startBytes is null when endBytes is not");
-            }
-
             // Record the requests we're making, so we can use it for debugging
             if (startBytes != null && endBytes != null)
             {
@@ -192,7 +202,7 @@ namespace BuildBackup
                     DownloadWholeFile = true
                 });
             }
-
+            
             // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
             if (DebugMode && writeToDevNull)
             {

@@ -41,8 +41,8 @@ namespace BuildBackup.Handlers
                     throw new Exception("Error while parsing download file. Did BLTE header size change?");
                 }
                 byte version = bin.ReadBytes(1)[0];
-                byte hash_size_ekey = bin.ReadBytes(1)[0];
-                byte has_checksum_in_entry = bin.ReadBytes(1)[0];
+                byte hash_size_ekey = bin.ReadByte();
+                byte has_checksum_in_entry = bin.ReadByte();
                 _downloadFile.numEntries = bin.ReadUInt32(true);
                 _downloadFile.numTags = bin.ReadUInt16(true);
 
@@ -53,7 +53,7 @@ namespace BuildBackup.Handlers
                 }
                 if (version >= 2)
                 {
-                    byte number_of_flag_bytes = bin.ReadBytes(1)[0];
+                    byte number_of_flag_bytes = bin.ReadByte();
                     entryExtra += number_of_flag_bytes;
                     if (version >= 3)
                     {
@@ -66,7 +66,7 @@ namespace BuildBackup.Handlers
                 for (int i = 0; i < _downloadFile.numEntries; i++)
                 {
                     _downloadFile.entries[i].hash = bin.Read<MD5Hash>();
-                    bin.ReadBytes(entryExtra);
+                    bin.BaseStream.Position += entryExtra;
                 }
 
                 // Reading the tags
@@ -82,7 +82,10 @@ namespace BuildBackup.Handlers
                     byte[] bits = bin.ReadBytes(numMaskBytes);
 
                     for (int j = 0; j < numMaskBytes; j++)
+                    {
                         bits[j] = (byte)((bits[j] * 0x0202020202 & 0x010884422010) % 1023);
+                    }
+                       
 
                     tag.Bits = new BitArray(bits);
 
@@ -99,7 +102,7 @@ namespace BuildBackup.Handlers
         {
             Debug.Assert(_downloadFile != null);
 
-            Console.Write("Parsing download file list...".PadRight(Config.PadRight));
+            Console.Write("Handling download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
 
             Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfigFile.fileIndex, _cdn, RootFolder.data);
@@ -125,6 +128,7 @@ namespace BuildBackup.Handlers
             //TODO document how this works
             var groupedTags = tagsToUse.GroupBy(e => e.Type).ToList();
             var computedMask = new BitArray(_downloadFile.entries.Length);
+            //TODO this takes about 200ms on WoW
             for (int i = 0; i < _downloadFile.entries.Length; i++)
             {
                 var result = groupedTags.All(e => e.Any(e2 => e2.Bits[i]));
@@ -135,7 +139,7 @@ namespace BuildBackup.Handlers
             {
                 DownloadEntry current = _downloadFile.entries[i];
 
-                // Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
+                //Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 //TODO I don't think this filtering is working correctly for all products
                 if (!computedMask[i] == true)
                 {
@@ -159,6 +163,7 @@ namespace BuildBackup.Handlers
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);
+                //TODO this takes about 500ms on WoW
                 _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
             }
 

@@ -107,7 +107,6 @@ namespace BuildBackup.DataAccess
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
             var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
-            //var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(cdnConfig.totalArchivedFiles, MD5HashComparer.Instance);
 
             for (int i = 0; i < cdnConfig.archives.Length; i++)
             {
