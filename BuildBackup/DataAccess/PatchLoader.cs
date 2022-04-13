@@ -10,7 +10,7 @@ namespace BuildBackup.DataAccess
 {
     public class PatchLoader
     {
-        private CDN _cdn;
+        private readonly CDN _cdn;
         private readonly CDNConfigFile _cdnConfig;
 
         public PatchLoader(CDN cdn, CDNConfigFile cdnConfig)
@@ -19,46 +19,51 @@ namespace BuildBackup.DataAccess
             _cdnConfig = cdnConfig;
         }
 
-        public void HandlePatches(BuildConfigFile buildConfig)
+        public void HandlePatches(BuildConfigFile buildConfig, TactProduct targetProduct)
         {
             var timer = Stopwatch.StartNew();
 
-            PatchFile patch = DownloadPatchConfig(buildConfig);
-            var patchFileIndexList = IndexParser.ParseIndex(_cdnConfig.patchFileIndex, _cdn, RootFolder.patch);
+            // For whatever reason, CodVanguard + Warzone do not make this request.
+            if (!string.IsNullOrEmpty(buildConfig.patchConfig) 
+                && targetProduct != TactProducts.CodVanguard && targetProduct != TactProducts.CodWarzone
+                && targetProduct != TactProducts.Hearthstone)
+            {
+                _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig);
+            }
 
+            if (!string.IsNullOrEmpty(buildConfig.patch))
+            {
+                GetPatchFile(buildConfig.patch);
+            }
+
+            // Unused by Hearthstone
+            if (targetProduct != TactProducts.Hearthstone)
+            {
+                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex, isIndex: true, writeToDevNull: true);
+            }
+            
             if (buildConfig.patchIndex != null)
             {
                 _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095, writeToDevNull: true);
             }
 
-            if (_cdnConfig.patchArchives != null)
+            // Unused by Hearthstone
+            if (_cdnConfig.patchArchives != null && targetProduct != TactProducts.Hearthstone)
             {
                 foreach (var patchIndex in _cdnConfig.patchArchives)
                 {
-                    _cdn.GetIndex(RootFolder.patch, patchIndex);
+                    _cdn.QueueRequest(RootFolder.patch, patchIndex, isIndex: true, writeToDevNull: true);
                 }
             }
 
-            Console.Write("Handled patches...".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            timer.Stop();
+            if (timer.Elapsed.TotalMilliseconds > 10)
+            {
+                Console.Write("Handled patches...".PadRight(Config.PadRight));
+                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            }
         }
 
-        //TODO comment
-        public PatchFile DownloadPatchConfig(BuildConfigFile buildConfig)
-        {
-            if (!string.IsNullOrEmpty(buildConfig.patchConfig))
-            {
-                _cdn.Get(RootFolder.config, buildConfig.patchConfig);
-            }
-
-            if (!string.IsNullOrEmpty(buildConfig.patch))
-            {
-                return GetPatchFile(buildConfig.patch);
-            }
-
-            return new PatchFile();
-        }
-        
         private PatchFile GetPatchFile(string hash)
         {
             var patchFile = new PatchFile();

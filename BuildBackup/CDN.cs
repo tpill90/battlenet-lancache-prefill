@@ -14,6 +14,7 @@ using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
 using ByteSizeLib;
 using Konsole;
+using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -87,7 +88,7 @@ namespace BuildBackup
         private Dictionary<string, string> _queuedRequestLookupTable = new Dictionary<string, string>();
 
         //TODO finish making everything use this
-        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
+        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false, bool isIndex = false)
         {
             string uri;
             if (rootPath == RootFolder.data)
@@ -105,6 +106,11 @@ namespace BuildBackup
             else
             {
                 uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
+            }
+
+            if (isIndex)
+            {
+                uri += ".index";
             }
 
             if (startBytes != null && endBytes != null)
@@ -157,7 +163,8 @@ namespace BuildBackup
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
             int count = 0;
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
-            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 20 }, entry =>
+            //TODO There is an issue here where exceptions get thrown for Warzone, Vanguard, BOCW, and Starcraft 2.  Probably related to a threading issue..
+            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 30 }, entry =>
             {
                 if (entry.DownloadWholeFile)
                 {
@@ -237,8 +244,18 @@ namespace BuildBackup
                 {
                     if(writeToDevNull)
                     {
-                        // Dump the received data, so we don't have to waste time writing it to disk.
-                        responseStream.CopyToAsync(Stream.Null).Wait();
+                        try
+                        {
+                            // Dump the received data, so we don't have to waste time writing it to disk.
+                            responseStream.CopyToAsync(Stream.Null).Wait();
+                        }
+                        catch (Exception e)
+                        {
+                            //Console.WriteLine(e);
+                            Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
+                            //throw;
+                        }
+                        
                         return null;
                     }
                     else

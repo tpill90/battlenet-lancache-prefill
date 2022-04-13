@@ -10,7 +10,7 @@ namespace BuildBackup.Handlers
 {
     public static class BuildConfigHandler
     {
-        public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn)
+        public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
         {
             var timer = Stopwatch.StartNew();
 
@@ -140,8 +140,13 @@ namespace BuildBackup.Handlers
                     case "build-release-name":
                         buildConfig.buildReleaseName = cols[1];
                         break;
+                    case "patch-index-size":
+                    case "vfs-1":
+                    case "vfs-1-size":
+                        // Purposefully doing nothing with these.  Don't care about these values.
+                        break;
                     default:
-                        Console.WriteLine("!!!!!!!! Unknown buildconfig variable '" + cols[0] + "'");
+                        Console.WriteLine($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
                         break;
                 }
             }
@@ -152,14 +157,20 @@ namespace BuildBackup.Handlers
                 buildConfig.buildName = "UNKNOWN";
             }
 
-            // Making a request to load "size" + "vfsRoot" files.  Not used by anything in our application, however it is called for some reason
-            // by the Actual Battle.Net client
-            cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+            // Diablo 3 doesn't make this request
+            if (targetProduct != TactProducts.Diablo3)
+            {
+                // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
+                cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+            }
+            
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
             cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1], writeToDevNull: true);
             
             if (buildConfig.vfsRoot != null)
             {
+                // Making a request to load "vfsRoot" files.  Not used by anything in our application,
+                // however it is called for some reason by the Actual Battle.Net client
                 cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
             }
 

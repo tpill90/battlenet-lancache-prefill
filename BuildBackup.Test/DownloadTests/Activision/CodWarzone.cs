@@ -23,7 +23,7 @@ namespace BuildBackup.Test.DownloadTests.Activision
         public void Misses()
         {
             //TODO improve this
-            Assert.LessOrEqual(_results.MissCount, 10);
+            Assert.LessOrEqual(_results.MissCount, 7);
         }
 
         [Test]
@@ -37,11 +37,8 @@ namespace BuildBackup.Test.DownloadTests.Activision
         [Test]
         public void WastedBandwidth()
         {
-            //TODO improve this
-            var expected = ByteSize.FromMegaBytes(200);
-
             var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
-            Assert.Less(wastedBandwidth.Bytes, expected.Bytes);
+            Assert.AreEqual(0, wastedBandwidth.Bytes);
         }
     }
 }

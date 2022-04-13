@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = ProductHandler.ProcessProduct(TactProducts.Diablo3, new MockConsole(120, 50), true, writeOutputFiles: false, showDebugStats: true);
+            _results = ProductHandler.ProcessProduct(TactProducts.Diablo3, new MockConsole(120, 50), useDebugMode: true, writeOutputFiles: false, showDebugStats: true);
         }
 
         [Test]
