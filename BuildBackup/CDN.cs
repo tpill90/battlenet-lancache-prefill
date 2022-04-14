@@ -79,16 +79,16 @@ namespace BuildBackup
             }
         }
 
-        public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false)
+        public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null)
         {
-            QueueRequest(rootPath, hash.ToString().ToLower(), startBytes, endBytes, writeToDevNull);
+            QueueRequest(rootPath, hash.ToString().ToLower(), startBytes, endBytes, true);
         }
 
         //TODO better name + comment
         private Dictionary<string, string> _queuedRequestLookupTable = new Dictionary<string, string>();
 
         //TODO finish making everything use this
-        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = false, bool isIndex = false)
+        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = true, bool isIndex = false)
         {
             string uri;
             if (rootPath == RootFolder.data)

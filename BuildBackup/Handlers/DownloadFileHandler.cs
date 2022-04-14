@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -143,7 +142,7 @@ namespace BuildBackup.Handlers
                         var file = fileIndexList[current.hash.ToString()];
 
                         var endBytes2 = file.offset + file.size - 1;
-                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes2, writeToDevNull: true);
+                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes2);
                     }
                     continue;
                 }
@@ -152,8 +151,7 @@ namespace BuildBackup.Handlers
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);
-                //TODO this takes about 500ms on WoW
-                _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange, writeToDevNull: true);
+                _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange);
             }
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));

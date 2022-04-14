@@ -161,17 +161,17 @@ namespace BuildBackup.Handlers
             if (targetProduct != TactProducts.Diablo3)
             {
                 // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
-                cdn.QueueRequest(RootFolder.data, buildConfig.size[1], writeToDevNull: true);
+                cdn.QueueRequest(RootFolder.data, buildConfig.size[1]);
             }
             
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
-            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1], writeToDevNull: true);
+            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1]);
             
             if (buildConfig.vfsRoot != null)
             {
                 // Making a request to load "vfsRoot" files.  Not used by anything in our application,
                 // however it is called for some reason by the Actual Battle.Net client
-                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1, true);
+                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1);
             }
 
             timer.Stop();

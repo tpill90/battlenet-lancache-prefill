@@ -39,12 +39,12 @@ namespace BuildBackup.DataAccess
             // Unused by Hearthstone
             if (targetProduct != TactProducts.Hearthstone)
             {
-                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex, isIndex: true, writeToDevNull: true);
+                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex, isIndex: true);
             }
             
             if (buildConfig.patchIndex != null)
             {
-                _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095, writeToDevNull: true);
+                _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095);
             }
 
             // Unused by Hearthstone
@@ -52,7 +52,7 @@ namespace BuildBackup.DataAccess
             {
                 foreach (var patchIndex in _cdnConfig.patchArchives)
                 {
-                    _cdn.QueueRequest(RootFolder.patch, patchIndex, isIndex: true, writeToDevNull: true);
+                    _cdn.QueueRequest(RootFolder.patch, patchIndex, isIndex: true);
                 }
             }
 

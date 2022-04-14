@@ -107,7 +107,7 @@ namespace BuildBackup.DataAccess
         {
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
-            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashComparer.Instance);
+            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashEqualityComparer.Instance);
 
             for (int i = 0; i < cdnConfig.archives.Length; i++)
             {
@@ -125,62 +125,12 @@ namespace BuildBackup.DataAccess
         {
             int CHUNK_SIZE = 4096;
 
-            byte[] indexContent = cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId);
+            byte[] indexContent = cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId.ToString());
 
             using (var stream = new MemoryStream(indexContent))
             using (BinaryReader br = new BinaryReader(stream))
             {
-                #region footer
-                stream.Seek(-20, SeekOrigin.End);
-
-                byte version = br.ReadByte();
-
-                if (version != 1)
-                    throw new InvalidDataException("ParseIndex -> version");
-
-                byte unk1 = br.ReadByte();
-
-                if (unk1 != 0)
-                    throw new InvalidDataException("ParseIndex -> unk1");
-
-                byte unk2 = br.ReadByte();
-
-                if (unk2 != 0)
-                    throw new InvalidDataException("ParseIndex -> unk2");
-
-                byte blockSizeKb = br.ReadByte();
-
-                if (blockSizeKb != 4)
-                    throw new InvalidDataException("ParseIndex -> blockSizeKb");
-
-                byte offsetBytes = br.ReadByte();
-
-                if (offsetBytes != 4)
-                    throw new InvalidDataException("ParseIndex -> offsetBytes");
-
-                byte sizeBytes = br.ReadByte();
-
-                if (sizeBytes != 4)
-                    throw new InvalidDataException("ParseIndex -> sizeBytes");
-
-                byte keySizeBytes = br.ReadByte();
-
-                if (keySizeBytes != 16)
-                    throw new InvalidDataException("ParseIndex -> keySizeBytes");
-
-                byte checksumSize = br.ReadByte();
-
-                if (checksumSize != 8)
-                    throw new InvalidDataException("ParseIndex -> checksumSize");
-
-                int numElements = br.ReadInt32();
-
-                if (numElements * (keySizeBytes + sizeBytes + offsetBytes) > stream.Length)
-                    throw new Exception("ParseIndex failed");
-
-                stream.Seek(0, SeekOrigin.Begin);
-
-                #endregion
+                var numElements = ValidateArchiveIndexFooter(stream, br);
 
                 for (int j = 0; j < numElements; j++)
                 {
@@ -193,7 +143,7 @@ namespace BuildBackup.DataAccess
                         offset = br.ReadUInt32(true),
                         IndexId = cdnConfig.archives[i].hashId
                     };
-
+                    //TODO play around with using an array / btree / BST to lookup keys instead of using a dictionary.  Adding is dramatically faster
                     indexDictionary.Add(key, entry);
 
                     // each chunk is 4096 bytes, and zero padding at the end
@@ -206,6 +156,60 @@ namespace BuildBackup.DataAccess
                     }
                 }
             }
+        }
+
+        //TODO comment
+        private static int ValidateArchiveIndexFooter(MemoryStream stream, BinaryReader br)
+        {
+            stream.Seek(-20, SeekOrigin.End);
+
+            byte version = br.ReadByte();
+
+            if (version != 1)
+                throw new InvalidDataException("ParseIndex -> version");
+
+            byte unk1 = br.ReadByte();
+
+            if (unk1 != 0)
+                throw new InvalidDataException("ParseIndex -> unk1");
+
+            byte unk2 = br.ReadByte();
+
+            if (unk2 != 0)
+                throw new InvalidDataException("ParseIndex -> unk2");
+
+            byte blockSizeKb = br.ReadByte();
+
+            if (blockSizeKb != 4)
+                throw new InvalidDataException("ParseIndex -> blockSizeKb");
+
+            byte offsetBytes = br.ReadByte();
+
+            if (offsetBytes != 4)
+                throw new InvalidDataException("ParseIndex -> offsetBytes");
+
+            byte sizeBytes = br.ReadByte();
+
+            if (sizeBytes != 4)
+                throw new InvalidDataException("ParseIndex -> sizeBytes");
+
+            byte keySizeBytes = br.ReadByte();
+
+            if (keySizeBytes != 16)
+                throw new InvalidDataException("ParseIndex -> keySizeBytes");
+
+            byte checksumSize = br.ReadByte();
+
+            if (checksumSize != 8)
+                throw new InvalidDataException("ParseIndex -> checksumSize");
+
+            int numElements = br.ReadInt32();
+
+            if (numElements * (keySizeBytes + sizeBytes + offsetBytes) > stream.Length)
+                throw new Exception("ParseIndex failed");
+
+            stream.Seek(0, SeekOrigin.Begin);
+            return numElements;
         }
     }
 }

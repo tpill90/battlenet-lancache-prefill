@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using BuildBackup.Structs;
 
@@ -19,7 +17,9 @@ namespace BuildBackup
     public struct Archive
     {
         public string hashId;
-        public byte[] mask;
+        public MD5Hash hashIdMd5;
+
+        public int fileCount;
 
         public override string ToString()
         {
@@ -34,12 +34,7 @@ namespace BuildBackup
         /// </summary>
         public Archive[] archives;
 
-        // TODO move this to be inside of the Archives[] property
-        /// <summary>
-        /// A list of the number of files inside of each archive.  
-        /// </summary>
-        public int[] archivesIndexSize;
-        public int totalArchivedFiles => archivesIndexSize.Sum();
+        public int totalArchivedFileCount => archives.Sum(e => e.fileCount);
 
         public string archiveGroup;
 
@@ -56,6 +51,7 @@ namespace BuildBackup
         public string patchFileIndexSize;
     }
 
+    //TODO comment + rename
     public struct IndexEntry
     {
         public short index;
@@ -63,6 +59,7 @@ namespace BuildBackup
         /// <summary>
         /// CdnHash of the archive index that holds this file.
         /// </summary>
+		//TODO consider removing to reduce the # of allocations
         public string IndexId;
 
         public uint offset;
@@ -87,35 +84,6 @@ namespace BuildBackup
         public byte checksumSize;
         public uint numElements;
         public byte[] footerChecksum;
-    }
-
-    public struct InstallFile
-    {
-        public byte hashSize;
-        public ushort numTags;
-        public uint numEntries;
-        public InstallTagEntry[] tags;
-        public InstallFileEntry[] entries;
-    }
-
-    public struct InstallTagEntry
-    {
-        public string name;
-        public ushort type;
-        public BitArray files;
-    }
-
-    public struct InstallFileEntry
-    {
-        public string name;
-        public MD5Hash contentHash;
-        public uint size;
-        public List<string> tags;
-
-        public override string ToString()
-        {
-            return $"{name} size: {size}";
-        }
     }
 
     public struct BLTEChunkInfo

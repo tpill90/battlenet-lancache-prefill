@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using Konsole;
 using Spectre.Console;
 using Colors = Shared.Colors;
@@ -11,7 +10,7 @@ namespace BuildBackup.DebugUtil
 {
     public static class BenchmarkUtil
     {
-        public static void Benchmark(TactProduct targetProduct, int warmupRuns = 2, int totalRuns = 5)
+        public static void Benchmark(TactProduct targetProduct, int warmupRuns = 4, int totalRuns = 10)
         {
             Console.WriteLine(Colors.Yellow("Starting benchmark..."));
 

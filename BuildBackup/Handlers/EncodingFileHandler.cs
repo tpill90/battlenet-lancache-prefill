@@ -113,8 +113,8 @@ namespace BuildBackup.DataAccess
 
                 var tableAstart = bin.BaseStream.Position;
 
-                //encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
-                encoding.aEntriesReversed = new Dictionary<MD5Hash, MD5Hash>(MD5HashComparer.Instance);
+                //encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashEqualityComparer.Instance);
+                encoding.aEntriesReversed = new Dictionary<MD5Hash, MD5Hash>(MD5HashEqualityComparer.Instance);
                 for (int i = 0; i < encoding.numEntriesA; i++)
                 {
                     ushort keysCount;
