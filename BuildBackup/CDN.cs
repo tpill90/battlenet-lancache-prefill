@@ -6,15 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
 using BuildBackup.Structs;
+using BuildBackup.Utils;
 using ByteSizeLib;
 using Konsole;
-using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -36,6 +35,7 @@ namespace BuildBackup
         private readonly List<Request> _queuedRequests = new List<Request>();
 
         private CdnsFile _cdnsFile;
+        private CachedStringLookup _cachedStringLookup;
 
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
@@ -67,6 +67,7 @@ namespace BuildBackup
         {
             // Loading CDNs
             var cdnFileHandler = new CdnFileHandler(this);
+            //TODO assign _cdnsFile.entries[0].path to a property instead of looking it up every time.
             _cdnsFile = cdnFileHandler.ParseCdnsFile(currentProduct);
 
             // Adds any missing cdn hosts
@@ -77,18 +78,55 @@ namespace BuildBackup
                     cdnList.Add(host);
                 }
             }
+
+            _cachedStringLookup = new CachedStringLookup(_cdnsFile);
         }
 
-        public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null)
+        public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
-            QueueRequest(rootPath, hash.ToString().ToLower(), startBytes, endBytes, true);
+            string uri;
+            if (rootPath == RootFolder.data)
+            {
+                uri = _cachedStringLookup.TryGetPrecomputedValue(hash, rootPath);
+            }
+            else
+            {
+                var hashString = hash.ToString().ToLower();
+                uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
+            }
+
+            if (isIndex)
+            {
+                uri += ".index";
+            }
+
+            if (startBytes != null && endBytes != null)
+            {
+                _queuedRequests.Add(new Request
+                {
+                    Uri = uri,
+                    LowerByteRange = startBytes.Value,
+                    UpperByteRange = endBytes.Value,
+                    WriteToDevNull = true
+                });
+            }
+            else
+            {
+                _queuedRequests.Add(new Request
+                {
+                    Uri = uri,
+                    DownloadWholeFile = true,
+                    WriteToDevNull = true
+                });
+            }
         }
 
         //TODO better name + comment
         private Dictionary<string, string> _queuedRequestLookupTable = new Dictionary<string, string>();
 
         //TODO finish making everything use this
-        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool writeToDevNull = true, bool isIndex = false)
+        //TODO Switch hashId to MD5Hash
+        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
             string uri;
             if (rootPath == RootFolder.data)
@@ -120,7 +158,7 @@ namespace BuildBackup
                     Uri = uri,
                     LowerByteRange = startBytes.Value,
                     UpperByteRange = endBytes.Value,
-                    WriteToDevNull = writeToDevNull
+                    WriteToDevNull = true
                 });
             }
             else
@@ -129,11 +167,12 @@ namespace BuildBackup
                 {
                     Uri = uri,
                     DownloadWholeFile = true,
-                    WriteToDevNull = writeToDevNull
+                    WriteToDevNull = true
                 });
             }
         }
 
+        //TODO rename to GetWholeFile
         public byte[] Get(RootFolder rootPath, string hashId, bool writeToDevNull = false)
         {
             //TODO remove this ToLower() call
@@ -142,6 +181,7 @@ namespace BuildBackup
             return Get(uri, writeToDevNull);
         }
 
+        //TODO merge this with Get(), and add a flag as an option to get the index
         public byte[] GetIndex(RootFolder rootPath, string hashId)
         {
             //TODO indexes should have a size
@@ -216,68 +256,65 @@ namespace BuildBackup
                 return null;
             }
 
-            // Attempts to search for the file through each known cdn
-            foreach (var cdn in cdnList)
+            // TODO cache this in a dict
+            var uri = new Uri($"http://{cdnList[0]}/{requestPath}");
+
+            if (!writeToDevNull)
             {
-                var uri = new Uri($"http://{cdn}/{requestPath}");
-
-                if (!writeToDevNull)
+                string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                if (File.Exists(outputFilePath))
                 {
-                    string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
-                    if (File.Exists(outputFilePath))
-                    {
-                        return File.ReadAllBytes(outputFilePath);
-                    }
+                    return File.ReadAllBytes(outputFilePath);
                 }
-                
-                using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                if (startBytes != null && endBytes != null)
+            }
+            
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+            if (startBytes != null && endBytes != null)
+            {
+                requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
+            }
+
+            //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
+            using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
+            using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                if(writeToDevNull)
                 {
-                    requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
-                }
-
-                //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
-                using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
-                using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
-
-                if (response.IsSuccessStatusCode)
-                {
-                    if(writeToDevNull)
+                    try
                     {
-                        try
-                        {
-                            // Dump the received data, so we don't have to waste time writing it to disk.
-                            responseStream.CopyToAsync(Stream.Null).Wait();
-                        }
-                        catch (Exception e)
-                        {
-                            //Console.WriteLine(e);
-                            Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
-                            //throw;
-                        }
-                        
-                        return null;
+                        // Dump the received data, so we don't have to waste time writing it to disk.
+                        responseStream.CopyToAsync(Stream.Null).Wait();
                     }
-                    else
+                    catch (Exception e)
                     {
-                        using var memoryStream = new MemoryStream();
-                        responseStream.CopyToAsync(memoryStream).Wait();
-
-                        var byteArray = memoryStream.ToArray();
-                        
-                        // Cache to disk
-                        string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
-                        FileInfo file = new FileInfo(outputFilePath);
-                        file.Directory.Create();
-                        File.WriteAllBytes(file.FullName, byteArray);
-                        
-                        return byteArray;
+                        //Console.WriteLine(e);
+                        Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
+                        //throw;
                     }
+                    
+                    return null;
                 }
                 else
                 {
-                    throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdn}/{requestPath.ToLower()}");
+                    using var memoryStream = new MemoryStream();
+                    responseStream.CopyToAsync(memoryStream).Wait();
+
+                    var byteArray = memoryStream.ToArray();
+                    
+                    // Cache to disk
+                    string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                    FileInfo file = new FileInfo(outputFilePath);
+                    file.Directory.Create();
+                    File.WriteAllBytes(file.FullName, byteArray);
+
+                    return byteArray;
                 }
+            }
+            else
+            {
+                throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdnList[0]}/{requestPath.ToLower()}");
             }
 
             Console.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!");
