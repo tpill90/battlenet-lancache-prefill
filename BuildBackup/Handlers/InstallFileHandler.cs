@@ -21,7 +21,8 @@ namespace BuildBackup.Handlers
         }
 
         //TODO comment
-        public void HandleInstallFile(BuildConfigFile buildConfig, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, TactProduct product)
+        public void HandleInstallFile(BuildConfigFile buildConfig, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+            TactProduct product)
         {
             var timer = Stopwatch.StartNew();
 
@@ -69,11 +70,13 @@ namespace BuildBackup.Handlers
                     continue;
                 }
 
-                IndexEntry archiveIndex = archiveIndexDictionary[upperHash];
+                IndexEntry e = archiveIndexDictionary[upperHash];
 
                 // Need to subtract 1, since the byte range is "inclusive"
-                var upperByteRange = ((int)archiveIndex.offset + (int)archiveIndex.size - 1);
-                _cdn.QueueRequest(RootFolder.data, archiveIndex.IndexId, (int)archiveIndex.offset, upperByteRange);
+                var upperByteRange = ((int)e.offset + (int)e.size - 1);
+                string archiveIndexKey = cdnConfigFile.archives[e.index].hashId;
+
+                _cdn.QueueRequest(RootFolder.data, archiveIndexKey, (int)e.offset, upperByteRange);
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }

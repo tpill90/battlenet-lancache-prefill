@@ -54,20 +54,17 @@ namespace BuildBackup
     //TODO comment + rename
     public struct IndexEntry
     {
-        public short index;
-
         /// <summary>
-        /// CdnHash of the archive index that holds this file.
+        /// Use this to lookup the CdnHash of the archive index that holds this file.
         /// </summary>
-		//TODO consider removing to reduce the # of allocations
-        public string IndexId;
+        public short index;
 
         public uint offset;
         public uint size;
 
         public override string ToString()
         {
-            return $"{IndexId} Offset: {offset} size: {size}";
+            return $"{index} Offset: {offset} size: {size}";
         }
     }
 

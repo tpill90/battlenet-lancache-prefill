@@ -140,8 +140,7 @@ namespace BuildBackup.DataAccess
                     {
                         index = (short)i,
                         size = br.ReadUInt32(true),
-                        offset = br.ReadUInt32(true),
-                        IndexId = cdnConfig.archives[i].hashId
+                        offset = br.ReadUInt32(true)
                     };
                     //TODO play around with using an array / btree / BST to lookup keys instead of using a dictionary.  Adding is dramatically faster
                     indexDictionary.Add(key, entry);

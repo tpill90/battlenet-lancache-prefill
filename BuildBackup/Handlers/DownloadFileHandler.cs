@@ -151,7 +151,8 @@ namespace BuildBackup.Handlers
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);
-                _cdn.QueueRequest(RootFolder.data, e.IndexId, startBytes, upperByteRange);
+                string archiveIndexKey = cdnConfigFile.archives[e.index].hashId;
+                _cdn.QueueRequest(RootFolder.data, archiveIndexKey, startBytes, upperByteRange);
             }
 
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));

@@ -49,7 +49,7 @@ namespace BuildBackup
             var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
 
             // Start processing to determine which files need to be downloaded
-            installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, product);
+            installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, cdnConfig, product);
             downloadFileHandler.HandleDownloadFile(archiveIndexDictionary, cdnConfig, product);
 
             var patchLoader = new PatchLoader(cdn, cdnConfig);
