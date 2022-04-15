@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using BuildBackup.Structs;
 using BuildBackup.Utils;
 using Shared;
@@ -12,7 +13,7 @@ namespace BuildBackup.DataAccess
     {
         public static Dictionary<string, IndexEntry> ParseIndex(string hashId, CDN cdn, RootFolder folder)
         {
-            byte[] indexContent = cdn.GetIndex(folder, hashId);
+            byte[] indexContent = cdn.GetIndex(folder, hashId).Result;
 
             var returnDict = new Dictionary<string, IndexEntry>();
 
@@ -102,59 +103,87 @@ namespace BuildBackup.DataAccess
             return returnDict;
         }
 
-        //TODO get URI from settings
-        public static Dictionary<MD5Hash, IndexEntry> BuildArchiveIndexes(CDNConfigFile cdnConfig, CDN cdn)
+        //TODO break this out into ArchiveIndexHandler
+        public static List<Dictionary<MD5Hash, IndexEntry>> BuildArchiveIndexes(CDNConfigFile cdnConfig, CDN cdn, TactProduct targetProduct)
         {
             Console.Write("Building archive indexes...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
-            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashEqualityComparer.Instance);
 
-            for (int i = 0; i < cdnConfig.archives.Length; i++)
+            var tasks = new List<Task<Dictionary<MD5Hash, IndexEntry>>>();
+
+            // This default performs well for most TactProducts.
+            int maxTasks = 3;
+            // Overwatch's indexes parse significantly faster when increasing the concurrency.
+            if (targetProduct == TactProducts.Overwatch)
             {
-                ProcessArchive(cdnConfig, cdn, i, indexDictionary);
+                maxTasks = 6;
             }
 
+            int sliceAmount = cdnConfig.archives.Length / maxTasks;
+
+            for (int i = 0; i <= maxTasks; i++)
+            {
+                var lowerLimit = (i * sliceAmount);
+                int upperLimit = Math.Min(((i + 1) * sliceAmount) - 1, cdnConfig.archives.Length - 1);
+
+                tasks.Add(ProcessArchive(cdnConfig, cdn, lowerLimit, upperLimit));
+            }
+
+            Task.WhenAll(tasks).Wait();
+            var indexDictList = new List<Dictionary<MD5Hash, IndexEntry>>();
+            foreach (var task in tasks)
+            {
+                indexDictList.Add(task.GetAwaiter().GetResult());
+            }
             timer.Stop();
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-            
-            return indexDictionary;
+
+            return indexDictList;
         }
 
-
-        private static void ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, long i, Dictionary<MD5Hash, IndexEntry> indexDictionary)
+        private static async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchive(CDNConfigFile cdnConfig, CDN cdn, int start, int finish)
         {
             int CHUNK_SIZE = 4096;
 
-            byte[] indexContent = cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId.ToString());
+			//TODO does pre allocating help?
+            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(1000, MD5HashEqualityComparer.Instance);
 
-            using (var stream = new MemoryStream(indexContent))
-            using (BinaryReader br = new BinaryReader(stream))
+            for (int i = start; i <= finish; i++)
             {
-                var numElements = ValidateArchiveIndexFooter(stream, br);
+                byte[] indexContent = await cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId);
 
-                for (int j = 0; j < numElements; j++)
+                using (var stream = new MemoryStream(indexContent))
+                using (BinaryReader br = new BinaryReader(stream))
                 {
-                    MD5Hash key = br.Read<MD5Hash>();
+                    var numElements = ValidateArchiveIndexFooter(stream, br);
 
-                    var entry = new IndexEntry
+                    for (int j = 0; j < numElements; j++)
                     {
-                        index = (short)i,
-                        size = br.ReadUInt32(true),
-                        offset = br.ReadUInt32(true)
-                    };
-                    //TODO play around with using an array / btree / BST to lookup keys instead of using a dictionary.  Adding is dramatically faster
-                    indexDictionary.Add(key, entry);
+                        MD5Hash key = br.Read<MD5Hash>();
 
-                    // each chunk is 4096 bytes, and zero padding at the end
-                    long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);
+                        var entry = new IndexEntry
+                        {
+                            //key = br.Read<MD5Hash>(),
+                            index = (short)i,
+                            size = br.ReadUInt32(true),
+                            offset = br.ReadUInt32(true)
+                        };
+                        indexDictionary.Add(key, entry);
 
-                    // skip padding
-                    if (remaining < 16 + 4 + 4)
-                    {
-                        stream.Position += remaining;
+                        // each chunk is 4096 bytes, and zero padding at the end
+                        long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);
+
+                        // skip padding
+                        if (remaining < 16 + 4 + 4)
+                        {
+                            stream.Position += remaining;
+                        }
                     }
                 }
             }
+
+
+            return indexDictionary;
         }
 
         //TODO comment
@@ -209,6 +238,51 @@ namespace BuildBackup.DataAccess
 
             stream.Seek(0, SeekOrigin.Begin);
             return numElements;
+        }
+
+        public static int ContainsKey(List<Dictionary<MD5Hash, IndexEntry>> indexDictionaries, MD5Hash lookupKey)
+        {
+            for (var index = 0; index < indexDictionaries.Count; index++)
+            {
+                var dict = indexDictionaries[index];
+                if (dict.ContainsKey(lookupKey))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        public static bool ContainsKeyBool(List<Dictionary<MD5Hash, IndexEntry>> indexDictionaries, MD5Hash lookupKey)
+        {
+            foreach (var dict in indexDictionaries)
+            {
+                if (dict.ContainsKey(lookupKey))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static IndexEntry TryGet(List<Dictionary<MD5Hash, IndexEntry>> indexDictionaries, MD5Hash lookupKey, int archiveIndex)
+        {
+            return indexDictionaries[archiveIndex][lookupKey];
+        }
+
+        public static IndexEntry? TryGet(List<Dictionary<MD5Hash, IndexEntry>> indexDictionaries, MD5Hash lookupKey)
+        {
+            foreach (var dict in indexDictionaries)
+            {
+                if (dict.TryGetValue(lookupKey, out IndexEntry returnValue))
+                {
+                    return returnValue;
+                }
+            }
+
+            return null;
         }
     }
 }

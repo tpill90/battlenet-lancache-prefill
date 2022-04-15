@@ -35,38 +35,4 @@ namespace BuildBackup.Utils
             return unchecked((int)hash);
         }
     }
-
-    //public class MD5HashComparer : IComparer<MD5Hash>
-    //{
-    //    public int Compare(MD5Hash x, MD5Hash y)
-    //    {
-    //        //int highComparison = Compare(x.highPart, y.highPart);
-    //        //if (highComparison != 0)
-    //        //{
-    //        //    return highComparison;
-    //        //}
-
-    //        return Compare(x.lowPart, y.lowPart);
-    //    }
-
-    //    private int Compare(ulong x, ulong y)
-    //    {
-    //        if (x < y)
-    //        {
-    //            return -1;
-    //        }
-
-    //        if (x > y)
-    //        {
-    //            return 1;
-    //        }
-
-    //        return 0;
-    //    }
-
-    //    public bool Equals(MD5Hash x, MD5Hash y)
-    //    {
-    //        return x.lowPart == y.lowPart && x.highPart == y.highPart;
-    //    }
-    //}
 }

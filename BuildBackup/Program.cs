@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime;
+using System.Linq;
 using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
-using ByteSizeLib;
+using BuildBackup.Utils;
 using Konsole;
+using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
@@ -37,17 +38,15 @@ namespace BuildBackup
 
         //TODO extract to config file
         public static bool UseCdnDebugMode = true;
-        public static bool ShowDebugStats = false;
+        public static bool ShowDebugStats = true;
 
         public static bool WriteOutputFiles = false;
 
         public static void Main()
         {
-            //BenchmarkMD5Hashes();
-
             foreach (var product in ProductsToProcess)
             {
-                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
+                //ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
 
                 BenchmarkUtil.Benchmark(product);
             }
@@ -60,7 +59,75 @@ namespace BuildBackup
             }
         }
 
-        private static void BenchmarkMD5Hashes()
+        //TODO measure this with benchmark.net
+        private static void Benchmark_MD5GetHashCode()
+        {
+            int numEntries = 4 * 1000 * 1000;
+
+            var random = new Random();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                MD5GetHashCodeRun(i * 100000, random);
+            }
+
+            MD5GetHashCodeRun(numEntries, random);
+        }
+
+        private static void MD5GetHashCodeRun(int numEntries, Random random)
+        {
+            var inputHashList = new List<MD5Hash>();
+            Stopwatch timer;
+
+            // Prepopulating
+            timer = Stopwatch.StartNew();
+            for (long i = 0; i < numEntries; i++)
+            {
+                inputHashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
+            }
+
+            timer.Stop();
+            // Filling dictionary
+            //var hashDict = new Dictionary<MD5Hash, long>(equalityComparer);
+            //timer = Stopwatch.StartNew();
+            //for (int i = 0; i < numEntries; i++)
+            //{
+            //    hashDict.Add(hashList[i], i);
+            //}
+            //Console.WriteLine($"Filled dict in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
+            // Calculating collisions
+            List<int> calculatedHashCodes = new List<int>();
+            foreach (var md5 in inputHashList)
+            {
+                calculatedHashCodes.Add(MD5HashEqualityComparer.Instance.GetHashCode(md5));
+            }
+
+            var grouped = calculatedHashCodes.GroupBy(e => e).Where(e => e.Count() > 1).ToList();
+            Console.WriteLine($"{Colors.Magenta(inputHashList.Count.ToString("N0"))} entries {Colors.Cyan(grouped.Count)} collisions");
+
+
+            //// Warmup
+            //timer = Stopwatch.StartNew();
+            //foreach (var hash in hashList)
+            //{
+            //    int asd = equalityComparer.GetHashCode(hash);
+            //}
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Console.WriteLine($"Warmup done in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+
+            //timer = Stopwatch.StartNew();
+            //foreach (var hash in hashList)
+            //{
+            //    int asd = equalityComparer.GetHashCode(hash);
+            //}
+
+            //Console.WriteLine($"Done in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+        }
+
+        //TODO measure this with benchmark.net
+        private static void BenchmarkMD5Hash_ToString()
         {
             int count = 10000000;
 

@@ -66,7 +66,7 @@ namespace BuildBackup.DebugUtil
             var parsedRequests = new List<Request>();
 
             // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
-            var filteredRequests = rawRequests.Where(e => e.Contains("GET") && e.Contains("[blizzard]")).ToList();
+            var filteredRequests = rawRequests.Where(e => e.Contains("GET") && e.Contains("[blizzard]") && !e.Contains("bnt004")).ToList();
             foreach (var rawRequest in filteredRequests)
             {
                 // Find all matches between double quotes.  This will be the only info that we care about in the request logs.

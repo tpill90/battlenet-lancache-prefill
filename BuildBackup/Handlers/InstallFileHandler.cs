@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +22,7 @@ namespace BuildBackup.Handlers
         }
 
         //TODO comment
-        public void HandleInstallFile(BuildConfigFile buildConfig, Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+        public void HandleInstallFile(BuildConfigFile buildConfig, List<Dictionary<MD5Hash, IndexEntry>> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
             TactProduct product)
         {
             var timer = Stopwatch.StartNew();
@@ -38,7 +39,9 @@ namespace BuildBackup.Handlers
             }
             else
             {
-                filtered = installFile.entries.Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows")).ToList();
+                filtered = installFile.entries
+                    .Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows"))
+                    .ToList();
             }
 
             if (!filtered.Any())
@@ -65,12 +68,13 @@ namespace BuildBackup.Handlers
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                 MD5Hash upperHash = encodingTable.ReversedEncodingDictionary[file.contentHash];
 
-                if (!archiveIndexDictionary.ContainsKey(upperHash))
+                int archiveIndex = IndexParser.ContainsKey(archiveIndexDictionary, upperHash);
+                if (archiveIndex == -1)
                 {
                     continue;
                 }
 
-                IndexEntry e = archiveIndexDictionary[upperHash];
+                IndexEntry e = IndexParser.TryGet(archiveIndexDictionary, upperHash, archiveIndex);
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);

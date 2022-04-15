@@ -90,13 +90,13 @@ namespace BuildBackup.Handlers
                     _downloadFile.tags[i] = tag;
                 }
             }
-            
+
             Console.Write("Parsed download file...".PadRight(Config.PadRight));
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
-
+        
         //TODO document method
-        public void HandleDownloadFile(Dictionary<MD5Hash, IndexEntry> archiveIndexDictionary, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
+        public void HandleDownloadFile(List<Dictionary<MD5Hash, IndexEntry>> archiveIndexDictionary, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
             Console.Write("Handling download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
@@ -122,18 +122,19 @@ namespace BuildBackup.Handlers
             }
 
             var computedMask = BuildDownloadMask(tagsToUse);
-
             for (var i = 0; i < _downloadFile.entries.Length; i++)
             {
                 DownloadEntry current = _downloadFile.entries[i];
-
+                
                 //Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 //TODO document how this works
                 if ((computedMask.Mask[i/8]  & (1 << (i % 8))) == 0)
                 {
                     continue;
                 }
-                if (!archiveIndexDictionary.ContainsKey(current.hash))
+
+                IndexEntry? archiveIndex = IndexParser.TryGet(archiveIndexDictionary, current.hash);
+                if (archiveIndex == null)
                 {
                     if (fileIndexList.ContainsKey(current.hash.ToString()))
                     {
@@ -147,7 +148,7 @@ namespace BuildBackup.Handlers
                     continue;
                 }
 
-                IndexEntry e = archiveIndexDictionary[current.hash];
+                IndexEntry e = archiveIndex.Value;
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);

@@ -27,7 +27,11 @@ namespace BuildBackup
         //TODO make these all private
         public readonly HttpClient client;
 
-        public List<string> cdnList;
+        public List<string> cdnList = new List<string> 
+        {
+            "level3.blizzard.com",      // Level3
+            "cdn.blizzard.com",         // Official regionless CDN
+        };
 
         //TODO break these requests out into a different class later
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
@@ -50,16 +54,6 @@ namespace BuildBackup
             client = new HttpClient
             {
                 Timeout = new TimeSpan(0, 5, 0)
-            };
-            
-            cdnList = new List<string> 
-            {
-                "level3.blizzard.com",      // Level3
-                "eu.cdn.blizzard.com",      // Official EU CDN
-                "blzddist1-a.akamaihd.net", // Akamai first
-                "cdn.blizzard.com",         // Official regionless CDN
-                "us.cdn.blizzard.com",      // Official US CDN
-                "blizzard.nefficient.co.kr" // Korea 
             };
         }
 
@@ -178,15 +172,15 @@ namespace BuildBackup
             //TODO remove this ToLower() call
             hashId = hashId.ToLower();
             var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            return Get(uri, writeToDevNull);
+            return Get(uri, writeToDevNull).Result;
         }
 
         //TODO merge this with Get(), and add a flag as an option to get the index
-        public byte[] GetIndex(RootFolder rootPath, string hashId)
+        public async Task<byte[]> GetIndex(RootFolder rootPath, string hashId)
         {
             //TODO indexes should have a size
             var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
-            return Get(uri);
+            return await Get(uri);
         }
 
         //TODO nicer progress bar
@@ -208,11 +202,11 @@ namespace BuildBackup
             {
                 if (entry.DownloadWholeFile)
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull);
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull).Wait();
                 }
                 else
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange);
+                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange).Wait();
                 }
 
                 if (!DebugMode)
@@ -229,7 +223,7 @@ namespace BuildBackup
         }
 
         //TODO comment
-        private byte[] Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
+        private async Task<byte[]> Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             // Record the requests we're making, so we can use it for debugging
             if (startBytes != null && endBytes != null)
@@ -264,7 +258,7 @@ namespace BuildBackup
                 string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
                 if (File.Exists(outputFilePath))
                 {
-                    return File.ReadAllBytes(outputFilePath);
+                    return await File.ReadAllBytesAsync(outputFilePath);
                 }
             }
             
@@ -287,7 +281,7 @@ namespace BuildBackup
                         // Dump the received data, so we don't have to waste time writing it to disk.
                         responseStream.CopyToAsync(Stream.Null).Wait();
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         //Console.WriteLine(e);
                         Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
@@ -309,16 +303,13 @@ namespace BuildBackup
                     file.Directory.Create();
                     File.WriteAllBytes(file.FullName, byteArray);
 
-                    return byteArray;
+                    return await Task.FromResult(byteArray);
                 }
             }
             else
             {
                 throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdnList[0]}/{requestPath.ToLower()}");
             }
-
-            Console.WriteLine($"Exhausted all CDNs looking for file {Path.GetFileNameWithoutExtension(requestPath)}, cannot retrieve it!");
-            return Array.Empty<byte>();
         }
 
         //TODO comment

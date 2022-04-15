@@ -46,7 +46,7 @@ namespace BuildBackup
             CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
             downloadFileHandler.ParseDownloadFile(buildConfig);
-            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn);
+            var archiveIndexDictionary = IndexParser.BuildArchiveIndexes(cdnConfig, cdn, product);
 
             // Start processing to determine which files need to be downloaded
             installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, cdnConfig, product);

@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
 using BuildBackup.Utils;
 
 namespace BuildBackup.Structs
 {
     public readonly struct MD5Hash : IEquatable<MD5Hash>
     {
+        /// <summary>
+        /// This is actually the "higher" part of the hash.  Left most chunk of data.
+        /// </summary>
         public readonly ulong lowPart;
         public readonly ulong highPart;
 

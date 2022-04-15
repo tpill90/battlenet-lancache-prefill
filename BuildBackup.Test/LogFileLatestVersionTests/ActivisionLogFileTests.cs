@@ -20,7 +20,7 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
         }
 
         [Test]
-        public void CallOfDutyWarzone_UpToDate()
+        public void CodWarzone_UpToDate()
         {
             var product = TactProducts.CodWarzone;
 
