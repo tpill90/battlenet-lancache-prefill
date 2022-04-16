@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using BuildBackup.DataAccess;
 using BuildBackup.Structs;
+using CASCLib;
 using Shared;
 
 namespace BuildBackup.Handlers
@@ -33,7 +34,9 @@ namespace BuildBackup.Handlers
 
             byte[] content = _cdn.Get(RootFolder.data, hash);
 
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
+            using (var memoryStream = new MemoryStream(content))
+            using (var blteStream = new BLTEStream(memoryStream, buildConfig.download[1]))
+            using (BinaryReader bin = new BinaryReader(blteStream))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
                 {
@@ -86,7 +89,7 @@ namespace BuildBackup.Handlers
                         var result = (bit * 0x0202020202 & 0x010884422010) % 1023;
                         tag.Mask[j] = (byte)result;
                     }
-                       
+
                     _downloadFile.tags[i] = tag;
                 }
             }

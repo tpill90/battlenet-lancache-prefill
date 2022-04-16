@@ -188,9 +188,7 @@ namespace BuildBackup
         public void DownloadQueuedRequests()
         {
             var timer = Stopwatch.StartNew();
-
-			//TODO log time that coalescing takes.  Figure out how many requests there are before and after.
-			//TODO need to calculate the actual file size, for full file downloads.
+            
             var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true);
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
@@ -283,33 +281,25 @@ namespace BuildBackup
                     }
                     catch (Exception)
                     {
-                        //Console.WriteLine(e);
                         Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
-                        //throw;
                     }
                     
                     return null;
                 }
-                else
-                {
-                    using var memoryStream = new MemoryStream();
-                    responseStream.CopyToAsync(memoryStream).Wait();
+                await using var memoryStream = new MemoryStream();
+                responseStream.CopyToAsync(memoryStream).Wait();
 
-                    var byteArray = memoryStream.ToArray();
+                var byteArray = memoryStream.ToArray();
                     
-                    // Cache to disk
-                    string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
-                    FileInfo file = new FileInfo(outputFilePath);
-                    file.Directory.Create();
-                    File.WriteAllBytes(file.FullName, byteArray);
+                // Cache to disk
+                string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                FileInfo file = new FileInfo(outputFilePath);
+                file.Directory.Create();
+                File.WriteAllBytes(file.FullName, byteArray);
 
-                    return await Task.FromResult(byteArray);
-                }
+                return await Task.FromResult(byteArray);
             }
-            else
-            {
-                throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdnList[0]}/{requestPath.ToLower()}");
-            }
+            throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdnList[0]}/{requestPath.ToLower()}");
         }
 
         //TODO comment

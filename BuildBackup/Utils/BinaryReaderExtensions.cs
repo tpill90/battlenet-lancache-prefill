@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using BuildBackup.Structs;
 
+//TODO rename file to just Extensions.cs
 namespace System.IO
 {
     public static class BinaryReaderExtensions
@@ -279,6 +280,18 @@ namespace System.IO
 
             return result;
 #endif
+        }
+    }
+
+    public static class Extensions
+    {
+        // copies whole stream
+        public static MemoryStream CopyToMemoryStream(this Stream src)
+        {
+            MemoryStream ms = new MemoryStream();
+            src.CopyTo(ms);
+            ms.Position = 0;
+            return ms;
         }
     }
 }

@@ -13,6 +13,8 @@ namespace BuildBackup
             }
         }
 
+        public static bool ValidateData = false;
+
         public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
 
         //TODO comment
