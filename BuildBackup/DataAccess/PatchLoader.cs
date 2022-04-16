@@ -83,7 +83,7 @@ namespace BuildBackup.DataAccess
                 patchFile.flags = bin.ReadByte();
                 patchFile.encodingContentKey = bin.ReadBytes(16);
                 patchFile.encodingEncodingKey = bin.ReadBytes(16);
-                patchFile.decodedSize = bin.ReadUInt32(true);
+                patchFile.decodedSize = bin.ReadUInt32InvertEndian();
                 patchFile.encodedSize = bin.ReadUInt32(true);
                 patchFile.especLength = bin.ReadByte();
                 patchFile.encodingSpec = new string(bin.ReadChars(patchFile.especLength));

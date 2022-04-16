@@ -37,7 +37,7 @@ namespace BuildBackup.DataAccess
                 if ((footer.numElements & 0xff000000) != 0)
                 {
                     bin.BaseStream.Position -= footer.checksumSize + 4;
-                    footer.numElements = bin.ReadUInt32(true);
+                    footer.numElements = bin.ReadUInt32InvertEndian();
                 }
 
                 bin.BaseStream.Position = 0;
@@ -59,7 +59,7 @@ namespace BuildBackup.DataAccess
 
                         if (footer.sizeBytes == 4)
                         {
-                            entry.size = bin.ReadUInt32(true);
+                            entry.size = bin.ReadUInt32InvertEndian();
                         }
                         else
                         {
@@ -69,7 +69,7 @@ namespace BuildBackup.DataAccess
                         if (footer.offsetBytes == 4)
                         {
                             // Archive index
-                            entry.offset = bin.ReadUInt32(true);
+                            entry.offset = bin.ReadUInt32InvertEndian();
                         }
                         else if (footer.offsetBytes == 6)
                         {

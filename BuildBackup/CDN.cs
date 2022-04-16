@@ -328,5 +328,88 @@ namespace BuildBackup
 
             throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
         }
+
+        //TODO swap everything over to use this?
+        public Task<Stream> GetRequestAsStream(RootFolder rootPath, string hashId, bool isIndex = false)
+        {
+            //TODO remove this ToLower() call
+            hashId = hashId.ToLower();
+            var uri = $"{_productBasePath}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            if (isIndex)
+            {
+                uri = $"{uri}.index";
+            }
+            return GetRequestAsStream(uri);
+        }
+
+        //TODO comment
+        //TODO come up with a better name for writeToDevNull
+        private async Task<Stream> GetRequestAsStream(string requestUri, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
+        {
+            LogRequestMade(requestUri, startBytes, endBytes);
+
+            // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
+            if (DebugMode && writeToDevNull)
+            {
+                return null;
+            }
+
+            // TODO cache this in a dict
+            var uri = new Uri($"http://{_cdnList[0]}/{requestUri}");
+
+            // Try to return a cached copy from the disk first, before making an actual request
+            if (!writeToDevNull)
+            {
+                string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                if (File.Exists(outputFilePath))
+                {
+                    return File.Open(outputFilePath, FileMode.Open);
+                }
+            }
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+            if (startBytes != null && endBytes != null)
+            {
+                requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
+            }
+
+            //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
+            using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+            await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
+
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                throw new FileNotFoundException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL http://{uri.ToString()}");
+            }
+            if (writeToDevNull)
+            {
+                try
+                {
+                    // Dump the received data, so we don't have to waste time writing it to disk.
+                    responseStream.CopyToAsync(Stream.Null).Wait();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine(Colors.Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
+                }
+
+                return null;
+            }
+            var memoryStream = new MemoryStream();
+            await responseStream.CopyToAsync(memoryStream);
+            
+            // Cache to disk
+            FileInfo file = new FileInfo(Path.Combine(Config.CacheDir + uri.AbsolutePath));
+            file.Directory.Create();
+
+            using var fileStream = file.Open(FileMode.Create);
+            memoryStream.Position = 0;
+            await memoryStream.CopyToAsync(fileStream);
+            fileStream.Close();
+
+            // Reset and return the stream
+            memoryStream.Position = 0;
+            return memoryStream;
+        }
     }
 }

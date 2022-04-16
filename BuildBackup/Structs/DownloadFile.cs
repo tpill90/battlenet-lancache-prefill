@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 
 namespace BuildBackup.Structs
 {
@@ -17,8 +16,6 @@ namespace BuildBackup.Structs
     public struct DownloadEntry
     {
         public MD5Hash hash;
-        public byte[] unk;
-        public UInt64 fileSize;
 
         public override string ToString()
         {
@@ -27,7 +24,7 @@ namespace BuildBackup.Structs
     }
 
     //TODO document how this works
-    public sealed class DownloadTag
+    public struct DownloadTag
     {
         public string Name;
         public short Type;

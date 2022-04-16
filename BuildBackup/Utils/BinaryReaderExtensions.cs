@@ -95,16 +95,12 @@ namespace System.IO
             return reader.ReadUInt32();
         }
 
-        public static UInt64 ReadUInt64(this BinaryReader reader, bool invertEndian = false)
+        //TODO comment.  This is the opposite of ReadUInt32
+        public static UInt32 ReadUInt32InvertEndian(this BinaryReader reader)
         {
-            if (invertEndian)
-            {
-                return BitConverter.ToUInt64(reader.ReadInvertedBytes(8), 0);
-            }
-
-            return reader.ReadUInt64();
+            return BitConverter.ToUInt32(reader.ReadInvertedBytes(4), 0);
         }
-
+        
         public static UInt64 ReadUInt40(this BinaryReader reader, bool invertEndian = false)
         {
             ulong b1 = reader.ReadByte();

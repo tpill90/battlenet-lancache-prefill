@@ -33,66 +33,64 @@ namespace BuildBackup.Handlers
             var hash = buildConfig.download[1].ToString().ToLower();
 
             //TODO async
-            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
+            using var stream = _cdn.GetRequestAsStream(RootFolder.data, hash).Result;
+            using var blteStream = new BLTEStream(stream, buildConfig.download[1]);
+            using BinaryReader bin = new BinaryReader(blteStream);
 
-            using (var memoryStream = new MemoryStream(content))
-            using (var blteStream = new BLTEStream(memoryStream, buildConfig.download[1]))
-            using (BinaryReader bin = new BinaryReader(blteStream))
+            // Reading header
+            if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
             {
-                if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
+                throw new Exception("Error while parsing download file. Did BLTE header size change?");
+            }
+            byte version = bin.ReadByte();
+            byte hash_size_ekey = bin.ReadByte();
+            byte hasChecksumInEntry = bin.ReadByte();
+            _downloadFile.numEntries = bin.ReadUInt32(true);
+            _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
+
+            _downloadFile.numTags = bin.ReadUInt16(true);
+            _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
+
+            int entryExtra = 6;
+            if (hasChecksumInEntry > 0)
+            {
+                entryExtra += 4;
+            }
+            if (version >= 2)
+            {
+                entryExtra += bin.ReadByte();
+                if (version >= 3)
                 {
-                    throw new Exception("Error while parsing download file. Did BLTE header size change?");
+                    bin.BaseStream.Seek(16, SeekOrigin.Begin);
                 }
-                byte version = bin.ReadByte();
-                byte hash_size_ekey = bin.ReadByte();
-                byte has_checksum_in_entry = bin.ReadByte();
-                _downloadFile.numEntries = bin.ReadUInt32(true);
-                _downloadFile.numTags = bin.ReadUInt16(true);
+            }
 
-                int entryExtra = 6;
-                if (has_checksum_in_entry > 0)
+            // Reading the DownloadFile entries
+            for (int i = 0; i < _downloadFile.numEntries; i++)
+            {
+                _downloadFile.entries[i].hash = bin.Read<MD5Hash>();
+                // Skips data that we are not interested in reading, to get to the next entry
+                bin.BaseStream.Position += entryExtra;
+            }
+
+            // Reading the tags
+            int numMaskBytes = (int)((_downloadFile.numEntries + 7) / 8);
+            for (int i = 0; i < _downloadFile.numTags; i++)
+            {
+                DownloadTag tag = new DownloadTag();
+                tag.Name = bin.ReadCString();
+                tag.Type = bin.ReadInt16BE();
+
+                tag.Mask = bin.ReadBytes(numMaskBytes);
+
+                for (int j = 0; j < numMaskBytes; j++)
                 {
-                    entryExtra += 4;
-                }
-                if (version >= 2)
-                {
-                    byte number_of_flag_bytes = bin.ReadByte();
-                    entryExtra += number_of_flag_bytes;
-                    if (version >= 3)
-                    {
-                        bin.BaseStream.Seek(16, SeekOrigin.Begin);
-                    }
+                    var original = tag.Mask[j];
+                    var result = (original * 0x0202020202 & 0x010884422010) % 1023;
+                    tag.Mask[j] = (byte)result;
                 }
 
-                // Reading the DownloadFile entries
-                _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
-                for (int i = 0; i < _downloadFile.numEntries; i++)
-                {
-                    _downloadFile.entries[i].hash = bin.Read<MD5Hash>();
-                    bin.BaseStream.Position += entryExtra;
-                }
-
-                // Reading the tags
-                int numMaskBytes = (int)((_downloadFile.numEntries + 7) / 8);
-                _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
-
-                for (int i = 0; i < _downloadFile.numTags; i++)
-                {
-                    DownloadTag tag = new DownloadTag();
-                    tag.Name = bin.ReadCString();
-                    tag.Type = bin.ReadInt16BE();
-
-                    tag.Mask = bin.ReadBytes(numMaskBytes);
-
-                    for (int j = 0; j < numMaskBytes; j++)
-                    {
-                        var bit = tag.Mask[j];
-                        var result = (bit * 0x0202020202 & 0x010884422010) % 1023;
-                        tag.Mask[j] = (byte)result;
-                    }
-
-                    _downloadFile.tags[i] = tag;
-                }
+                _downloadFile.tags[i] = tag;
             }
 
             Console.Write("Parsed download file...".PadRight(Config.PadRight));
