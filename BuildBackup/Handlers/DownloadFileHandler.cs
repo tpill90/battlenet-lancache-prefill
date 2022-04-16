@@ -96,7 +96,7 @@ namespace BuildBackup.Handlers
         }
         
         //TODO document method
-        public void HandleDownloadFile(List<Dictionary<MD5Hash, IndexEntry>> archiveIndexDictionary, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
+        public void HandleDownloadFile(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
             Console.Write("Handling download file list...".PadRight(Config.PadRight));
             var timer = Stopwatch.StartNew();
@@ -133,7 +133,7 @@ namespace BuildBackup.Handlers
                     continue;
                 }
 
-                IndexEntry? archiveIndex = ArchiveIndexHandler.TryGet(archiveIndexDictionary, current.hash);
+                IndexEntry? archiveIndex = archiveIndexHandler.TryGet(current.hash);
                 if (archiveIndex == null)
                 {
                     if (fileIndexList.ContainsKey(current.hash.ToString()))
@@ -170,7 +170,7 @@ namespace BuildBackup.Handlers
                 var groupedList = group.ToList();
                 var combinedMask = groupedList.First();
 
-                for (int tagIndex = 1; tagIndex < groupedList.Count(); tagIndex++)
+                for (int tagIndex = 1; tagIndex < groupedList.Count; tagIndex++)
                 {
                     var current = groupedList[tagIndex];
                     for (int i = 0; i < combinedMask.Mask.Length; i++)

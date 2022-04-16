@@ -1,0 +1,24 @@
+# .NET formatting rules
+# See https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules
+# Resharper Rules - https://www.jetbrains.com/help/resharper/EditorConfig_Index.html
+[*.cs]
+indent_style = space
+indent_size = 4
+# https://www.jetbrains.com/help/resharper/EditorConfig_CSHARP_CSharpIndentStylePageSchema.html#resharper_csharp_align_linq_query
+align_linq_query = true
+align_multiline_calls_chain = true
+# Won't force add blank lines after block statements
+blank_lines_after_block_statements = 0
+csharp_prefer_braces = true
+csharp_space_after_cast = false
+indent_preprocessor_region = do_not_change
+space_between_attribute_sections = false
+
+# ---- These two warnings are being set to error, because forgetting await on async code can produce bugs that are extremely difficult to debug.
+# CS1998: Async method lacks 'await' operators and will run synchronously 
+dotnet_diagnostic.cs1998.severity = error
+# CS4014: Because this call is not awaited, execution of the current method continues before the call is completed
+dotnet_diagnostic.cs4014.severity = error
+
+# IDE0090 : 'new' expression can be simplified
+csharp_style_implicit_object_creation_when_type_is_apparent = false

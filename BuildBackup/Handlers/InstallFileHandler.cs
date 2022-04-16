@@ -22,7 +22,7 @@ namespace BuildBackup.Handlers
         }
 
         //TODO comment
-        public void HandleInstallFile(BuildConfigFile buildConfig, List<Dictionary<MD5Hash, IndexEntry>> archiveIndexDictionary, CDNConfigFile cdnConfigFile,
+        public void HandleInstallFile(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile,
             TactProduct product)
         {
             var timer = Stopwatch.StartNew();
@@ -68,13 +68,13 @@ namespace BuildBackup.Handlers
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                 MD5Hash upperHash = encodingTable.ReversedEncodingDictionary[file.contentHash];
 
-                int archiveIndex = IndexParser.ContainsKey(archiveIndexDictionary, upperHash);
-                if (archiveIndex == -1)
+                IndexEntry? archiveIndex = archiveIndexHandler.TryGet(upperHash);
+                if (archiveIndex == null)
                 {
                     continue;
                 }
 
-                IndexEntry e = IndexParser.TryGet(archiveIndexDictionary, upperHash, archiveIndex);
+                IndexEntry e = archiveIndex.Value;
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);

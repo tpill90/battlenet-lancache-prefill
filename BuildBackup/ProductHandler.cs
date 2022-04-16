@@ -36,6 +36,7 @@ namespace BuildBackup
             var downloadFileHandler = new DownloadFileHandler(cdn);
             var configFileHandler = new ConfigFileHandler(cdn);
             var installFileHandler = new InstallFileHandler(cdn);
+            var archiveIndexHandler = new ArchiveIndexHandler(cdn, product);
 
             // Finding the latest version of the game
             VersionsEntry targetVersion = configFileHandler.GetLatestVersionEntry(product);
@@ -45,12 +46,12 @@ namespace BuildBackup
             BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn, product);
             CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
+            archiveIndexHandler.BuildArchiveIndexes(cdnConfig);
             downloadFileHandler.ParseDownloadFile(buildConfig);
-            var archiveIndexDictionary = ArchiveIndexHandler.BuildArchiveIndexes(cdnConfig, cdn, product);
 
             // Start processing to determine which files need to be downloaded
-            installFileHandler.HandleInstallFile(buildConfig, archiveIndexDictionary, cdnConfig, product);
-            downloadFileHandler.HandleDownloadFile(archiveIndexDictionary, cdnConfig, product);
+            installFileHandler.HandleInstallFile(buildConfig, archiveIndexHandler, cdnConfig, product);
+            downloadFileHandler.HandleDownloadFile(archiveIndexHandler, cdnConfig, product);
 
             var patchLoader = new PatchLoader(cdn, cdnConfig);
             patchLoader.HandlePatches(buildConfig, product);
