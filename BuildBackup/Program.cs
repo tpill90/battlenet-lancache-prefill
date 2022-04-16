@@ -10,13 +10,11 @@ using Colors = Shared.Colors;
 
 namespace BuildBackup
 {
-    //TODO figure out why Roslyn analyzers are complaining with a bunch of warnings
+    //TODO Add more analyzers
     //TODO Readme.md needs to be heavily updated.  Needs documentation on what this program does, how to use it, how to compile it, acknowledgements, external docs, etc.
     //TODO Repo - Github repo needs to be renamed, something like BattleNet-Preloader.
     //TODO Repo - Squash old commits + generally cleanup repo history
     //TODO Uncached performance - Improve uncached performance of all applications
-    //TODO Performance - Improve overall performance of Overwatch, Wow
-    //TODO Performance - Improve overall performance of parsing archives
 	//TODO Reduce the number of overall allocations
 	//TODO consider creating a flag/option, to not write any data to the cache, and to not use the cache.  Would be useful for saving disk space, or testing performance of an uncached run.
     public class Program
@@ -38,7 +36,7 @@ namespace BuildBackup
 
         //TODO extract to config file
         public static bool UseCdnDebugMode = true;
-        public static bool ShowDebugStats = true;
+        public static bool ShowDebugStats = false;
 
         public static bool WriteOutputFiles = false;
 
@@ -83,7 +81,7 @@ namespace BuildBackup
             timer = Stopwatch.StartNew();
             for (long i = 0; i < numEntries; i++)
             {
-                inputHashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
+                //inputHashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
             }
 
             timer.Stop();
@@ -139,7 +137,7 @@ namespace BuildBackup
             timer = Stopwatch.StartNew();
             for (int i = 0; i < count; i++)
             {
-                hashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
+                //hashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
             }
 
             timer.Stop();

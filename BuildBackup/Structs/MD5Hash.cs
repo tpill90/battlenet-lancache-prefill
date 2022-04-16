@@ -17,8 +17,20 @@ namespace BuildBackup.Structs
             this.highPart = highPart;
         }
 
-        public bool Equals(MD5Hash other)
+        public override int GetHashCode()
         {
+            return MD5HashEqualityComparer.Instance.GetHashCode(this);
+        }
+
+        public bool Equals(MD5Hash o)
+        {
+            MD5Hash other = (MD5Hash)o;
+            return other.lowPart == lowPart && other.highPart == highPart;
+        }
+
+        public override bool Equals(object o)
+        {
+            MD5Hash other = (MD5Hash)o;
             return other.lowPart == lowPart && other.highPart == highPart;
         }
 
