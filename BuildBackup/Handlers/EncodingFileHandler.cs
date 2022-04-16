@@ -50,11 +50,11 @@ namespace BuildBackup.DataAccess
 
             var encoding = new EncodingFile();
 
-            byte[] content = _cdn.Get(RootFolder.data, hash);
+            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = _cdn.Get(RootFolder.data, hash);
+                content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {

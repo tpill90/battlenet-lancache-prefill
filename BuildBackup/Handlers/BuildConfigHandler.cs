@@ -16,7 +16,7 @@ namespace BuildBackup.Handlers
 
             var buildConfig = new BuildConfigFile();
 
-            string content = Encoding.UTF8.GetString(cdn.Get(RootFolder.config, versionsEntry.buildConfig));
+            string content = Encoding.UTF8.GetString(cdn.GetRequestAsBytes(RootFolder.config, versionsEntry.buildConfig).Result);
             
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {

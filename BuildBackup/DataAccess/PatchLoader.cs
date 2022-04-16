@@ -68,7 +68,7 @@ namespace BuildBackup.DataAccess
         {
             var patchFile = new PatchFile();
 
-            byte[] content = _cdn.Get(RootFolder.patch, hash);
+            byte[] content = _cdn.GetRequestAsBytes(RootFolder.patch, hash).Result;
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
             {

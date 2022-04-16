@@ -89,7 +89,7 @@ namespace BuildBackup.Handlers
         {
             var install = new InstallFile();
 
-            byte[] content = _cdn.Get(RootFolder.data, hash);
+            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {

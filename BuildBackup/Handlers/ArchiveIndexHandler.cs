@@ -72,10 +72,10 @@ namespace BuildBackup.Handlers
         {
             //TODO does pre allocating help performance?
             var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashEqualityComparer.Instance);
-
+            
             for (int i = start; i <= finish; i++)
             {
-                byte[] indexContent = await cdn.GetIndex(RootFolder.data, cdnConfig.archives[i].hashId);
+                byte[] indexContent = await cdn.GetRequestAsBytes(RootFolder.data, cdnConfig.archives[i].hashId, isIndex: true);
 
                 using (var stream = new MemoryStream(indexContent))
                 using (BinaryReader br = new BinaryReader(stream))

@@ -9,7 +9,7 @@ namespace BuildBackup.DataAccess
     {
         public static Dictionary<string, IndexEntry> ParseIndex(string hashId, CDN cdn, RootFolder folder)
         {
-            byte[] indexContent = cdn.GetIndex(folder, hashId).Result;
+            byte[] indexContent = cdn.GetRequestAsBytes(folder, hashId, isIndex: true).Result;
 
             var returnDict = new Dictionary<string, IndexEntry>();
 

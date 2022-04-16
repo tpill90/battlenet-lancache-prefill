@@ -32,7 +32,8 @@ namespace BuildBackup.Handlers
 
             var hash = buildConfig.download[1].ToString().ToLower();
 
-            byte[] content = _cdn.Get(RootFolder.data, hash);
+            //TODO async
+            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
 
             using (var memoryStream = new MemoryStream(content))
             using (var blteStream = new BLTEStream(memoryStream, buildConfig.download[1]))

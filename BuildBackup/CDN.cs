@@ -7,9 +7,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using BuildBackup.DataAccess;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
+using BuildBackup.Parsers;
 using BuildBackup.Structs;
 using BuildBackup.Utils;
 using ByteSizeLib;
@@ -22,23 +22,25 @@ namespace BuildBackup
     public class CDN
     {
         private readonly IConsole _console;
-        private readonly Uri _battleNetPatchUri;
+        private readonly HttpClient client;
 
-        //TODO make these all private
-        public readonly HttpClient client;
-
-        public List<string> cdnList = new List<string> 
+        private readonly List<string> _cdnList = new List<string> 
         {
             "level3.blizzard.com",      // Level3
             "cdn.blizzard.com",         // Official regionless CDN
         };
+
+        //TODO comment
+        private string _productBasePath;
+
+        //TODO comment
+        private readonly Uri _battleNetPatchUri;
 
         //TODO break these requests out into a different class later
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         private readonly List<Request> _queuedRequests = new List<Request>();
 
-        private CdnsFile _cdnsFile;
         private CachedStringLookup _cachedStringLookup;
 
         /// <summary>
@@ -47,10 +49,10 @@ namespace BuildBackup
         /// </summary>
         public bool DebugMode = false;
 
-        public CDN(IConsole console, Uri BattleNetPatchUri)
+        public CDN(IConsole console, Uri battleNetPatchUri)
         {
             _console = console;
-            _battleNetPatchUri = BattleNetPatchUri;
+            _battleNetPatchUri = battleNetPatchUri;
             client = new HttpClient
             {
                 Timeout = new TimeSpan(0, 5, 0)
@@ -60,20 +62,19 @@ namespace BuildBackup
         public void LoadCdnsFile(TactProduct currentProduct)
         {
             // Loading CDNs
-            var cdnFileHandler = new CdnFileHandler(this);
-            //TODO assign _cdnsFile.entries[0].path to a property instead of looking it up every time.
-            _cdnsFile = cdnFileHandler.ParseCdnsFile(currentProduct);
+            var cdnsFile = CdnsFileParser.ParseCdnsFile(this, currentProduct);
 
-            // Adds any missing cdn hosts
-            foreach (var host in _cdnsFile.entries.SelectMany(e => e.hosts))
+            _productBasePath = cdnsFile.entries[0].path;
+            _cachedStringLookup = new CachedStringLookup(_productBasePath);
+
+            // Adds any missing CDN hosts
+            foreach (var host in cdnsFile.entries.SelectMany(e => e.hosts))
             {
-                if (!cdnList.Contains(host))
+                if (!_cdnList.Contains(host))
                 {
-                    cdnList.Add(host);
+                    _cdnList.Add(host);
                 }
             }
-
-            _cachedStringLookup = new CachedStringLookup(_cdnsFile);
         }
 
         public void QueueRequest(RootFolder rootPath, MD5Hash hash, long? startBytes = null, long? endBytes = null, bool isIndex = false)
@@ -86,7 +87,7 @@ namespace BuildBackup
             else
             {
                 var hashString = hash.ToString().ToLower();
-                uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
+                uri = $"{_productBasePath}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
             }
 
             if (isIndex)
@@ -131,13 +132,13 @@ namespace BuildBackup
                 }
                 else
                 {
-                    uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
+                    uri = $"{_productBasePath}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
                     _queuedRequestLookupTable.Add(hashId, uri);
                 }
             }
             else
             {
-                uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
+                uri = $"{_productBasePath}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
             }
 
             if (isIndex)
@@ -166,29 +167,12 @@ namespace BuildBackup
             }
         }
 
-        //TODO rename to GetWholeFile
-        public byte[] Get(RootFolder rootPath, string hashId, bool writeToDevNull = false)
-        {
-            //TODO remove this ToLower() call
-            hashId = hashId.ToLower();
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            return Get(uri, writeToDevNull).Result;
-        }
-
-        //TODO merge this with Get(), and add a flag as an option to get the index
-        public async Task<byte[]> GetIndex(RootFolder rootPath, string hashId)
-        {
-            //TODO indexes should have a size
-            var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}.index";
-            return await Get(uri);
-        }
-
         //TODO nicer progress bar
         //TODO this doesn't max out my connection at 300mbs
         public void DownloadQueuedRequests()
         {
             var timer = Stopwatch.StartNew();
-            
+
             var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true);
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
@@ -200,11 +184,11 @@ namespace BuildBackup
             {
                 if (entry.DownloadWholeFile)
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull).Wait();
+                    GetRequestAsBytes(entry.Uri, writeToDevNull: entry.WriteToDevNull).Wait();
                 }
                 else
                 {
-                    Get(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange).Wait();
+                    GetRequestAsBytes(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange).Wait();
                 }
 
                 if (!DebugMode)
@@ -212,36 +196,32 @@ namespace BuildBackup
                     // Skip refreshing the progress bar when debugging.  Slows things down
                     progressBar.Refresh(count, "");
                 }
-                
+
                 count++;
             });
 
             timer.Stop();
             progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
+        
+        public Task<byte[]> GetRequestAsBytes(RootFolder rootPath, string hashId, bool isIndex = false)
+        {
+            //TODO remove this ToLower() call
+            hashId = hashId.ToLower();
+            var uri = $"{_productBasePath}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            if (isIndex)
+            {
+                uri = $"{uri}.index";
+            }
+            return GetRequestAsBytes(uri);
+        }
 
         //TODO comment
-        private async Task<byte[]> Get(string requestPath, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
+        //TODO come up with a better name for writeToDevNull
+        private async Task<byte[]> GetRequestAsBytes(string requestUri, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
-            // Record the requests we're making, so we can use it for debugging
-            if (startBytes != null && endBytes != null)
-            {
-                allRequestsMade.Add(new Request
-                {
-                    Uri = requestPath,
-                    LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value
-                });
-            }
-            else
-            {
-                allRequestsMade.Add(new Request
-                {
-                    Uri = requestPath,
-                    DownloadWholeFile = true
-                });
-            }
-            
+            LogRequestMade(requestUri, startBytes, endBytes);
+
             // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
             if (DebugMode && writeToDevNull)
             {
@@ -249,8 +229,9 @@ namespace BuildBackup
             }
 
             // TODO cache this in a dict
-            var uri = new Uri($"http://{cdnList[0]}/{requestPath}");
+            var uri = new Uri($"http://{_cdnList[0]}/{requestUri}");
 
+            // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull)
             {
                 string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
@@ -267,39 +248,60 @@ namespace BuildBackup
             }
 
             //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
-            using HttpResponseMessage response = client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead).Result;
-            using Stream responseStream = response.Content.ReadAsStreamAsync().Result;
+            using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+            await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
 
-            if (response.IsSuccessStatusCode)
+            if (!responseMessage.IsSuccessStatusCode)
             {
-                if(writeToDevNull)
-                {
-                    try
-                    {
-                        // Dump the received data, so we don't have to waste time writing it to disk.
-                        responseStream.CopyToAsync(Stream.Null).Wait();
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine(Colors.Red($"Error downloading : {uri.ToString()} {startBytes}-{endBytes}"));
-                    }
-                    
-                    return null;
-                }
-                await using var memoryStream = new MemoryStream();
-                responseStream.CopyToAsync(memoryStream).Wait();
-
-                var byteArray = memoryStream.ToArray();
-                    
-                // Cache to disk
-                string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
-                FileInfo file = new FileInfo(outputFilePath);
-                file.Directory.Create();
-                File.WriteAllBytes(file.FullName, byteArray);
-
-                return await Task.FromResult(byteArray);
+                throw new FileNotFoundException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL http://{uri.ToString()}");
             }
-            throw new FileNotFoundException($"Error retrieving file: HTTP status code {response.StatusCode} on URL http://{cdnList[0]}/{requestPath.ToLower()}");
+            if(writeToDevNull)
+            {
+                try
+                {
+                    // Dump the received data, so we don't have to waste time writing it to disk.
+                    responseStream.CopyToAsync(Stream.Null).Wait();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine(Colors.Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
+                }
+                
+                return null;
+            }
+            await using var memoryStream = new MemoryStream();
+            responseStream.CopyToAsync(memoryStream).Wait();
+
+            var byteArray = memoryStream.ToArray();
+                
+            // Cache to disk
+            FileInfo file = new FileInfo(Path.Combine(Config.CacheDir + uri.AbsolutePath));
+            file.Directory.Create();
+            await File.WriteAllBytesAsync(file.FullName, byteArray);
+
+            return await Task.FromResult(byteArray);
+        }
+
+        private void LogRequestMade(string requestUri, long? startBytes, long? endBytes)
+        {
+            // Record the requests we're making, so we can use it for debugging
+            if (startBytes != null && endBytes != null)
+            {
+                allRequestsMade.Add(new Request
+                {
+                    Uri = requestUri,
+                    LowerByteRange = startBytes.Value,
+                    UpperByteRange = endBytes.Value
+                });
+            }
+            else
+            {
+                allRequestsMade.Add(new Request
+                {
+                    Uri = requestUri,
+                    DownloadWholeFile = true
+                });
+            }
         }
 
         //TODO comment

@@ -1,30 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using BuildBackup.Structs;
-using Newtonsoft.Json;
 using Shared;
 
-namespace BuildBackup.DataAccess
+namespace BuildBackup.Parsers
 {
-    public class CdnFileHandler
+    public static class CdnsFileParser
     {
-        private CDN cdn;
-
-        public CdnFileHandler(CDN cdn)
-        {
-            this.cdn = cdn;
-        }
-
-        //TODO should this be part of the CDN class?
-        public CdnsFile ParseCdnsFile(TactProduct tactProduct)
+        public static CdnsFile ParseCdnsFile(CDN cdn, TactProduct targetProduct)
         {
             var timer = Stopwatch.StartNew();
 
-            string content = cdn.MakePatchRequest(tactProduct, "cdns");
+            string content = cdn.MakePatchRequest(targetProduct, "cdns");
 
             CdnsFile cdns = new CdnsFile();
 
@@ -87,8 +76,8 @@ namespace BuildBackup.DataAccess
 
             if (cdns.entries == null || !cdns.entries.Any())
             {
-                Console.WriteLine($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
-                throw new Exception($"Invalid CDNs file for {tactProduct.DisplayName}, skipping!");
+                Console.WriteLine($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
+                throw new Exception($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
             }
 
             timer.Stop();

@@ -6,12 +6,12 @@ namespace BuildBackup.Utils
     //TODO document what this does, and why it is needed
     public class CachedStringLookup
     {
-        private readonly CdnsFile _cdnsFile;
+        private readonly string _productBasePath;
         private Dictionary<MD5Hash, string> _cacheLookupDictionary = new Dictionary<MD5Hash, string>();
 
-        public CachedStringLookup(CdnsFile cdnsFile)
+        public CachedStringLookup(string productBasePath)
         {
-            _cdnsFile = cdnsFile;
+            _productBasePath = productBasePath;
         }
 
         public string TryGetPrecomputedValue(MD5Hash hash, RootFolder rootPath)
@@ -24,7 +24,7 @@ namespace BuildBackup.Utils
             {
                 //TODO write a ToLower variant
                 var hashString = hash.ToString().ToLower();
-                var uri = $"{_cdnsFile.entries[0].path}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
+                var uri = $"{_productBasePath}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
                 _cacheLookupDictionary.Add(hash, uri);
 
                 return uri;

@@ -24,7 +24,7 @@ namespace BuildBackup
 
             var cdnConfig = new CDNConfigFile();
 
-            var content = Encoding.UTF8.GetString(cdn.Get(RootFolder.config, targetVersion.cdnConfig));
+            var content = Encoding.UTF8.GetString(cdn.GetRequestAsBytes(RootFolder.config, targetVersion.cdnConfig).Result);
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
