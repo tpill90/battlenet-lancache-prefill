@@ -133,7 +133,7 @@ namespace BuildBackup.Handlers
                     continue;
                 }
 
-                IndexEntry? archiveIndex = IndexParser.TryGet(archiveIndexDictionary, current.hash);
+                IndexEntry? archiveIndex = ArchiveIndexHandler.TryGet(archiveIndexDictionary, current.hash);
                 if (archiveIndex == null)
                 {
                     if (fileIndexList.ContainsKey(current.hash.ToString()))
