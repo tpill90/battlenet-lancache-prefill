@@ -36,20 +36,6 @@ namespace BuildBackup.Structs
 
         public override string ToString()
         {
-            return ToStringNew();
-        }
-
-        public string ToStringOld()
-        {
-            return (BitConverter.ToString(BitConverter.GetBytes(lowPart))
-                    + BitConverter.ToString(BitConverter.GetBytes(highPart)))
-                .Replace("-", "");
-        }
-
-        //TODO unit test this vs expected
-        //var hash = new MD5Hash(6051113216891152126L, 49107880105117937L).ToString();
-        public string ToStringNew()
-        {
             return string.Create(32, (highPart, lowPart), static (dst, state) =>
             {
                 ulong highPartTemp = state.highPart;
@@ -61,7 +47,7 @@ namespace BuildBackup.Structs
 
                 while (i != 16)
                 {
-                    dst[i] = HexConverter.ToCharUpper((uint)((lowPartTemp & highMask) >> 4));
+                    dst[i] = HexConverter.ToCharUpper((uint)((lowPartTemp >> 4) & lowMask));
                     dst[i + 1] = HexConverter.ToCharUpper((uint)(lowPartTemp & lowMask));
                     i += 2;
                     lowPartTemp >>= 8;
@@ -69,7 +55,7 @@ namespace BuildBackup.Structs
 
                 while (i != 32)
                 {
-                    dst[i] = HexConverter.ToCharUpper((uint)((highPartTemp & highMask) >> 4));
+                    dst[i] = HexConverter.ToCharUpper((uint)((highPartTemp >> 4) & highMask));
                     dst[i + 1] = HexConverter.ToCharUpper((uint)(highPartTemp & lowMask));
                     i += 2;
                     highPartTemp >>= 8;

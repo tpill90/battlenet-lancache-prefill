@@ -15,7 +15,7 @@ namespace BuildBackup.DebugUtil
         private HttpClient _client = new HttpClient();
 
         private ConcurrentDictionary<string, long> _cachedContentLengths;
-        private int _cacheMisses = 0;
+        private int _cacheMisses;
 
         //TODO make all cache files point to the /cache directory
         private string _cacheDir = "cache/cachedContentLengths";

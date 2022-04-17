@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using BuildBackup.Structs;
 
@@ -19,26 +18,6 @@ namespace System.IO
             return ret;
         }
 
-        public static double ReadDouble(this BinaryReader reader, bool invertEndian = false)
-        {
-            if (invertEndian)
-            {
-                return BitConverter.ToDouble(reader.ReadInvertedBytes(8), 0);
-            }
-
-            return reader.ReadDouble();
-        }
-
-        public static Int16 ReadInt16(this BinaryReader reader, bool invertEndian = false)
-        {
-            if (invertEndian)
-            {
-                return BitConverter.ToInt16(reader.ReadInvertedBytes(2), 0);
-            }
-
-            return reader.ReadInt16();
-        }
-
         public static short ReadInt16BE(this BinaryReader reader)
         {
             byte[] val = reader.ReadBytes(2);
@@ -53,26 +32,6 @@ namespace System.IO
             }
 
             return reader.ReadInt32();
-        }
-
-        public static Int64 ReadInt64(this BinaryReader reader, bool invertEndian = false)
-        {
-            if (invertEndian)
-            {
-                return BitConverter.ToInt64(reader.ReadInvertedBytes(8), 0);
-            }
-
-            return reader.ReadInt64();
-        }
-
-        public static Single ReadSingle(this BinaryReader reader, bool invertEndian = false)
-        {
-            if (invertEndian)
-            {
-                return BitConverter.ToSingle(reader.ReadInvertedBytes(4), 0);
-            }
-
-            return reader.ReadSingle();
         }
 
         public static UInt16 ReadUInt16(this BinaryReader reader, bool invertEndian = false)
@@ -134,21 +93,6 @@ namespace System.IO
             return Unsafe.ReadUnaligned<T>(ref result[0]);
         }
 
-        public static string ToHexString(this byte[] data)
-        {
-#if NET5_0_OR_GREATER
-            return Convert.ToHexString(data);
-#else
-            if (data == null)
-                throw new ArgumentNullException(nameof(data));
-            if (data.Length == 0)
-                return string.Empty;
-            if (data.Length > int.MaxValue / 2)
-                throw new ArgumentOutOfRangeException(nameof(data), "SR.ArgumentOutOfRange_InputTooLarge");
-            return HexConverter.ToString(data, HexConverter.Casing.Upper);
-#endif
-        }
-
         public static bool EqualsTo(this in MD5Hash key, byte[] array)
         {
             if (array.Length != 16)
@@ -183,28 +127,6 @@ namespace System.IO
             return true;
         }
 
-        public static bool EqualsTo(this in MD5Hash key, in MD5Hash other)
-        {
-            return key.lowPart == other.lowPart && key.highPart == other.highPart;
-        }
-
-        public static unsafe string ToHexString(this in MD5Hash key)
-        {
-#if NET5_0_OR_GREATER
-            ref MD5Hash md5ref = ref Unsafe.AsRef(in key);
-            var md5Span = MemoryMarshal.CreateReadOnlySpan(ref md5ref, 1);
-            var span = MemoryMarshal.AsBytes(md5Span);
-            return Convert.ToHexString(span);
-#else
-            byte[] array = new byte[16];
-            fixed (byte* aptr = array)
-            {
-                *(MD5Hash*)aptr = key;
-            }
-            return array.ToHexString();
-#endif
-        }
-
         public static MD5Hash ToMD5(this byte[] array)
         {
             if (array.Length != 16)
@@ -236,13 +158,6 @@ namespace System.IO
             while ((b = reader.ReadByte()) != 0)
                 bytes.Add(b);
             return encoding.GetString(bytes.ToArray());
-        }
-
-        public static void WriteCString(this BinaryWriter writer, string str)
-        {
-            var bytes = Encoding.UTF8.GetBytes(str);
-            writer.Write(bytes);
-            writer.Write((byte)0);
         }
 
         public static byte[] ToByteArray(this string str)

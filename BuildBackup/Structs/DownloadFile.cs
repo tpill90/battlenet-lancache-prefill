@@ -5,7 +5,6 @@ namespace BuildBackup.Structs
     //TODO document how this works
     public sealed class DownloadFile
     {
-        public byte[] unk;
         public uint numEntries;
         public uint numTags;
         public DownloadEntry[] entries;
