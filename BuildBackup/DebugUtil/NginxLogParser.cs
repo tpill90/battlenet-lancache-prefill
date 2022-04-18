@@ -47,7 +47,7 @@ namespace BuildBackup.DebugUtil
                 var logFilePath = latestFile.FullName.Replace(".zip", ".log");
 
                 var rawLogs = ParseRequestLogs(File.ReadAllLines(logFilePath));
-                List<Request> requestsToReplay = CoalesceRequests(rawLogs);
+                List<Request> requestsToReplay = RequestUtils.CoalesceRequests(rawLogs);
 
                 // Save the coalesced results to speed up future runs
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".zip", ".coalesced.log")}";
@@ -117,50 +117,6 @@ namespace BuildBackup.DebugUtil
             return latestFile.Name.Replace(".zip", "");
         }
 
-        //TODO comment + unit test
-        //TODO move this into a different class
-        public static List<Request> CoalesceRequests(List<Request> initialRequests, bool isBattleNetClient = false)
-        {
-            //TODO handle the case where there are "whole file downloads".  If there is a whole file download, then any other requests should just be removed at this step
-            var coalesced = new List<Request>();
-
-            //Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
-            var requestsGroupedByUri = initialRequests.GroupBy(e => e.Uri).ToList();
-            foreach (var grouping in requestsGroupedByUri)
-            {
-                var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping(isBattleNetClient).ToList();
-
-                coalesced.AddRange(merged);
-            }
-
-            return coalesced;
-        }
-
-        public static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source, bool isBattleNetClient)
-        {
-            using (var enumerator = source.GetEnumerator())
-            {
-                if (!enumerator.MoveNext())
-                {
-                    yield break;
-                }
-
-                var previousInterval = enumerator.Current;
-                while (enumerator.MoveNext())
-                {
-                    var nextInterval = enumerator.Current;
-                    if (!previousInterval.Overlaps(nextInterval, isBattleNetClient))
-                    {
-                        yield return previousInterval;
-                        previousInterval = nextInterval;
-                    }
-                    else
-                    {
-                        previousInterval = previousInterval.MergeWith(nextInterval);
-                    }
-                }
-                yield return previousInterval;
-            }
-        }
+        
     }
 }

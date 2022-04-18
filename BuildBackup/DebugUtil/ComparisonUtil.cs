@@ -29,7 +29,7 @@ namespace BuildBackup.DebugUtil
 
             var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
 
-            generatedRequests = NginxLogParser.CoalesceRequests(generatedRequests, true);
+            generatedRequests = RequestUtils.CoalesceRequests(generatedRequests, true);
             var requestsWithoutSize = generatedRequests.Count(e => e.DownloadWholeFile);
             GetRequestSizes(generatedRequests, fileSizeProvider);
 

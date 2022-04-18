@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace BuildBackup.Test.DebugUtilTests
 {
     [TestFixture]
-    public class NginxLogParserTests
+    public class RequestUtilsTests
     {
         [Test]
         public void DuplicateRequests_GetCombined()
@@ -19,7 +19,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
-            var result = NginxLogParser.CoalesceRequests(requests);
+            var result = RequestUtils.CoalesceRequests(requests);
 
             // Expect there to be 1 result left, since we deduped the final request.
             Assert.AreEqual(1, result.Count);
@@ -36,7 +36,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 50, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
-            var result = NginxLogParser.CoalesceRequests(requests);
+            var result = RequestUtils.CoalesceRequests(requests);
 
             // Expect there to be 1 result left, since we deduped the final request.
             Assert.AreEqual(1, result.Count);
@@ -52,7 +52,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request() { Uri = "DifferentURI", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
-            var result = NginxLogParser.CoalesceRequests(requests);
+            var result = RequestUtils.CoalesceRequests(requests);
 
             // Expect 2 results, since they wont get combined
             Assert.AreEqual(2, result.Count);
@@ -68,7 +68,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request() { Uri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
-            var result = NginxLogParser.CoalesceRequests(requests);
+            var result = RequestUtils.CoalesceRequests(requests);
 
             // Expect 2 results, since they wont get combined
             Assert.AreEqual(2, result.Count);
@@ -84,7 +84,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 999999 }
             };
 
-            var result = NginxLogParser.CoalesceRequests(requests);
+            var result = RequestUtils.CoalesceRequests(requests);
 
             // Expect 1 results, since they got combined
             Assert.AreEqual(1, result.Count);
@@ -102,7 +102,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 101, UpperByteRange = 200 }
             };
 
-            var results = NginxLogParser.CoalesceRequests(requests);
+            var results = RequestUtils.CoalesceRequests(requests);
 
             // Expect 1 result, with the byte range being the combination of the two
             Assert.AreEqual(1, results.Count);
@@ -123,7 +123,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 }
             };
 
-            var results = NginxLogParser.CoalesceRequests(requests);
+            var results = RequestUtils.CoalesceRequests(requests);
 
             // Expect 1 result, with the byte range being the combination of the two
             Assert.AreEqual(1, results.Count);
@@ -143,7 +143,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "DifferentUri", LowerByteRange = 101, UpperByteRange = 200 }
             };
 
-            var results = NginxLogParser.CoalesceRequests(requests);
+            var results = RequestUtils.CoalesceRequests(requests);
 
             // Expect 2 results, since they wont get combined
             Assert.AreEqual(2, results.Count);
@@ -168,7 +168,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 25, UpperByteRange = 100 }
             };
 
-            var results = NginxLogParser.CoalesceRequests(requests);
+            var results = RequestUtils.CoalesceRequests(requests);
 
             // Expect 1 result, with the byte range being the combination of the two
             Assert.AreEqual(1, results.Count);
@@ -188,7 +188,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { Uri = "SampleUri", LowerByteRange = 264241152, UpperByteRange = 269484031 }
             };
 
-            var results = NginxLogParser.CoalesceRequests(requests);
+            var results = RequestUtils.CoalesceRequests(requests);
 
             // Expect 1 result, with the byte range being the combination of the two
             Assert.AreEqual(1, results.Count);
