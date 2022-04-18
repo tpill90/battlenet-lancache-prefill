@@ -36,23 +36,23 @@ namespace BuildBackup.Handlers
                 switch (cols[0])
                 {
                     case "root":
-                        buildConfig.root = cols[1].FromHexString().ToMD5();
+                        buildConfig.root = cols[1].ToMD5();
                         break;
                     case "download":
-                        buildConfig.download = cols[1].Split(' ').Select(e => e.FromHexString().ToMD5()).ToArray();
+                        buildConfig.download = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "install":
-                        buildConfig.install = cols[1].Split(' ').Select(e => e.FromHexString().ToMD5()).ToArray();
+                        buildConfig.install = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "encoding":
-                        buildConfig.encoding = cols[1].Split(' ');
+                        buildConfig.encoding = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "encoding-size":
                         var encodingSize = cols[1].Split(' ');
                         buildConfig.encodingSize = encodingSize;
                         break;
                     case "size":
-                        buildConfig.size = cols[1].Split(' ');
+                        buildConfig.size = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "size-size":
                         buildConfig.sizeSize = cols[1].Split(' ');
@@ -70,16 +70,16 @@ namespace BuildBackup.Handlers
                         buildConfig.buildUid = cols[1];
                         break;
                     case "patch":
-                        buildConfig.patch = cols[1].FromHexString().ToMD5();
+                        buildConfig.patch = cols[1].ToMD5();
                         break;
                     case "patch-size":
                         buildConfig.patchSize = cols[1];
                         break;
                     case "patch-config":
-                        buildConfig.patchConfig = cols[1];
+                        buildConfig.patchConfig = cols[1].ToMD5();
                         break;
                     case "patch-index":
-                        buildConfig.patchIndex = cols[1].Split(' ');
+                        buildConfig.patchIndex = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "build-branch": // Overwatch
                         buildConfig.buildBranch = cols[1];
@@ -121,7 +121,7 @@ namespace BuildBackup.Handlers
                         buildConfig.partialPrioritySize = cols[1];
                         break;
                     case "vfs-root":
-                        buildConfig.vfsRoot = cols[1].Split(' ');
+                        buildConfig.vfsRoot = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "vfs-root-size":
                         buildConfig.vfsRootSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();

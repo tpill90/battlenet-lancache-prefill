@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using BuildBackup.Structs;
+﻿using BuildBackup.Structs;
 
 namespace BuildBackup
 {
@@ -36,7 +35,7 @@ namespace BuildBackup
 
         public string archiveGroup;
 
-        public string[] patchArchives;
+        public MD5Hash[] patchArchives;
         public int[] patchArchivesIndexSize;
         public string patchArchiveGroup;
 
@@ -45,7 +44,7 @@ namespace BuildBackup
         public MD5Hash fileIndex;
         public string fileIndexSize;
 
-        public string patchFileIndex;
+        public MD5Hash patchFileIndex;
         public string patchFileIndexSize;
     }
 

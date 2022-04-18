@@ -76,6 +76,7 @@ namespace BuildBackup.Web
             }
         }
 
+        //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
             string uri;
@@ -114,58 +115,7 @@ namespace BuildBackup.Web
                 });
             }
         }
-
-        //TODO better name + comment
-        private Dictionary<string, string> _queuedRequestLookupTable = new Dictionary<string, string>();
-
-        //TODO finish making everything use this
-        //TODO Switch hashId to MD5Hash
-        public void QueueRequest(RootFolder rootPath, string hashId, long? startBytes = null, long? endBytes = null, bool isIndex = false)
-        {
-            string uri;
-            if (rootPath == RootFolder.data)
-            {
-                if (_queuedRequestLookupTable.ContainsKey(hashId))
-                {
-                    uri = _queuedRequestLookupTable[hashId];
-                }
-                else
-                {
-                    uri = $"{_productBasePath}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
-                    _queuedRequestLookupTable.Add(hashId, uri);
-                }
-            }
-            else
-            {
-                uri = $"{_productBasePath}/{rootPath.Name}/{hashId[0]}{hashId[1]}/{hashId[2]}{hashId[3]}/{hashId}";
-            }
-
-            if (isIndex)
-            {
-                uri += ".index";
-            }
-
-            if (startBytes != null && endBytes != null)
-            {
-                _queuedRequests.Add(new Request
-                {
-                    Uri = uri,
-                    LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value,
-                    WriteToDevNull = true
-                });
-            }
-            else
-            {
-                _queuedRequests.Add(new Request
-                {
-                    Uri = uri,
-                    DownloadWholeFile = true,
-                    WriteToDevNull = true
-                });
-            }
-        }
-
+        
         //TODO nicer progress bar
         //TODO this doesn't max out my connection at 300mbs
         public void DownloadQueuedRequests()
@@ -203,22 +153,13 @@ namespace BuildBackup.Web
             progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
-        public Task<byte[]> GetRequestAsBytes(RootFolder rootPath, MD5Hash hash, bool isIndex = false)
+        //TODO comment
+        //TODO come up with a better name for writeToDevNull
+        public Task<byte[]> GetRequestAsBytes(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
+            bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             //TODO remove this ToLower() call
             var hashId = hash.ToString().ToLower();
-            var uri = $"{_productBasePath}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            if (isIndex)
-            {
-                uri = $"{uri}.index";
-            }
-            return GetRequestAsBytes(uri);
-        }
-
-        public Task<byte[]> GetRequestAsBytes(RootFolder rootPath, string hashId, bool isIndex = false)
-        {
-            //TODO remove this ToLower() call
-            hashId = hashId.ToLower();
             var uri = $"{_productBasePath}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
             if (isIndex)
             {

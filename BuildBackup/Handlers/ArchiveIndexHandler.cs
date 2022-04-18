@@ -74,7 +74,7 @@ namespace BuildBackup.Handlers
             
             for (int i = start; i <= finish; i++)
             {
-                byte[] indexContent = await cdn.GetRequestAsBytes(RootFolder.data, cdnConfig.archives[i].hashId, isIndex: true);
+                byte[] indexContent = await cdn.GetRequestAsBytes(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
 
                 using (var stream = new MemoryStream(indexContent))
                 using (BinaryReader br = new BinaryReader(stream))

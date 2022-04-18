@@ -38,7 +38,6 @@ namespace BuildBackup.DataAccess
 
         private EncodingFile GetEncoding(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
-            var hash = buildConfig.encoding[1];
             int encodingSize;
             if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
             {
@@ -51,15 +50,15 @@ namespace BuildBackup.DataAccess
 
             var encoding = new EncodingFile();
 
-            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
+            byte[] content = _cdn.GetRequestAsBytes(RootFolder.data, buildConfig.encoding[1]).Result;
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = _cdn.GetRequestAsBytes(RootFolder.data, hash).Result;
+                content = _cdn.GetRequestAsBytes(RootFolder.data, buildConfig.encoding[1]).Result;
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {
-                    throw new Exception($"File corrupt/not fully downloaded! Remove data / {hash[0]}{hash[1]} / {hash[2]}{hash[3]} / {hash} from cache.");
+                    throw new Exception($"File corrupt/not fully downloaded! Remove data / {buildConfig.encoding[1].ToString()} from cache.");
                 }
             }
 

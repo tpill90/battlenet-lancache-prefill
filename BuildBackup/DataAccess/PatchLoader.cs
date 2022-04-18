@@ -25,11 +25,11 @@ namespace BuildBackup.DataAccess
             var timer = Stopwatch.StartNew();
 
             // For whatever reason, CodVanguard + Warzone do not make this request.
-            if (!string.IsNullOrEmpty(buildConfig.patchConfig) 
+            if (buildConfig.patchConfig != null
                 && targetProduct != TactProducts.CodVanguard && targetProduct != TactProducts.CodWarzone
                 && targetProduct != TactProducts.Hearthstone)
             {
-                _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig);
+                _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
             }
 
             if (buildConfig.patch != null)

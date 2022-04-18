@@ -3,11 +3,11 @@
     public struct VersionsEntry
     {
         public string region;
-        public string buildConfig;
-        public string cdnConfig;
+        public MD5Hash buildConfig;
+        public MD5Hash cdnConfig;
         public string buildId;
         public string versionsName;
         public string productConfig;
-        public string keyRing;
+        public MD5Hash? keyRing;
     }
 }

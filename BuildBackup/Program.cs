@@ -28,15 +28,15 @@ namespace BuildBackup
             //TactProducts.Hearthstone,
             //TactProducts.HeroesOfTheStorm,
             //TactProducts.Overwatch,
-            //TactProducts.Starcraft1,
+            TactProducts.Starcraft1,
             //TactProducts.Starcraft2,
-            TactProducts.WorldOfWarcraft,
+            //TactProducts.WorldOfWarcraft,
             //TactProducts.WowClassic
         };
 
         //TODO extract to config file
         public static bool UseCdnDebugMode = true;
-        public static bool ShowDebugStats = false;
+        public static bool ShowDebugStats = true;
 
         public static bool WriteOutputFiles = false;
 
@@ -44,7 +44,7 @@ namespace BuildBackup
         {
             foreach (var product in ProductsToProcess)
             {
-                //ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
+                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
 
                 BenchmarkUtil.Benchmark(product);
             }

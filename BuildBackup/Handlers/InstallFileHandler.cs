@@ -23,13 +23,12 @@ namespace BuildBackup.Handlers
         }
 
         //TODO comment
-        public void HandleInstallFile(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile,
-            TactProduct product)
+        public void HandleInstallFile(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, 
+            CDNConfigFile cdnConfigFile, TactProduct product)
         {
             var timer = Stopwatch.StartNew();
 
-            var installKey = buildConfig.install[1].ToString();
-            InstallFile installFile = ParseInstallFile(installKey);
+            InstallFile installFile = ParseInstallFile(buildConfig.install[1]);
 
             List<InstallFileEntry> filtered;
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
@@ -79,14 +78,13 @@ namespace BuildBackup.Handlers
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);
-                string archiveIndexKey = cdnConfigFile.archives[e.index].hashId;
-
+                MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 _cdn.QueueRequest(RootFolder.data, archiveIndexKey, (int)e.offset, upperByteRange);
             }
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        private InstallFile ParseInstallFile(string hash)
+        private InstallFile ParseInstallFile(in MD5Hash hash)
         {
             var install = new InstallFile();
 

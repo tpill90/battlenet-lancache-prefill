@@ -31,10 +31,8 @@ namespace BuildBackup.Handlers
 
             _downloadFile = new DownloadFile();
 
-            var hash = buildConfig.download[1].ToString().ToLower();
-
             //TODO async
-            using var stream = new MemoryStream(_cdn.GetRequestAsBytes(RootFolder.data, hash).Result);
+            using var stream = new MemoryStream(_cdn.GetRequestAsBytes(RootFolder.data, buildConfig.download[1]).Result);
             using var blteStream = new BLTEStream(stream, buildConfig.download[1]);
             using BinaryReader bin = new BinaryReader(blteStream);
 
@@ -155,7 +153,7 @@ namespace BuildBackup.Handlers
                 var startBytes = e.offset;
                 // Need to subtract 1, since the byte range is "inclusive"
                 uint upperByteRange = (e.offset + e.size - 1);
-                string archiveIndexKey = cdnConfigFile.archives[e.index].hashId;
+                MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 _cdn.QueueRequest(RootFolder.data, archiveIndexKey, startBytes, upperByteRange);
             }
 

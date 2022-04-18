@@ -39,7 +39,7 @@ namespace BuildBackup
                         cdnConfig.archives = archives.Select(e => new Archive
                         {
                             hashId = e,
-                            hashIdMd5 = e.FromHexString().ToMD5()
+                            hashIdMd5 = e.ToMD5()
                         }).ToArray();
                         break;
                     case "archives-index-size":
@@ -55,8 +55,7 @@ namespace BuildBackup
                     case "patch-archives":
                         if (cols.Length > 1)
                         {
-                            var patchArchives = cols[1].Split(' ');
-                            cdnConfig.patchArchives = patchArchives;
+                            cdnConfig.patchArchives = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         }
                         break;
                     case "patch-archive-group":
@@ -67,13 +66,13 @@ namespace BuildBackup
                         cdnConfig.builds = builds;
                         break;
                     case "file-index":
-                        cdnConfig.fileIndex = cols[1].FromHexString().ToMD5();
+                        cdnConfig.fileIndex = cols[1].ToMD5();
                         break;
                     case "file-index-size":
                         cdnConfig.fileIndexSize = cols[1];
                         break;
                     case "patch-file-index":
-                        cdnConfig.patchFileIndex = cols[1];
+                        cdnConfig.patchFileIndex = cols[1].ToMD5();
                         break;
                     case "patch-file-index-size":
                         cdnConfig.patchFileIndexSize = cols[1];
@@ -149,14 +148,18 @@ namespace BuildBackup
                                 versions.entries[i - 1].region = row[c];
                                 break;
                             case "BuildConfig":
-                                versions.entries[i - 1].buildConfig = row[c];
+                                versions.entries[i - 1].buildConfig = row[c].ToMD5();
                                 break;
                             case "CDNConfig":
-                                versions.entries[i - 1].cdnConfig = row[c];
+                                versions.entries[i - 1].cdnConfig = row[c].ToMD5();
                                 break;
                             case "Keyring":
                             case "KeyRing":
-                                versions.entries[i - 1].keyRing = row[c];
+                                var keyRing = row[c];
+                                if (!String.IsNullOrEmpty(keyRing))
+                                {
+                                    versions.entries[i - 1].keyRing = keyRing.ToMD5();
+                                }
                                 break;
                             case "BuildId":
                                 versions.entries[i - 1].buildId = row[c];
@@ -193,9 +196,9 @@ namespace BuildBackup
         {
             // Making a request to load this "Key Ring" file.  Not used by anything in our application, however it is called for some reason
             // by the Actual Battle.Net client
-            if (!string.IsNullOrEmpty(targetVersion.keyRing))
+            if (targetVersion.keyRing != null)
             {
-                cdn.QueueRequest(RootFolder.config, targetVersion.keyRing);
+                cdn.QueueRequest(RootFolder.config, targetVersion.keyRing.Value);
             }
         }
     }

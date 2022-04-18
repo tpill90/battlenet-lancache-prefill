@@ -10,9 +10,9 @@
         public MD5Hash[] install;
         public string[] installSize;
 
-        public string[] encoding;
+        public MD5Hash[] encoding;
         public string[] encodingSize;
-        public string[] size;
+        public MD5Hash[] size;
         public string[] sizeSize;
         public string buildName;
         public string buildPlaybuildInstaller;
@@ -30,14 +30,14 @@
         public MD5Hash? patch;
         public string patchSize;
 
-        public string patchConfig;
+        public MD5Hash? patchConfig;
 
-        public string[] patchIndex;
+        public MD5Hash[] patchIndex;
 
         public string partialPriority;
         public string partialPrioritySize;
 
-        public string[] vfsRoot;
+        public MD5Hash[] vfsRoot;
         public int[] vfsRootSize;
 
         public string buildBaseContentReleaseManifestFileId;

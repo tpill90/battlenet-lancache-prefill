@@ -127,6 +127,16 @@ namespace System.IO
             return true;
         }
 
+        public static MD5Hash ToMD5(this string str)
+        {
+            var array = Convert.FromHexString(str);
+            
+            if (array.Length != 16)
+                throw new ArgumentException("array size != 16", nameof(array));
+
+            return Unsafe.As<byte, MD5Hash>(ref array[0]);
+        }
+
         public static MD5Hash ToMD5(this byte[] array)
         {
             if (array.Length != 16)
@@ -174,23 +184,7 @@ namespace System.IO
 
         public static byte[] FromHexString(this string str)
         {
-#if NET5_0_OR_GREATER
             return Convert.FromHexString(str);
-#else
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
-            if (str.Length == 0)
-                return Array.Empty<byte>();
-            if ((uint)str.Length % 2 != 0)
-                throw new FormatException("SR.Format_BadHexLength");
-
-            byte[] result = new byte[str.Length >> 1];
-
-            if (!HexConverter.TryDecodeFromUtf16(str, result))
-                throw new FormatException("SR.Format_BadHexChar");
-
-            return result;
-#endif
         }
     }
 
