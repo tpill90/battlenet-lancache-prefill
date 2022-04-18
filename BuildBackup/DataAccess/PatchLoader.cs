@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using BuildBackup.Structs;
+using BuildBackup.Web;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess

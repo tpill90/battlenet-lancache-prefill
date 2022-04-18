@@ -1,6 +1,7 @@
 ﻿using System;
 using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
+using BuildBackup.Web;
 using Konsole;
 
 namespace BuildBackup.Test.LogFileLatestVersionTests

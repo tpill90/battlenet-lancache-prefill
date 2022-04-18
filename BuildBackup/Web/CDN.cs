@@ -11,12 +11,11 @@ using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
 using BuildBackup.Parsers;
 using BuildBackup.Structs;
-using BuildBackup.Utils;
 using ByteSizeLib;
 using Konsole;
 using Colors = Shared.Colors;
 
-namespace BuildBackup
+namespace BuildBackup.Web
 {
     //TODO rename to something like HttpRequestHandler
     public class CDN
@@ -340,6 +339,5 @@ namespace BuildBackup
 
             throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
         }
-
     }
 }

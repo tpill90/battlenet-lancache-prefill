@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BuildBackup.Structs;
 
-namespace BuildBackup.Utils
+namespace BuildBackup.Web
 {
     //TODO document what this does, and why it is needed
     public class CachedStringLookup

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using BuildBackup.Structs;
+using BuildBackup.Web;
 using Colors = Shared.Colors;
 
 namespace BuildBackup

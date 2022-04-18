@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using BuildBackup.DataAccess;
 using BuildBackup.Structs;
+using BuildBackup.Web;
 using CASCLib;
 using Shared;
 
