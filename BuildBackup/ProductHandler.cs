@@ -20,13 +20,14 @@ namespace BuildBackup
     public static class ProductHandler
     {
         //TODO comment parameters
-        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, bool useDebugMode, bool writeOutputFiles, bool showDebugStats)
+        public static ComparisonResult ProcessProduct(TactProduct product, IConsole console, 
+            bool useDebugMode, bool writeOutputFiles, bool showDebugStats, bool skipDiskCache = false)
         {
             var timer = Stopwatch.StartNew();
             Console.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
             // Loading CDNs
-            CDN cdn = new CDN(console, Config.BattleNetPatchUri)
+            CDN cdn = new CDN(console, Config.BattleNetPatchUri, skipDiskCache)
             {
                 DebugMode = useDebugMode
             };

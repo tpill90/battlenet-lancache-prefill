@@ -35,16 +35,18 @@ namespace BuildBackup
         };
 
         //TODO extract to config file
-        public static bool UseCdnDebugMode = true;
-        public static bool ShowDebugStats = true;
+        public static bool SkipDiskCache = false;
 
-        public static bool WriteOutputFiles = true;
+        public static bool UseCdnDebugMode = false;
+        public static bool ShowDebugStats = false;
+
+        public static bool WriteOutputFiles = false;
 
         public static void Main()
         {
             foreach (var product in ProductsToProcess)
             {
-                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
+                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats, SkipDiskCache);
 
                 //BenchmarkUtil.Benchmark(product);
             }

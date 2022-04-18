@@ -26,7 +26,7 @@ namespace BuildBackup.Web
         private readonly List<string> _cdnList = new List<string> 
         {
             "level3.blizzard.com",      // Level3
-            "cdn.blizzard.com",         // Official regionless CDN
+            "cdn.blizzard.com"          // Official regionless CDN
         };
 
         //TODO comment
@@ -48,10 +48,15 @@ namespace BuildBackup.Web
         /// </summary>
         public bool DebugMode = false;
 
-        public CDN(IConsole console, Uri battleNetPatchUri)
+        //TODO document
+        public bool SkipDiskCache = false;
+
+        public CDN(IConsole console, Uri battleNetPatchUri, bool skipDiskCache = false)
         {
             _console = console;
             _battleNetPatchUri = battleNetPatchUri;
+            SkipDiskCache = skipDiskCache;
+
             client = new HttpClient
             {
                 Timeout = new TimeSpan(0, 5, 0)
@@ -111,10 +116,11 @@ namespace BuildBackup.Web
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
+
             int count = 0;
             var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
-            //TODO There is an issue here where exceptions get thrown for Warzone, Vanguard, BOCW, and Starcraft 2.  Probably related to a threading issue..
-            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 30 }, entry =>
+			//TODO There is an issue here where exceptions get thrown for Warzone, Vanguard, BOCW, and Starcraft 2.  Probably related to a threading issue..
+            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 4 }, entry =>
             {
                 GetRequestAsBytes(entry).Wait();
                
@@ -123,7 +129,6 @@ namespace BuildBackup.Web
                     // Skip refreshing the progress bar when debugging.  Slows things down
                     progressBar.Refresh(count, "");
                 }
-
                 count++;
             });
 
@@ -175,7 +180,7 @@ namespace BuildBackup.Web
             var uri = new Uri($"http://{_cdnList[0]}/{request}");
 
             // Try to return a cached copy from the disk first, before making an actual request
-            if (!writeToDevNull)
+            if (!writeToDevNull && !SkipDiskCache)
             {
                 string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
                 if (File.Exists(outputFilePath))
@@ -190,13 +195,12 @@ namespace BuildBackup.Web
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
             }
 
-            //TODO Handle "The response ended prematurely" exceptions.  Maybe add them to the queue again to be retried?
             using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
             await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
 
             if (!responseMessage.IsSuccessStatusCode)
             {
-                throw new FileNotFoundException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL http://{uri.ToString()}");
+                throw new FileNotFoundException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL http://{uri}");
             }
             if(writeToDevNull)
             {
@@ -216,6 +220,10 @@ namespace BuildBackup.Web
             responseStream.CopyToAsync(memoryStream).Wait();
 
             var byteArray = memoryStream.ToArray();
+            if (SkipDiskCache)
+            {
+                return await Task.FromResult(byteArray);
+            }
                 
             // Cache to disk
             FileInfo file = new FileInfo(Path.Combine(Config.CacheDir + uri.AbsolutePath));

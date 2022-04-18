@@ -56,7 +56,6 @@ namespace BuildBackup.Handlers
                 }
                 tasks.Add(ProcessArchiveAsync(cdnConfig, _cdn, lowerLimit, upperLimit));
             }
-
             Task.WhenAll(tasks).Wait();
             
             foreach (var task in tasks)
