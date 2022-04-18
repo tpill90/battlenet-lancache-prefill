@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
+using BuildBackup.Structs;
 using NUnit.Framework;
 
 namespace BuildBackup.Test.DebugUtilTests
@@ -14,12 +15,12 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var generatedRequests = new List<Request>
             {
-                new Request {Uri = "/miss", LowerByteRange = 0, UpperByteRange = 10}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), LowerByteRange = 0, UpperByteRange = 10}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 10},
-                new Request {Uri = "/example2", LowerByteRange = 0, UpperByteRange = 10}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(200, 0), LowerByteRange = 0, UpperByteRange = 10},
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(0, 555), LowerByteRange = 0, UpperByteRange = 10}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -37,11 +38,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This will be exactly the same as the expected requests
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 10}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), LowerByteRange = 0, UpperByteRange = 10}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 10}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), LowerByteRange = 0, UpperByteRange = 10}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -59,11 +60,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This request will be larger than what is expected, but should still be considered a match
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 25, UpperByteRange = 75}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -82,11 +83,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This request will be larger than what is expected, but should still be considered a match
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 50, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 50, UpperByteRange = 100}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -105,11 +106,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This request will be larger than what is expected, but should still be considered a match
-                new Request {Uri = "/example", LowerByteRange = 50, UpperByteRange = 100 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 50, UpperByteRange = 100 }
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -131,11 +132,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This request will be larger than what is expected, but should still be considered a match
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 50}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 50}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -154,11 +155,11 @@ namespace BuildBackup.Test.DebugUtilTests
             var generatedRequests = new List<Request>
             {
                 // This request will be larger than what is expected, but should still be considered a match
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 50}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 50}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 100}
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -180,11 +181,11 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var generatedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 0, UpperByteRange = 50 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 50 }
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -206,11 +207,11 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var generatedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 50, UpperByteRange = 100 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 50, UpperByteRange = 100 }
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -233,12 +234,12 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var generatedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 44527, UpperByteRange = 64327 },
-                new Request {Uri = "/example", LowerByteRange = 16997, UpperByteRange = 40744 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 44527, UpperByteRange = 64327 },
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 16997, UpperByteRange = 40744 }
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/example", LowerByteRange = 16997, UpperByteRange = 64327 }
+                new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 16997, UpperByteRange = 64327 }
             };
 
             var comparisonUtil = new ComparisonUtil(null);
@@ -257,11 +258,11 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var generatedRequests = new List<Request>
             {
-                new Request {Uri = "/sample.index", LowerByteRange = 0, UpperByteRange = 1122 }
+                new Request { ProductRootUri = "/sample.index", IsIndex = true, LowerByteRange = 0, UpperByteRange = 1122, RootFolder = RootFolder.data, CdnKey = new MD5Hash(0,0)}
             };
             var expectedRequests = new List<Request>
             {
-                new Request {Uri = "/sample.index", LowerByteRange = 0, UpperByteRange = 102400000 }
+                new Request { ProductRootUri = "/sample.index", IsIndex = true, LowerByteRange = 0, UpperByteRange = 102400000 , RootFolder = RootFolder.data, CdnKey = new MD5Hash(0,0)}
             };
 
             var comparisonUtil = new ComparisonUtil(null);

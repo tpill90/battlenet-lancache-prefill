@@ -50,20 +50,20 @@ namespace BuildBackup.DebugUtil
 
         public bool HasBeenCached(Request request)
         {
-            return _cachedContentLengths.ContainsKey(request.Uri);
+            return _cachedContentLengths.ContainsKey(request.Uri2);
         }
 
         public long GetContentLength(Request request)
         {
-            if (_cachedContentLengths.ContainsKey(request.Uri))
+            if (_cachedContentLengths.ContainsKey(request.Uri2))
             {
-                return _cachedContentLengths[request.Uri];
+                return _cachedContentLengths[request.Uri2];
             }
 
-            var response = _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri}"))).Result;
+            var response = _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri2}"))).Result;
             var contentLength = response.Content.Headers.ContentLength.Value;
 
-            _cachedContentLengths.TryAdd(request.Uri, contentLength);
+            _cachedContentLengths.TryAdd(request.Uri2, contentLength);
             _cacheMisses++;
 
             if (_cacheMisses == 100)

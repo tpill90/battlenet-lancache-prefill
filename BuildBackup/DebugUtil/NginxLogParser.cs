@@ -6,7 +6,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BuildBackup.DebugUtil.Models;
+using BuildBackup.Structs;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Shared;
 
 namespace BuildBackup.DebugUtil
@@ -51,7 +53,8 @@ namespace BuildBackup.DebugUtil
 
                 // Save the coalesced results to speed up future runs
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".zip", ".coalesced.log")}";
-                File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay));
+                var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
+                File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay, Formatting.Indented, jsonSettings));
 
                 Console.WriteLine($"Parsed request logs in {Colors.Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
                 return requestsToReplay;
@@ -65,35 +68,45 @@ namespace BuildBackup.DebugUtil
         {
             var parsedRequests = new List<Request>();
 
-            // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
-            var filteredRequests = rawRequests.Where(e => e.Contains("GET") && e.Contains("[blizzard]") && !e.Contains("bnt004")).ToList();
-            foreach (var rawRequest in filteredRequests)
+            foreach (var rawRequest in rawRequests)
             {
-                // Find all matches between double quotes.  This will be the only info that we care about in the request logs.
-                var matches = Regex.Matches(rawRequest, "\"(.*?)\"");
-
-                var httpRequest = matches[0].Value;
-                // Request byte range will always be the last result
-                string byteRange = matches[matches.Count - 1].Value
-                    .Replace("bytes=", "")
-                    .Replace("\"", "");
-
-                var parsedRequest = new Request()
+                // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
+                if (!(rawRequest.Contains("GET") && rawRequest.Contains("[blizzard]")))
                 {
-                    //TODO replace this with a regex
-                    // Uri will be the second item.  Example : "GET /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708 HTTP/1.1". 
-                    // Will also remove leading slash
-                    Uri = httpRequest.Split(" ")[1].Remove(0, 1)
+                    continue;
+                }
+                if (rawRequest.Contains("bnt004"))
+                {
+                    continue;
+                }
+
+                // Find all matches between double quotes.  This will be the only info that we care about in the request logs.
+                // Uri example : /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708.
+                var requestUrlMatches = Regex.Matches(rawRequest, @"(tpr/.*/\w*/[a-z0-9]{2}/[a-z0-9]{2}/[a-z0-9]+)(.index)?");
+                var requestUrl = requestUrlMatches[0].Value;
+
+                var requestSplit = requestUrl.Split("/");
+
+                var parsedRequest = new Request
+                {
+                    ProductRootUri = $"tpr/{requestSplit[1]}",
+                    RootFolder = RootFolder.Parse(requestSplit[2]),
+                    CdnKey = requestSplit[5].Replace(".index", "").ToMD5(),
+
+                    IsIndex = requestUrl.Contains(".index")
                 };
 
-                if (byteRange == "-")
+                // Pulling out byte ranges ex. "0-4095" from logs
+                var byteMatch = Regex.Match(rawRequest, @"bytes=(\d+-\d+)");
+                if (byteMatch.Success)
                 {
-                    parsedRequest.DownloadWholeFile = true;
+                    var bytesSplit = byteMatch.Groups[1].Value.Split("-");
+                    parsedRequest.LowerByteRange = long.Parse(bytesSplit[0]);
+                    parsedRequest.UpperByteRange = long.Parse(bytesSplit[1]);
                 }
                 else
                 {
-                    parsedRequest.LowerByteRange = long.Parse(byteRange.Split("-")[0]);
-                    parsedRequest.UpperByteRange = long.Parse(byteRange.Split("-")[1]);
+                    parsedRequest.DownloadWholeFile = true;
                 }
 
                 parsedRequests.Add(parsedRequest);

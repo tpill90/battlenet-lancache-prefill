@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BuildBackup.DebugUtil.Models;
 
@@ -15,7 +14,7 @@ namespace BuildBackup.DebugUtil
             var coalesced = new List<Request>();
 
             //Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
-            var requestsGroupedByUri = initialRequests.GroupBy(e => e.Uri).ToList();
+            var requestsGroupedByUri = initialRequests.GroupBy(e => new {e.RootFolder, e.CdnKey, e.IsIndex } ).ToList();
             foreach (var grouping in requestsGroupedByUri)
             {
                 var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping(isBattleNetClient).ToList();

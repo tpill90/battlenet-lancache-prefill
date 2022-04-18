@@ -39,14 +39,11 @@ namespace BuildBackup.DebugUtil.Models
         public void SaveToDisk(string baseUri)
         {
             var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-            File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(GeneratedRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
+          
+            File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(Misses.OrderBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange), 
                 Formatting.Indented, jsonSettings));
-            File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(Misses.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange), 
+            File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(UnnecessaryRequests.OrderBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
                 Formatting.Indented, jsonSettings));
-            File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(UnnecessaryRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-                Formatting.Indented, jsonSettings));
-            File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(RealRequests.OrderBy(e => e.Uri).ThenBy(e => e.LowerByteRange),
-                Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
         }
 
         public void PrintOutput()

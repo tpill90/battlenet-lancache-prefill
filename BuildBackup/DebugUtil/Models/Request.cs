@@ -1,5 +1,5 @@
 ﻿using System;
-using ByteSizeLib;
+using BuildBackup.Structs;
 
 namespace BuildBackup.DebugUtil.Models
 {
@@ -13,12 +13,33 @@ namespace BuildBackup.DebugUtil.Models
         /// Example :
         ///     tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708
         /// </summary>
-        public string Uri { get; init; }
+        private string _uri;
+        public string Uri2
+        {
+            get
+            {
+                if (_uri == null)
+                {
+                    _uri = this.ToString();
+                }
+                return _uri;
+            }
+        }
 
-        //TODO should this be a computed property?
+        /// <summary>
+        /// Root uri of the target product.  Ex. tpr/sc1live
+        /// </summary>
+        public string ProductRootUri { get; set; }
+
+        public RootFolder RootFolder { get; set; }
+
+        public MD5Hash CdnKey { get; set; }
+
+        public bool IsIndex { get; set; }
+
         public bool DownloadWholeFile { get; set; }
 
-        //TODO should this be null?
+        //TODO should this be nullable?
         public long LowerByteRange { get; set; }
         public long UpperByteRange { get; set; }
 
@@ -31,15 +52,17 @@ namespace BuildBackup.DebugUtil.Models
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
         public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
 
+        //TODO benchmark and see if this is slowing down anything
         public override string ToString()
         {
-            if (DownloadWholeFile)
+            //TODO remove this ToLower() call
+            var hashId = CdnKey.ToString().ToLower();
+            var uri = $"{ProductRootUri}/{RootFolder.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+            if (IsIndex)
             {
-                return $"{Uri} - -";
+                uri = $"{uri}.index";
             }
-            
-            var size = ByteSize.FromBytes((double)TotalBytes);
-            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
+            return uri;
         }
 
         //TODO write some individual unit tests for this
@@ -77,7 +100,11 @@ namespace BuildBackup.DebugUtil.Models
         {
             return new Request
             {
-                Uri = Uri,
+                ProductRootUri = ProductRootUri,
+                RootFolder = RootFolder,
+                CdnKey = CdnKey,
+                IsIndex = IsIndex,
+
                 LowerByteRange = Math.Min(LowerByteRange, request2.LowerByteRange),
                 UpperByteRange = Math.Max(UpperByteRange, request2.UpperByteRange),
 

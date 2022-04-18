@@ -79,41 +79,26 @@ namespace BuildBackup.Web
         //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
-            string uri;
-            if (rootPath == RootFolder.data)
+            Request request2 = new Request
             {
-                uri = _cachedStringLookup.TryGetPrecomputedValue(hash, rootPath);
-            }
-            else
-            {
-                var hashString = hash.ToString().ToLower();
-                uri = $"{_productBasePath}/{rootPath.Name}/{hashString[0]}{hashString[1]}/{hashString[2]}{hashString[3]}/{hashString}";
-            }
+                ProductRootUri = _productBasePath,
+                RootFolder = rootPath,
+                CdnKey = hash,
+                IsIndex = isIndex,
 
-            if (isIndex)
-            {
-                uri += ".index";
-            }
-
+                WriteToDevNull = true
+            };
             if (startBytes != null && endBytes != null)
             {
-                _queuedRequests.Add(new Request
-                {
-                    Uri = uri,
-                    LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value,
-                    WriteToDevNull = true
-                });
+                request2.LowerByteRange = startBytes.Value;
+                request2.UpperByteRange = endBytes.Value;
             }
             else
             {
-                _queuedRequests.Add(new Request
-                {
-                    Uri = uri,
-                    DownloadWholeFile = true,
-                    WriteToDevNull = true
-                });
+                request2.DownloadWholeFile = true;
+                
             }
+            _queuedRequests.Add(request2);
         }
         
         //TODO nicer progress bar
@@ -122,7 +107,7 @@ namespace BuildBackup.Web
         {
             var timer = Stopwatch.StartNew();
 
-            var coalesced = NginxLogParser.CoalesceRequests(_queuedRequests, true);
+            var coalesced = RequestUtils.CoalesceRequests(_queuedRequests, true);
 
             Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
                               $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
@@ -131,15 +116,8 @@ namespace BuildBackup.Web
             //TODO There is an issue here where exceptions get thrown for Warzone, Vanguard, BOCW, and Starcraft 2.  Probably related to a threading issue..
             Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 30 }, entry =>
             {
-                if (entry.DownloadWholeFile)
-                {
-                    GetRequestAsBytes(entry.Uri, writeToDevNull: entry.WriteToDevNull).Wait();
-                }
-                else
-                {
-                    GetRequestAsBytes(entry.Uri, writeToDevNull: entry.WriteToDevNull, entry.LowerByteRange, entry.UpperByteRange).Wait();
-                }
-
+                GetRequestAsBytes(entry).Wait();
+               
                 if (!DebugMode)
                 {
                     // Skip refreshing the progress bar when debugging.  Slows things down
@@ -153,27 +131,40 @@ namespace BuildBackup.Web
             progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
-        //TODO comment
-        //TODO come up with a better name for writeToDevNull
-        public Task<byte[]> GetRequestAsBytes(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
-            bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
+        public async Task<byte[]> GetRequestAsBytes(RootFolder rootPath, MD5Hash hash, bool isIndex = false, bool writeToDevNull = false,
+            long? startBytes = null, long? endBytes = null)
         {
-            //TODO remove this ToLower() call
-            var hashId = hash.ToString().ToLower();
-            var uri = $"{_productBasePath}/{rootPath.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            if (isIndex)
+            Request request = new Request
             {
-                uri = $"{uri}.index";
+                ProductRootUri = _productBasePath,
+                RootFolder = rootPath,
+                CdnKey = hash,
+                IsIndex = isIndex,
+
+                WriteToDevNull = writeToDevNull
+            };
+
+            if (startBytes != null && endBytes != null)
+            {
+                request.LowerByteRange = startBytes.Value;
+                request.UpperByteRange = endBytes.Value;
             }
-            return GetRequestAsBytes(uri);
+            else
+            {
+                request.DownloadWholeFile = true;
+            }
+            return await GetRequestAsBytes(request);
         }
 
         //TODO comment
         //TODO come up with a better name for writeToDevNull
-        private async Task<byte[]> GetRequestAsBytes(string requestUri, bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
+        public async Task<byte[]> GetRequestAsBytes(Request request = null)
         {
-            LogRequestMade(requestUri, startBytes, endBytes);
+            var writeToDevNull = request.WriteToDevNull;
+            var startBytes = request.LowerByteRange;
+            var endBytes = request.UpperByteRange;
 
+            LogRequestMade(request);
             // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
             if (DebugMode && writeToDevNull)
             {
@@ -181,7 +172,7 @@ namespace BuildBackup.Web
             }
 
             // TODO cache this in a dict
-            var uri = new Uri($"http://{_cdnList[0]}/{requestUri}");
+            var uri = new Uri($"http://{_cdnList[0]}/{request}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull)
@@ -194,7 +185,7 @@ namespace BuildBackup.Web
             }
             
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-            if (startBytes != null && endBytes != null)
+            if (startBytes != 0 && endBytes != 0)
             {
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
             }
@@ -214,7 +205,7 @@ namespace BuildBackup.Web
                     // Dump the received data, so we don't have to waste time writing it to disk.
                     responseStream.CopyToAsync(Stream.Null).Wait();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Console.WriteLine(Colors.Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
                 }
@@ -234,29 +225,12 @@ namespace BuildBackup.Web
             return await Task.FromResult(byteArray);
         }
 
-        private void LogRequestMade(string requestUri, long? startBytes, long? endBytes)
+        private void LogRequestMade(Request request = null)
         {
-            // Record the requests we're making, so we can use it for debugging
-            if (startBytes != null && endBytes != null)
-            {
-                allRequestsMade.Add(new Request
-                {
-                    Uri = requestUri,
-                    LowerByteRange = startBytes.Value,
-                    UpperByteRange = endBytes.Value
-                });
-            }
-            else
-            {
-                allRequestsMade.Add(new Request
-                {
-                    Uri = requestUri,
-                    DownloadWholeFile = true
-                });
-            }
+            allRequestsMade.Add(request);
         }
 
-        //TODO comment
+        //TODO comment + possibly move to ownn file
         public string MakePatchRequest(TactProduct tactProduct, string target)
         {
             var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";

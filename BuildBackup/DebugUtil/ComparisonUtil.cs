@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.DebugUtil.Models;
-using ByteSizeLib;
 using Konsole;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DebugUtil
@@ -36,6 +37,15 @@ namespace BuildBackup.DebugUtil
             var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product).ToList();
             GetRequestSizes(realRequests, fileSizeProvider);
 
+            if (writeOutputFiles)
+            {
+                var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
+                var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
+                File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests.OrderBy(e => e.RootFolder).ThenBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
+                    Formatting.Indented, jsonSettings));
+                File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.RootFolder).ThenBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
+                    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+            }
             var comparisonResult = new ComparisonResult
             {
                 GeneratedRequests = FastDeepCloner.DeepCloner.Clone(generatedRequests),
@@ -120,9 +130,10 @@ namespace BuildBackup.DebugUtil
             {
                 var current = requestsToProcess.First();
 
-                var partialMatchesLower = generatedRequests.Where(e => e.Uri == current.Uri
-                                                                  && current.LowerByteRange <= e.UpperByteRange
-                                                                  && current.UpperByteRange >= e.UpperByteRange).ToList();
+                var partialMatchesLower = generatedRequests.Where(e => e.CdnKey == current.CdnKey
+                                                                       && e.RootFolder.Name == current.RootFolder.Name
+                                                                       && current.LowerByteRange <= e.UpperByteRange
+                                                                       && current.UpperByteRange >= e.UpperByteRange).ToList();
                 if (partialMatchesLower.Any())
                 {
                     // Case where the request we are testing against satisfies the whole match - lower end match
@@ -139,7 +150,8 @@ namespace BuildBackup.DebugUtil
                     continue;
                 }
 
-                var partialMatchesUpper = generatedRequests.Where(e => e.Uri == current.Uri
+                var partialMatchesUpper = generatedRequests.Where(e => e.CdnKey == current.CdnKey
+                                                                       && e.RootFolder.Name == current.RootFolder.Name
                                                                        && current.UpperByteRange >= e.LowerByteRange
                                                                        && current.LowerByteRange <= e.LowerByteRange).ToList();
                 if (partialMatchesUpper.Any())
@@ -184,9 +196,11 @@ namespace BuildBackup.DebugUtil
                 var current = requestsToProcess.First();
 
                 // Special case for indexes
-                if (current.Uri.Contains(".index"))
+                if (current.IsIndex)
                 {
-                    var indexMatch = generatedRequests.FirstOrDefault(e => e.Uri == current.Uri);
+                    //TODO doesn't look like RootFolder is being deserialized correctly.
+                    var indexMatch = generatedRequests.FirstOrDefault(e => e.IsIndex && e.CdnKey == current.CdnKey
+                                                                                     && e.RootFolder.Name == current.RootFolder.Name);
                     if (indexMatch != null)
                     {
                         requestsToProcess.RemoveAt(0);
@@ -196,9 +210,10 @@ namespace BuildBackup.DebugUtil
                 }
 
                 // Exact match, remove from both lists
-                var exactMatch = generatedRequests.FirstOrDefault(e => e.Uri == current.Uri
-                                                                         && e.LowerByteRange == current.LowerByteRange
-                                                                         && e.UpperByteRange == current.UpperByteRange);
+                var exactMatch = generatedRequests.FirstOrDefault(e => e.CdnKey == current.CdnKey
+                                                                       && e.RootFolder.Name == current.RootFolder.Name
+                                                                       && e.LowerByteRange == current.LowerByteRange
+                                                                       && e.UpperByteRange == current.UpperByteRange);
                 if (exactMatch != null)
                 {
                     requestsToProcess.RemoveAt(0);
@@ -227,9 +242,10 @@ namespace BuildBackup.DebugUtil
             {
                 var current = requestsToProcess.First();
 
-                var rangeMatches = generatedRequests.Where(e => e.Uri == current.Uri
-                                                              && current.LowerByteRange >= e.LowerByteRange
-                                                              && current.UpperByteRange <= e.UpperByteRange).ToList();
+                var rangeMatches = generatedRequests.Where(e => e.CdnKey == current.CdnKey
+                                                                && e.RootFolder.Name == current.RootFolder.Name
+                                                                && current.LowerByteRange >= e.LowerByteRange
+                                                                && current.UpperByteRange <= e.UpperByteRange).ToList();
                 if (rangeMatches.Any())
                 {
                     if (rangeMatches.Count > 1)
@@ -258,10 +274,14 @@ namespace BuildBackup.DebugUtil
             {
                 var lowerSlice = new Request
                 {
-                    Uri = match.Uri,
                     //TODO should probably unit test the range calculations as well
                     LowerByteRange = match.LowerByteRange,
-                    UpperByteRange = current.LowerByteRange - 1
+                    UpperByteRange = current.LowerByteRange - 1,
+
+                    ProductRootUri = current.ProductRootUri,
+                    RootFolder = current.RootFolder,
+                    CdnKey = current.CdnKey,
+                    IsIndex = current.IsIndex
                 };
                 results.Add(lowerSlice);
             }
@@ -271,10 +291,14 @@ namespace BuildBackup.DebugUtil
             {
                 var upperSlice = new Request
                 {
-                    Uri = match.Uri,
                     //TODO should probably unit test the range calculations as well
                     LowerByteRange = current.UpperByteRange + 1,
-                    UpperByteRange = match.UpperByteRange
+                    UpperByteRange = match.UpperByteRange,
+
+                    ProductRootUri = current.ProductRootUri,
+                    RootFolder = current.RootFolder,
+                    CdnKey = current.CdnKey,
+                    IsIndex = current.IsIndex
                 };
                 results.Add(upperSlice);
             }

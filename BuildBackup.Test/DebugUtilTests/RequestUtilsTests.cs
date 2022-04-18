@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BuildBackup.DebugUtil;
 using BuildBackup.DebugUtil.Models;
+using BuildBackup.Structs;
 using NUnit.Framework;
 
 namespace BuildBackup.Test.DebugUtilTests
@@ -15,8 +17,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Creating two requests that are exact duplicates
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -30,10 +32,10 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var requests = new List<Request>
             {
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
                 // Creating two requests that will be combined into a single request, that is a duplicate of the above
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 49, DownloadWholeFile = true },
-                new Request { Uri = "SampleUri", LowerByteRange = 50, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 49, DownloadWholeFile = true },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 50, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -47,9 +49,11 @@ namespace BuildBackup.Test.DebugUtilTests
         {
             var requests = new List<Request>
             {
-                // Requests differ by URI, won't be combined
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { Uri = "DifferentURI", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
+                // Requests differ by ProductRootUri, won't be combined
+                new Request { ProductRootUri = "SampleUri", RootFolder = RootFolder.data, CdnKey = "01d2060c711a275d39be37732fbeee16".ToMD5(),
+                                    LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request { ProductRootUri = "DifferentURI", RootFolder = RootFolder.data, CdnKey = "0002060c711a275d39be37732fbeee16".ToMD5(), 
+                                    LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -64,8 +68,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Requests differ by LowerByteRange, won't be combined
-                new Request() { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { Uri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -80,8 +84,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Overlap on the upper byte range
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 999999 }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 999999 }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -98,8 +102,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // These two requests have sequential byte ranges (0-100 -> 101-200), so they should be combined
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
-                new Request { Uri = "SampleUri", LowerByteRange = 101, UpperByteRange = 200 }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 101, UpperByteRange = 200 }
             };
 
             var results = RequestUtils.CoalesceRequests(requests);
@@ -119,8 +123,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // These two requests have sequential byte ranges (0-100 -> 101-200), so they should be combined
-                new Request { Uri = "SampleUri", LowerByteRange = 101, UpperByteRange = 200 },
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 101, UpperByteRange = 200 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 }
             };
 
             var results = RequestUtils.CoalesceRequests(requests);
@@ -139,8 +143,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // These two requests have sequential byte ranges, however they are not to the same request so they will not be combined
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
-                new Request { Uri = "DifferentUri", LowerByteRange = 101, UpperByteRange = 200 }
+                new Request { ProductRootUri = "SampleUri", RootFolder = RootFolder.data, CdnKey = "01d2060c711a275d39be37732fbeee16".ToMD5(), LowerByteRange = 0, UpperByteRange = 100 },
+                new Request { ProductRootUri = "DifferentUri", RootFolder = RootFolder.data, CdnKey = "1112060c711a275d39be37732fbeee16".ToMD5(), LowerByteRange = 101, UpperByteRange = 200 }
             };
 
             var results = RequestUtils.CoalesceRequests(requests);
@@ -149,11 +153,11 @@ namespace BuildBackup.Test.DebugUtilTests
             Assert.AreEqual(2, results.Count);
 
             // Validating that the requests are untouched
-            var firstRequest = results.Single(e => e.Uri == "SampleUri");
+            var firstRequest = results.Single(e => e.Uri2.Contains("SampleUri"));
             Assert.AreEqual(0, firstRequest.LowerByteRange);
             Assert.AreEqual(100, firstRequest.UpperByteRange);
 
-            var secondRequest = results.Single(e => e.Uri == "DifferentUri");
+            var secondRequest = results.Single(e => e.Uri2.Contains("DifferentUri"));
             Assert.AreEqual(101, secondRequest.LowerByteRange);
             Assert.AreEqual(200, secondRequest.UpperByteRange);
         }
@@ -164,8 +168,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // These two requests have byte ranges that overlap, so they should be combined into a single entry
-                new Request { Uri = "SampleUri", LowerByteRange = 0, UpperByteRange = 50 },
-                new Request { Uri = "SampleUri", LowerByteRange = 25, UpperByteRange = 100 }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 50 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 25, UpperByteRange = 100 }
             };
 
             var results = RequestUtils.CoalesceRequests(requests);
@@ -184,8 +188,8 @@ namespace BuildBackup.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // These two requests have byte ranges that overlap, so they should be combined into a single entry
-                new Request { Uri = "SampleUri", LowerByteRange = 260046848, UpperByteRange = 268435455 },
-                new Request { Uri = "SampleUri", LowerByteRange = 264241152, UpperByteRange = 269484031 }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 260046848, UpperByteRange = 268435455 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 264241152, UpperByteRange = 269484031 }
             };
 
             var results = RequestUtils.CoalesceRequests(requests);

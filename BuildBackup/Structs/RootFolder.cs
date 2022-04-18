@@ -7,7 +7,7 @@
         public static readonly RootFolder config = new RootFolder("config");
         public static readonly RootFolder patch = new RootFolder("patch");
 
-        private RootFolder(string name) : base(name)
+        public RootFolder(string name) : base(name)
         {
         }
     }

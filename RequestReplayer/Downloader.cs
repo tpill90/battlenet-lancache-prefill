@@ -65,7 +65,7 @@ namespace RequestReplayer
 
         private async Task DownloadAsync(Request request, ProgressBar progressBar)
         {
-            var requestUri = new Uri($"{_blizzardCdnBaseUri}/{request.Uri}");
+            var requestUri = new Uri($"{_blizzardCdnBaseUri}/{request}");
 
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
             if (!request.DownloadWholeFile)

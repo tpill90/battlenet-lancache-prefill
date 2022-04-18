@@ -38,7 +38,7 @@ namespace BuildBackup
         public static bool UseCdnDebugMode = true;
         public static bool ShowDebugStats = true;
 
-        public static bool WriteOutputFiles = false;
+        public static bool WriteOutputFiles = true;
 
         public static void Main()
         {
@@ -46,7 +46,7 @@ namespace BuildBackup
             {
                 ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats);
 
-                BenchmarkUtil.Benchmark(product);
+                //BenchmarkUtil.Benchmark(product);
             }
             Console.WriteLine("Pre-load Complete!\n");
 
