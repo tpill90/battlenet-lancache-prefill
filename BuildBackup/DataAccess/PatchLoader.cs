@@ -31,9 +31,9 @@ namespace BuildBackup.DataAccess
                 _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig);
             }
 
-            if (!string.IsNullOrEmpty(buildConfig.patch))
+            if (buildConfig.patch != null)
             {
-                GetPatchFile(buildConfig.patch);
+                GetPatchFile(buildConfig.patch.Value);
             }
 
             // Unused by Hearthstone
@@ -64,7 +64,7 @@ namespace BuildBackup.DataAccess
             }
         }
 
-        private PatchFile GetPatchFile(string hash)
+        private PatchFile GetPatchFile(in MD5Hash hash)
         {
             var patchFile = new PatchFile();
 

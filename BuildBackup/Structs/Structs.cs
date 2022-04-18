@@ -18,7 +18,8 @@ namespace BuildBackup
         public string hashId;
         public MD5Hash hashIdMd5;
 
-        public int fileCount;
+        // Not sure what this means right now
+        public int archiveIndexSize;
 
         public override string ToString()
         {
@@ -33,8 +34,6 @@ namespace BuildBackup
         /// </summary>
         public Archive[] archives;
 
-        public int totalArchivedFileCount => archives.Sum(e => e.fileCount);
-
         public string archiveGroup;
 
         public string[] patchArchives;
@@ -43,7 +42,7 @@ namespace BuildBackup
 
         public string[] builds;
 
-        public string fileIndex;
+        public MD5Hash fileIndex;
         public string fileIndexSize;
 
         public string patchFileIndex;

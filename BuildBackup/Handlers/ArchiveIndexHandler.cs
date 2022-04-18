@@ -44,7 +44,6 @@ namespace BuildBackup.Handlers
             }
 
             int sliceAmount = cdnConfig.archives.Length / maxTasks;
-
             for (int i = 0; i <= maxTasks; i++)
             {
                 var lowerLimit = (i * sliceAmount);
@@ -66,8 +65,7 @@ namespace BuildBackup.Handlers
             timer.Stop();
             Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
-
-        //TODO reduce allocs
+        
         private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, CDN cdn, int start, int finish)
         {
             //TODO does pre allocating help performance?
@@ -155,7 +153,7 @@ namespace BuildBackup.Handlers
         }
 
         //TODO document
-        public IndexEntry? TryGet(MD5Hash lookupKey)
+        public IndexEntry? TryGet(in MD5Hash lookupKey)
         {
             foreach (var dict in _indexDictionaries)
             {

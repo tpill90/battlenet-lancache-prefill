@@ -81,7 +81,7 @@ namespace BuildBackup
             timer = Stopwatch.StartNew();
             for (long i = 0; i < numEntries; i++)
             {
-                //inputHashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
+                //inputHashList.Add();
             }
 
             timer.Stop();
@@ -122,62 +122,6 @@ namespace BuildBackup
             //}
 
             //Console.WriteLine($"Done in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-        }
-
-        //TODO measure this with benchmark.net
-        private static void BenchmarkMD5Hash_ToString()
-        {
-            int count = 10000000;
-
-            var random = new Random();
-            var hashList = new List<MD5Hash>();
-            Stopwatch timer;
-
-            // Prepopulating
-            timer = Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                //hashList.Add(new MD5Hash((ulong) random.NextInt64(), (ulong) random.NextInt64()));
-            }
-
-            timer.Stop();
-            Console.WriteLine($"Prepopulated in {timer.Elapsed}");
-
-            // Warmup
-            timer = Stopwatch.StartNew();
-            Console.WriteLine("Warmup");
-            foreach (var hash in hashList)
-            {
-                hash.ToStringOld();
-                hash.ToStringNew();
-            }
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Console.WriteLine($"Warmup done in {timer.Elapsed}");
-
-            timer = Stopwatch.StartNew();
-            foreach (var hash in hashList)
-            {
-                hash.ToStringOld();
-            }
-
-            Console.WriteLine($"Old done in {timer.Elapsed}");
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            timer = Stopwatch.StartNew();
-            foreach (var hash in hashList)
-            {
-                hash.ToStringNew();
-            }
-
-            Console.WriteLine($"New done in {timer.Elapsed}");
         }
     }
 }

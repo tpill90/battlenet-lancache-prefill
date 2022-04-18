@@ -7,7 +7,7 @@ namespace BuildBackup.DataAccess
 {
     public static class IndexParser
     {
-        public static Dictionary<string, IndexEntry> ParseIndex(string hashId, CDN cdn, RootFolder folder)
+        public static Dictionary<string, IndexEntry> ParseIndex(in MD5Hash hashId, CDN cdn, RootFolder folder)
         {
             byte[] indexContent = cdn.GetRequestAsBytes(folder, hashId, isIndex: true).Result;
 

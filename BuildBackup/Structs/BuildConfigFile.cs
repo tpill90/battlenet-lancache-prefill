@@ -27,7 +27,7 @@
         public string buildReplayHash;
         public string buildManifestVersion;
 
-        public string patch;
+        public MD5Hash? patch;
         public string patchSize;
 
         public string patchConfig;

@@ -69,7 +69,7 @@ namespace BuildBackup.Handlers
                         buildConfig.buildUid = cols[1];
                         break;
                     case "patch":
-                        buildConfig.patch = cols[1];
+                        buildConfig.patch = cols[1].FromHexString().ToMD5();
                         break;
                     case "patch-size":
                         buildConfig.patchSize = cols[1];

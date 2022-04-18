@@ -14,7 +14,7 @@ namespace BuildBackup.Utils
             _productBasePath = productBasePath;
         }
 
-        public string TryGetPrecomputedValue(MD5Hash hash, RootFolder rootPath)
+        public string TryGetPrecomputedValue(in MD5Hash hash, RootFolder rootPath)
         {
             if (_cacheLookupDictionary.ContainsKey(hash))
             {

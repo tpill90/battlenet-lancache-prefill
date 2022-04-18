@@ -47,7 +47,7 @@ namespace BuildBackup.Structs
 
                 while (i != 16)
                 {
-                    dst[i] = HexConverter.ToCharUpper((uint)((lowPartTemp >> 4) & lowMask));
+                    dst[i] = HexConverter.ToCharUpper((uint)((lowPartTemp & highMask) >> 4));
                     dst[i + 1] = HexConverter.ToCharUpper((uint)(lowPartTemp & lowMask));
                     i += 2;
                     lowPartTemp >>= 8;
@@ -55,7 +55,7 @@ namespace BuildBackup.Structs
 
                 while (i != 32)
                 {
-                    dst[i] = HexConverter.ToCharUpper((uint)((highPartTemp >> 4) & highMask));
+                    dst[i] = HexConverter.ToCharUpper((uint)((highPartTemp & highMask) >> 4));
                     dst[i + 1] = HexConverter.ToCharUpper((uint)(highPartTemp & lowMask));
                     i += 2;
                     highPartTemp >>= 8;

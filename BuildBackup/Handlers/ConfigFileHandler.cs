@@ -45,7 +45,7 @@ namespace BuildBackup
                         var archiveLengths = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToList();
                         for (int j = 0; j < archiveLengths.Count; j++)
                         {
-                            cdnConfig.archives[j].fileCount = archiveLengths[j];
+                            cdnConfig.archives[j].archiveIndexSize = archiveLengths[j];
                         }
                         break;
                     case "archive-group":
@@ -66,7 +66,7 @@ namespace BuildBackup
                         cdnConfig.builds = builds;
                         break;
                     case "file-index":
-                        cdnConfig.fileIndex = cols[1];
+                        cdnConfig.fileIndex = cols[1].FromHexString().ToMD5();
                         break;
                     case "file-index-size":
                         cdnConfig.fileIndexSize = cols[1];
