@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Konsole;
 using Spectre.Console;
 using Colors = Shared.Colors;
 
@@ -25,7 +24,7 @@ namespace BuildBackup.DebugUtil
                 Console.WriteLine(Colors.Yellow($"Run {i+1}"));
 
                 Stopwatch timer = Stopwatch.StartNew();
-                ProductHandler.ProcessProduct(targetProduct, new Writer(), useDebugMode: true, writeOutputFiles: false, showDebugStats: false);
+                //ProductHandler.ProcessProduct(targetProduct, new Writer(), useDebugMode: true, writeOutputFiles: false, showDebugStats: false);
                 timer.Stop();
                 runResults.Add(timer);
 
@@ -44,7 +43,7 @@ namespace BuildBackup.DebugUtil
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
-                ProductHandler.ProcessProduct(targetProduct, new Writer(), useDebugMode: true, writeOutputFiles: false, showDebugStats: false);
+                //ProductHandler.ProcessProduct(targetProduct, new Writer(), useDebugMode: true, writeOutputFiles: false, showDebugStats: false);
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();

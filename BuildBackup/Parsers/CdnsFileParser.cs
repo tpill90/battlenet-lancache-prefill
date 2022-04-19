@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using BuildBackup.Structs;
 using BuildBackup.Web;
-using Shared;
 
 namespace BuildBackup.Parsers
 {
@@ -12,8 +10,6 @@ namespace BuildBackup.Parsers
     {
         public static CdnsFile ParseCdnsFile(CDN cdn, TactProduct targetProduct)
         {
-            var timer = Stopwatch.StartNew();
-
             string content = cdn.MakePatchRequest(targetProduct, "cdns");
 
             CdnsFile cdns = new CdnsFile();
@@ -77,17 +73,9 @@ namespace BuildBackup.Parsers
 
             if (cdns.entries == null || !cdns.entries.Any())
             {
-                Console.WriteLine($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
                 throw new Exception($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
             }
 
-            timer.Stop();
-            if (timer.Elapsed.Milliseconds > 10)
-            {
-                Console.Write("CDNs File loaded in ".PadRight(Config.PadRight));
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF")).PadLeft(Config.Padding)}");
-            }
-            
             return cdns;
         }
     }

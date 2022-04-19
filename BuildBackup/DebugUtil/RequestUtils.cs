@@ -7,7 +7,6 @@ namespace BuildBackup.DebugUtil
     public static class RequestUtils
     {
         //TODO comment + unit test
-        //TODO move this into a different class
         public static List<Request> CoalesceRequests(List<Request> initialRequests, bool isBattleNetClient = false)
         {
             //TODO handle the case where there are "whole file downloads".  If there is a whole file download, then any other requests should just be removed at this step

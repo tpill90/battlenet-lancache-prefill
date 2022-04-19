@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
-using Konsole;
 using NUnit.Framework;
+using Spectre.Console.Testing;
 
 namespace BuildBackup.Test.DownloadTests.Blizzard
 {
@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = ProductHandler.ProcessProduct(TactProducts.Starcraft1, new MockConsole(120, 50), true, writeOutputFiles: false, showDebugStats: true);
+            _results = ProductHandler.ProcessProduct(TactProducts.Starcraft1, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
         [Test]
@@ -31,16 +31,6 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
             var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
             Assert.AreEqual(0, missedBandwidth.Bytes);
         }
-
-        //TODO copy this to the rest of the tests
-        //[Test]
-        //public void TotalTime()
-        //{
-        //    var expectedMilliseconds = 700;
-        //    Assert.LessOrEqual(_results.ElapsedTime.TotalMilliseconds, expectedMilliseconds);
-        //}
-
-        //TODO make a test that checks for the # of requests w\o size
 
         [Test]
         public void WastedBandwidth()

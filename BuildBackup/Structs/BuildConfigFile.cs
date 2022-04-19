@@ -11,9 +11,9 @@
         public string[] installSize;
 
         public MD5Hash[] encoding;
-        public string[] encodingSize;
+        public int[] encodingSize;
         public MD5Hash[] size;
-        public string[] sizeSize;
+        public int[] sizeSize;
         public string buildName;
         public string buildPlaybuildInstaller;
         public string buildProduct;

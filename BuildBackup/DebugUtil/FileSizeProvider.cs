@@ -16,8 +16,7 @@ namespace BuildBackup.DebugUtil
 
         private ConcurrentDictionary<string, long> _cachedContentLengths;
         private int _cacheMisses;
-
-        //TODO make all cache files point to the /cache directory
+        
         private string _cacheDir = "cache/cachedContentLengths";
         private string CachedFileName => $"{_cacheDir}/{_targetProduct.ProductCode}.json";
         private object _cacheFileLock = new object();

@@ -23,7 +23,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(0, 555), LowerByteRange = 0, UpperByteRange = 10}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // Since there were no matches found, we should expect the two lists to have their original contents
@@ -45,7 +45,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), LowerByteRange = 0, UpperByteRange = 10}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // Because there is an exact match between the requests, the requests should be removed from each array.
@@ -67,7 +67,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
@@ -90,7 +90,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 50, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
@@ -113,7 +113,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
             
             // Since this matched fully, should be completely removed
@@ -139,7 +139,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 50}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
@@ -162,7 +162,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             
@@ -188,7 +188,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(1, generatedRequests.Count);
@@ -214,7 +214,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(1, generatedRequests.Count);
@@ -242,7 +242,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 16997, UpperByteRange = 64327 }
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(0, generatedRequests.Count);
@@ -265,7 +265,7 @@ namespace BuildBackup.Test.DebugUtilTests
                 new Request { ProductRootUri = "/sample.index", IsIndex = true, LowerByteRange = 0, UpperByteRange = 102400000 , RootFolder = RootFolder.data, CdnKey = new MD5Hash(0,0)}
             };
 
-            var comparisonUtil = new ComparisonUtil(null);
+            var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // When an index is matched, it should only consider the Uri.  Battle.net for whatever reason chooses to request the wrong byte range

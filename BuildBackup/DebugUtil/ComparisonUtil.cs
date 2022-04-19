@@ -5,24 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BuildBackup.DebugUtil.Models;
-using Konsole;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.DebugUtil
 {
     public class ComparisonUtil
     {
-        private readonly IConsole _console;
-
         //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
-        public ComparisonUtil(IConsole console)
-        {
-            _console = console;
-        }
-        
+      
         public ComparisonResult CompareAgainstRealRequests(List<Request> generatedRequests, TactProduct product, bool writeOutputFiles)
         {
             Console.WriteLine("\nComparing requests against real request logs...");
@@ -41,9 +35,9 @@ namespace BuildBackup.DebugUtil
             {
                 var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
                 var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-                File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests.OrderBy(e => e.RootFolder).ThenBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
+                File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests,
                     Formatting.Indented, jsonSettings));
-                File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests.OrderBy(e => e.RootFolder).ThenBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
+                File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests,
                     Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
             }
             var comparisonResult = new ComparisonResult
@@ -79,17 +73,13 @@ namespace BuildBackup.DebugUtil
                 return;
             }
 
-            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, wholeFileRequests.Count, 50);
-            int count = 0;
             // Speeding up by pre-caching the content-length headers in parallel.
             Parallel.ForEach(wholeFileRequests, new ParallelOptions { MaxDegreeOfParallelism = 25 }, request =>
             {
                 fileSizeProvider.GetContentLength(request);
-                progressBar.Refresh(count, $"Getting request sizes.  {Colors.Cyan(wholeFileRequests.Count - count)} remaining");
-                count++;
             });
             fileSizeProvider.Save();
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            AnsiConsole.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         private void GetRequestSizes(List<Request> requests, FileSizeProvider fileSizeProvider)

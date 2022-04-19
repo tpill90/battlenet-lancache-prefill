@@ -26,8 +26,6 @@ namespace BuildBackup.Handlers
         public void HandleInstallFile(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, 
             CDNConfigFile cdnConfigFile, TactProduct product)
         {
-            var timer = Stopwatch.StartNew();
-
             InstallFile installFile = ParseInstallFile(buildConfig.install[1]);
 
             List<InstallFileEntry> filtered;
@@ -46,11 +44,6 @@ namespace BuildBackup.Handlers
 
             if (!filtered.Any())
             {
-                if (timer.Elapsed.TotalMilliseconds > 10)
-                {
-                    Console.Write("Parsed install file...".PadRight(Config.PadRight));
-                    Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-                }
                 return;
             }
 
@@ -81,7 +74,6 @@ namespace BuildBackup.Handlers
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 _cdn.QueueRequest(RootFolder.data, archiveIndexKey, (int)e.offset, upperByteRange);
             }
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
         private InstallFile ParseInstallFile(in MD5Hash hash)

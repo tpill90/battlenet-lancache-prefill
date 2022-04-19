@@ -8,7 +8,7 @@ using BuildBackup.Structs;
 using BuildBackup.Web;
 using Colors = Shared.Colors;
 
-namespace BuildBackup
+namespace BuildBackup.Handlers
 {
     public class ConfigFileHandler
     {
@@ -21,8 +21,6 @@ namespace BuildBackup
 
         public CDNConfigFile GetCDNconfig(VersionsEntry targetVersion)
         {
-            var timer = Stopwatch.StartNew();
-
             var cdnConfig = new CDNConfigFile();
 
             var content = Encoding.UTF8.GetString(cdn.GetRequestAsBytes(RootFolder.config, targetVersion.cdnConfig).Result);
@@ -75,7 +73,7 @@ namespace BuildBackup
                         cdnConfig.patchFileIndex = cols[1].ToMD5();
                         break;
                     case "patch-file-index-size":
-                        cdnConfig.patchFileIndexSize = cols[1];
+                        cdnConfig.patchFileIndexSize = Int32.Parse(cols[1]);
                         break;
                     case "patch-archives-index-size":
                         cdnConfig.patchArchivesIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
@@ -92,14 +90,7 @@ namespace BuildBackup
 
             if (cdnConfig.archives == null)
             {
-                throw new Exception("Invalid CDNconfig");
-            }
-            
-            timer.Stop();
-            if (timer.Elapsed.TotalMilliseconds > 10)
-            {
-                Console.Write($"CDNConfig loaded, {Colors.Magenta(cdnConfig.archives.Count())} archives.".PadRight(Config.PadRight));
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+                throw new Exception("Invalid CDNConfig");
             }
             
             return cdnConfig;
@@ -108,8 +99,6 @@ namespace BuildBackup
         //TODO comment
         public VersionsEntry GetLatestVersionEntry(TactProduct tactProduct)
         {
-            var timer = Stopwatch.StartNew();
-
             string content = cdn.MakePatchRequest(tactProduct, "versions");
             var versions = new VersionsFile();
 
@@ -181,14 +170,6 @@ namespace BuildBackup
 
             var targetVersion = versions.entries[0];
 
-
-            timer.Stop();
-            if (timer.Elapsed.Milliseconds > 10)
-            {
-                Console.Write("GetLatestVersion loaded...".PadRight(Config.PadRight));
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-            }
-            
             return targetVersion;
         }
 

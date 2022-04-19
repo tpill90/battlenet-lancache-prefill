@@ -27,8 +27,6 @@ namespace BuildBackup.Handlers
         //TODO document
         public void ParseDownloadFile(BuildConfigFile buildConfig)
         {
-            var timer = Stopwatch.StartNew();
-
             _downloadFile = new DownloadFile();
 
             //TODO async
@@ -91,18 +89,12 @@ namespace BuildBackup.Handlers
 
                 _downloadFile.tags[i] = tag;
             }
-
-            Console.Write("Parsed download file...".PadRight(Config.PadRight));
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
         
         //TODO document method
         public void HandleDownloadFile(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
-            Console.Write("Handling download file list...".PadRight(Config.PadRight));
-            var timer = Stopwatch.StartNew();
-
-            Dictionary<string, IndexEntry> fileIndexList = IndexParser.ParseIndex(cdnConfigFile.fileIndex, _cdn, RootFolder.data);
+            Dictionary<MD5Hash, IndexEntry> unarchivedFileIndex = IndexParser.ParseIndex(_cdn, RootFolder.data, cdnConfigFile.fileIndex);
 
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
@@ -135,32 +127,29 @@ namespace BuildBackup.Handlers
                 }
 
                 IndexEntry? archiveIndex = archiveIndexHandler.TryGet(current.hash);
+                // If a file is not found in the archive index, then there is a possibility that it is an "unarchived" file.
                 if (archiveIndex == null)
                 {
-                    if (fileIndexList.ContainsKey(current.hash.ToString()))
+                    // Handles downloading individual unarchived files if they are found in the unarchived file index
+                    if (unarchivedFileIndex.ContainsKey(current.hash))
                     {
-                        // Handles downloading unarchived files unarchived files
-                        //TODO get rid of .ToString
-                        var file = fileIndexList[current.hash.ToString()];
-
-                        var endBytes2 = file.offset + file.size - 1;
-                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes2);
+                        IndexEntry file = unarchivedFileIndex[current.hash];
+                        var endBytes = file.offset + file.size - 1;
+                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes);
                     }
                     continue;
                 }
 
                 IndexEntry e = archiveIndex.Value;
-                var startBytes = e.offset;
-                // Need to subtract 1, since the byte range is "inclusive"
-                uint upperByteRange = (e.offset + e.size - 1);
+
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
+                var startBytes = e.offset;
+                uint upperByteRange = (e.offset + e.size - 1);
                 _cdn.QueueRequest(RootFolder.data, archiveIndexKey, startBytes, upperByteRange);
             }
-
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
 
-        //TODO document how this works
+        //TODO document how this works + test
         private static DownloadTag BuildDownloadMask(List<DownloadTag> tagsToUse)
         {
             // Need to first pre-process groups of similar tags.  Must be combined using logical OR to determine all files that might be installed.

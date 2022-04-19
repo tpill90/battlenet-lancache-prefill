@@ -22,16 +22,10 @@ namespace BuildBackup.DataAccess
 
         public EncodingTable BuildEncodingTable(BuildConfigFile buildConfig)
         {
-            Console.Write("Loading encoding table...".PadRight(Config.PadRight));
-            var timer = Stopwatch.StartNew();
-
             EncodingFile encodingFile = GetEncoding(buildConfig);
 
             EncodingTable encodingTable = new EncodingTable();
             encodingTable.encodingFile = encodingFile;
-
-            timer.Stop();
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
 
             return encodingTable;
         }
@@ -45,7 +39,7 @@ namespace BuildBackup.DataAccess
             }
             else
             {
-                encodingSize = int.Parse(buildConfig.encodingSize[1]);
+                encodingSize = buildConfig.encodingSize[1];
             }
 
             var encoding = new EncodingFile();

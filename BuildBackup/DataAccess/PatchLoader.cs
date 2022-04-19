@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using BuildBackup.Structs;
 using BuildBackup.Web;
-using Colors = Shared.Colors;
 
 namespace BuildBackup.DataAccess
 {
@@ -22,11 +20,10 @@ namespace BuildBackup.DataAccess
 
         public void HandlePatches(BuildConfigFile buildConfig, TactProduct targetProduct)
         {
-            var timer = Stopwatch.StartNew();
-
             // For whatever reason, CodVanguard + Warzone do not make this request.
             if (buildConfig.patchConfig != null
                 && targetProduct != TactProducts.CodVanguard && targetProduct != TactProducts.CodWarzone
+                && targetProduct != TactProducts.CodBlackOpsColdWar
                 && targetProduct != TactProducts.Hearthstone)
             {
                 _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
@@ -40,7 +37,7 @@ namespace BuildBackup.DataAccess
             // Unused by Hearthstone
             if (targetProduct != TactProducts.Hearthstone)
             {
-                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex, isIndex: true);
+                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
             
             if (buildConfig.patchIndex != null)
@@ -51,17 +48,11 @@ namespace BuildBackup.DataAccess
             // Unused by Hearthstone
             if (_cdnConfig.patchArchives != null && targetProduct != TactProducts.Hearthstone)
             {
-                foreach (var patchIndex in _cdnConfig.patchArchives)
+                for (var i = 0; i < _cdnConfig.patchArchives.Length; i++)
                 {
-                    _cdn.QueueRequest(RootFolder.patch, patchIndex, isIndex: true);
+                    var patchIndex = _cdnConfig.patchArchives[i];
+                    _cdn.QueueRequest(RootFolder.patch, patchIndex, 0, _cdnConfig.patchArchivesIndexSize[i] - 1, isIndex: true);
                 }
-            }
-
-            timer.Stop();
-            if (timer.Elapsed.TotalMilliseconds > 10)
-            {
-                Console.Write("Handled patches...".PadRight(Config.PadRight));
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
             }
         }
 

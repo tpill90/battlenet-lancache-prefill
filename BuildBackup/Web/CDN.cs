@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -12,7 +11,7 @@ using BuildBackup.DebugUtil.Models;
 using BuildBackup.Parsers;
 using BuildBackup.Structs;
 using ByteSizeLib;
-using Konsole;
+using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup.Web
@@ -20,7 +19,8 @@ namespace BuildBackup.Web
     //TODO rename to something like HttpRequestHandler
     public class CDN
     {
-        private readonly IConsole _console;
+        private readonly IAnsiConsole _ansiConsole;
+
         private readonly HttpClient client;
 
         private readonly List<string> _cdnList = new List<string> 
@@ -33,9 +33,9 @@ namespace BuildBackup.Web
         private string _productBasePath;
 
         //TODO comment
+       
         private readonly Uri _battleNetPatchUri;
-
-        //TODO break these requests out into a different class later
+        
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         private readonly List<Request> _queuedRequests = new List<Request>();
@@ -51,11 +51,12 @@ namespace BuildBackup.Web
         //TODO document
         public bool SkipDiskCache = false;
 
-        public CDN(IConsole console, Uri battleNetPatchUri, bool skipDiskCache = false)
+        public CDN(IAnsiConsole ansiConsole, Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
         {
-            _console = console;
+            _ansiConsole = ansiConsole;
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
+            DebugMode = useDebugMode;
 
             client = new HttpClient
             {
@@ -84,56 +85,57 @@ namespace BuildBackup.Web
         //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
-            Request request2 = new Request
+            Request request = new Request
             {
                 ProductRootUri = _productBasePath,
                 RootFolder = rootPath,
                 CdnKey = hash,
                 IsIndex = isIndex,
-
                 WriteToDevNull = true
             };
             if (startBytes != null && endBytes != null)
             {
-                request2.LowerByteRange = startBytes.Value;
-                request2.UpperByteRange = endBytes.Value;
+                request.LowerByteRange = startBytes.Value;
+                request.UpperByteRange = endBytes.Value;
             }
             else
             {
-                request2.DownloadWholeFile = true;
-                
+                request.DownloadWholeFile = true;
             }
-            _queuedRequests.Add(request2);
+            _queuedRequests.Add(request);
         }
         
-        //TODO nicer progress bar
-        //TODO this doesn't max out my connection at 300mbs
-        public void DownloadQueuedRequests()
+        public void DownloadQueuedRequests(IAnsiConsole ansiConsole)
         {
-            var timer = Stopwatch.StartNew();
+            var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
+            
+            var totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
+            AnsiConsole.WriteLine($"Downloading {Colors.Cyan(coalescedRequests.Count)} total queued requests {Colors.Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
-            var coalesced = RequestUtils.CoalesceRequests(_queuedRequests, true);
-
-            Console.WriteLine($"Downloading {Colors.Cyan(coalesced.Count)} total queued requests " +
-                              $"Totaling {Colors.Magenta(ByteSize.FromBytes(coalesced.Sum(e => e.TotalBytes)))}");
-
-            int count = 0;
-            var progressBar = new ProgressBar(_console, PbStyle.SingleLine, coalesced.Count, 50);
-			//TODO There is an issue here where exceptions get thrown for Warzone, Vanguard, BOCW, and Starcraft 2.  Probably related to a threading issue..
-            Parallel.ForEach(coalesced, new ParallelOptions { MaxDegreeOfParallelism = 4 }, entry =>
+            var progress = ansiConsole.Progress()
+                       .HideCompleted(false)
+                       .AutoClear(false)
+                       .Columns(new ProgressColumn[]
+                       {
+                           new ProgressBarColumn(),
+                           new PercentageColumn(),
+                           new RemainingTimeColumn(),
+                           new DownloadedColumn(),
+                           new TransferSpeedColumn()
+                       });
+            progress.RefreshRate = TimeSpan.FromMilliseconds(100);
+            progress.Start(ctx =>
             {
-                GetRequestAsBytes(entry).Wait();
-               
-                if (!DebugMode)
+                var task = ctx.AddTask("Downloading...", new ProgressTaskSettings
                 {
-                    // Skip refreshing the progress bar when debugging.  Slows things down
-                    progressBar.Refresh(count, "");
-                }
-                count++;
+                    MaxValue = totalSize.Bytes
+                });
+                Parallel.ForEach(coalescedRequests, new ParallelOptions { MaxDegreeOfParallelism = 4 }, entry =>
+                {
+                    GetRequestAsBytes(entry, task).Wait();
+                });
             });
-
-            timer.Stop();
-            progressBar.Refresh(count, $"     Done! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            
         }
 
         public async Task<byte[]> GetRequestAsBytes(RootFolder rootPath, MD5Hash hash, bool isIndex = false, bool writeToDevNull = false,
@@ -163,14 +165,15 @@ namespace BuildBackup.Web
 
         //TODO comment
         //TODO come up with a better name for writeToDevNull
-        public async Task<byte[]> GetRequestAsBytes(Request request = null)
+        public async Task<byte[]> GetRequestAsBytes(Request request = null, ProgressTask task = null)
         {
             var writeToDevNull = request.WriteToDevNull;
             var startBytes = request.LowerByteRange;
             var endBytes = request.UpperByteRange;
 
-            LogRequestMade(request);
-            // When we are running in debug mode, we can skip entirely any requests that will end up written to dev/null.  Will speed up debugging.
+            allRequestsMade.Add(request);
+
+            // When we are running in debug mode, we can skip any requests that will end up written to dev/null.  Will speed up debugging.
             if (DebugMode && writeToDevNull)
             {
                 return null;
@@ -206,8 +209,21 @@ namespace BuildBackup.Web
             {
                 try
                 {
+                    var buffer = new byte[8192];
+                    while (true)
+                    {
+                        var read = await responseStream.ReadAsync(buffer, 0, buffer.Length);
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        // Increment the number of read bytes for the progress task
+                        task.Increment(read);
+                    }
+
                     // Dump the received data, so we don't have to waste time writing it to disk.
-                    responseStream.CopyToAsync(Stream.Null).Wait();
+                    //responseStream.CopyToAsync(Stream.Null).Wait();
                 }
                 catch (Exception e)
                 {
@@ -233,18 +249,13 @@ namespace BuildBackup.Web
             return await Task.FromResult(byteArray);
         }
 
-        private void LogRequestMade(Request request = null)
-        {
-            allRequestsMade.Add(request);
-        }
-
-        //TODO comment + possibly move to ownn file
+        //TODO comment + possibly move to own file
         public string MakePatchRequest(TactProduct tactProduct, string target)
         {
             var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 1 hour
-            if (File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
+            if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
             {
                 return File.ReadAllText(cacheFile);
             }
@@ -254,6 +265,11 @@ namespace BuildBackup.Web
             {
                 using HttpContent res = response.Content;
                 string content = res.ReadAsStringAsync().Result;
+
+                if (SkipDiskCache)
+                {
+                    return content;
+                }
 
                 // Writes results to disk, to be used as cache later
                 File.WriteAllText(cacheFile, content);

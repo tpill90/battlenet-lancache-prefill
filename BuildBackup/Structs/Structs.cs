@@ -41,11 +41,17 @@ namespace BuildBackup
 
         public string[] builds;
 
+        /// <summary>
+        /// CDN Key for the "file" index.  Can be requested and parsed.
+        ///
+        /// The "file" index lists what known "unarchived" files exist on the CDN.  Using the index you can take a content MD5,  and can be used to lookup the CDNKey
+        /// used to download the file.
+        /// </summary>
         public MD5Hash fileIndex;
         public string fileIndexSize;
 
         public MD5Hash patchFileIndex;
-        public string patchFileIndexSize;
+        public int patchFileIndexSize;
     }
 
     //TODO comment + rename

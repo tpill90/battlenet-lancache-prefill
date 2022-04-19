@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using BuildBackup.DebugUtil;
 using BuildBackup.Structs;
 using BuildBackup.Utils;
-using Konsole;
+using Spectre.Console;
 using Colors = Shared.Colors;
 
 namespace BuildBackup
@@ -14,31 +13,30 @@ namespace BuildBackup
     //TODO Readme.md needs to be heavily updated.  Needs documentation on what this program does, how to use it, how to compile it, acknowledgements, external docs, etc.
     //TODO Repo - Github repo needs to be renamed, something like BattleNet-Preloader.
     //TODO Repo - Squash old commits + generally cleanup repo history
-    //TODO Uncached performance - Improve uncached performance of all applications
-	//TODO Reduce the number of overall allocations
-	//TODO consider creating a flag/option, to not write any data to the cache, and to not use the cache.  Would be useful for saving disk space, or testing performance of an uncached run.
+    //TODO consider creating a flag/option, to not write any data to the cache, and to not use the cache.  Would be useful for saving disk space, or testing performance of an uncached run.
+    //TODO add documentation on how to add unicode support to windows https://spectreconsole.net/best-practices
     public class Program
     {
         private static TactProduct[] ProductsToProcess = new TactProduct[]
         {
             //TactProducts.CodBlackOpsColdWar,
             //TactProducts.CodWarzone,
-            //TactProducts.CodVanguard,
-            //TactProducts.Diablo3,
-            //TactProducts.Hearthstone,
-            //TactProducts.HeroesOfTheStorm,
-            //TactProducts.Overwatch,
+            TactProducts.CodVanguard,
+            TactProducts.Diablo3,
+            TactProducts.Hearthstone,
+            TactProducts.HeroesOfTheStorm,
+            TactProducts.Overwatch,
             TactProducts.Starcraft1,
-            //TactProducts.Starcraft2,
-            //TactProducts.WorldOfWarcraft,
-            //TactProducts.WowClassic
+            TactProducts.Starcraft2,
+            TactProducts.WorldOfWarcraft,
+            TactProducts.WowClassic
         };
 
         //TODO extract to config file
         public static bool SkipDiskCache = false;
 
-        public static bool UseCdnDebugMode = false;
-        public static bool ShowDebugStats = false;
+        public static bool UseCdnDebugMode = true;
+        public static bool ShowDebugStats = true;
 
         public static bool WriteOutputFiles = false;
 
@@ -46,17 +44,18 @@ namespace BuildBackup
         {
             foreach (var product in ProductsToProcess)
             {
-                ProductHandler.ProcessProduct(product, new Writer(), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats, SkipDiskCache);
+                AnsiConsoleSettings consoleSettings = new AnsiConsoleSettings();
+                ProductHandler.ProcessProduct(product, AnsiConsole.Create(consoleSettings), UseCdnDebugMode, WriteOutputFiles, ShowDebugStats, SkipDiskCache);
 
                 //BenchmarkUtil.Benchmark(product);
             }
-            Console.WriteLine("Pre-load Complete!\n");
 
             if (Debugger.IsAttached)
             {
                 Console.WriteLine("Press any key to continue . . .");
                 Console.ReadLine();
             }
+            AnsiConsole.WriteLine("Done!");
         }
 
         //TODO measure this with benchmark.net

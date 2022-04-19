@@ -1,8 +1,9 @@
 ﻿using System;
 using BuildBackup.DebugUtil;
+using BuildBackup.Handlers;
 using BuildBackup.Structs;
 using BuildBackup.Web;
-using Konsole;
+using Spectre.Console.Testing;
 
 namespace BuildBackup.Test.LogFileLatestVersionTests
 {
@@ -19,7 +20,7 @@ namespace BuildBackup.Test.LogFileLatestVersionTests
         public static VersionsEntry GetLatestCdnVersion(TactProduct product)
         {
             // Finding the latest version of the game
-            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CDN(new MockConsole(120, 50), baseUrl));
+            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CDN(new TestConsole(), baseUrl));
             VersionsEntry cdnVersion = configFileHandler.GetLatestVersionEntry(product);
             return cdnVersion;
         }

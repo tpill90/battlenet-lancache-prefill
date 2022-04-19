@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
-using Konsole;
 using NUnit.Framework;
+using Spectre.Console.Testing;
 
 namespace BuildBackup.Test.DownloadTests.Activision
 {
@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Activision
         public void Setup()
         {
             // Run the download process only once
-            _results = ProductHandler.ProcessProduct(TactProducts.CodBlackOpsColdWar, new MockConsole(120, 50), true, writeOutputFiles: false, showDebugStats: true);
+            _results = ProductHandler.ProcessProduct(TactProducts.CodBlackOpsColdWar, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
         [Test]

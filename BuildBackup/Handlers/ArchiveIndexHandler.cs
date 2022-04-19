@@ -11,7 +11,6 @@ using Shared;
 namespace BuildBackup.Handlers
 {
     //TODO document this class
-    //TODO remove static
     public class ArchiveIndexHandler
     {
         private readonly CDN _cdn;
@@ -31,9 +30,6 @@ namespace BuildBackup.Handlers
         //TODO cleanup
         public void BuildArchiveIndexes(CDNConfigFile cdnConfig)
         {
-            Console.Write("Building archive indexes...".PadRight(Config.PadRight));
-            var timer = Stopwatch.StartNew();
-
             var tasks = new List<Task<Dictionary<MD5Hash, IndexEntry>>>();
 
             // This default performs well for most TactProducts.
@@ -62,8 +58,6 @@ namespace BuildBackup.Handlers
             {
                 _indexDictionaries.Add(task.GetAwaiter().GetResult());
             }
-            timer.Stop();
-            Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
         }
         
         private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, CDN cdn, int start, int finish)

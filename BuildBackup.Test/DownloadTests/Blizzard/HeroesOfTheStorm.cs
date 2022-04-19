@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using BuildBackup.DebugUtil.Models;
 using ByteSizeLib;
-using Konsole;
 using NUnit.Framework;
+using Spectre.Console.Testing;
 
 namespace BuildBackup.Test.DownloadTests.Blizzard
 {
@@ -16,7 +16,7 @@ namespace BuildBackup.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = ProductHandler.ProcessProduct(TactProducts.HeroesOfTheStorm, new MockConsole(120, 50), true, writeOutputFiles: false, showDebugStats: true);
+            _results = ProductHandler.ProcessProduct(TactProducts.HeroesOfTheStorm, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
         [Test]

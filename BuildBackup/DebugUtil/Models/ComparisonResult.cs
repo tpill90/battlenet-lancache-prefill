@@ -40,9 +40,9 @@ namespace BuildBackup.DebugUtil.Models
         {
             var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
           
-            File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(Misses.OrderBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange), 
+            File.WriteAllText($@"{baseUri}\misses.json", JsonConvert.SerializeObject(Misses, 
                 Formatting.Indented, jsonSettings));
-            File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(UnnecessaryRequests.OrderBy(e => e.CdnKey).ThenBy(e => e.LowerByteRange),
+            File.WriteAllText($@"{baseUri}\excess.json", JsonConvert.SerializeObject(UnnecessaryRequests,
                 Formatting.Indented, jsonSettings));
         }
 

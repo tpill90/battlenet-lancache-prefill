@@ -20,7 +20,6 @@ namespace RequestReplayer
             TactProducts.CodVanguard,
             // Blizzard
             TactProducts.Diablo3,
-            //TODO estimated download time left is displayed wrong
             TactProducts.Hearthstone,
             TactProducts.HeroesOfTheStorm,
             TactProducts.Overwatch,
@@ -29,9 +28,7 @@ namespace RequestReplayer
             TactProducts.WorldOfWarcraft,
             TactProducts.WowClassic
         };
-
-        //TODO do a version check to see if the logs are out of date
-        //TODO figure out why some games have errors when replaying
+        
         public static void Main()
         {
             foreach (var targetProduct in TargetProducts)

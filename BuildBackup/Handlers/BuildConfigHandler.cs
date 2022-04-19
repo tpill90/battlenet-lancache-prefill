@@ -9,12 +9,11 @@ using Shared;
 
 namespace BuildBackup.Handlers
 {
+    //TODO rename to parser
     public static class BuildConfigHandler
     {
         public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
         {
-            var timer = Stopwatch.StartNew();
-
             var buildConfig = new BuildConfigFile();
 
             string content = Encoding.UTF8.GetString(cdn.GetRequestAsBytes(RootFolder.config, versionsEntry.buildConfig).Result);
@@ -48,14 +47,13 @@ namespace BuildBackup.Handlers
                         buildConfig.encoding = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "encoding-size":
-                        var encodingSize = cols[1].Split(' ');
-                        buildConfig.encodingSize = encodingSize;
+                        buildConfig.encodingSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
                     case "size":
                         buildConfig.size = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
                     case "size-size":
-                        buildConfig.sizeSize = cols[1].Split(' ');
+                        buildConfig.sizeSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
                     case "build-name":
                         buildConfig.buildName = cols[1];
@@ -162,11 +160,11 @@ namespace BuildBackup.Handlers
             if (targetProduct != TactProducts.Diablo3)
             {
                 // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
-                cdn.QueueRequest(RootFolder.data, buildConfig.size[1]);
+                cdn.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
             }
             
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
-            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1]);
+            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);
             
             if (buildConfig.vfsRoot != null)
             {
@@ -174,14 +172,6 @@ namespace BuildBackup.Handlers
                 // however it is called for some reason by the Actual Battle.Net client
                 cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1);
             }
-
-            timer.Stop();
-            if (timer.Elapsed.Milliseconds > 10)
-            {
-                Console.Write("Parsed BuildConfig ...".PadRight(Config.PadRight));
-                Console.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
-            }
-            
             return buildConfig;
         }
     }
