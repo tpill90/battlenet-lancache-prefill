@@ -1,22 +1,25 @@
 
-# BattleNetBackup
+# BattleNet-lancache-autofill
 
 ## Description
 
+- https://github.com/zeropingheroes/lancache-autofill
+- https://lancache.net/
+
 # Development Pre-reqs
 
-Only the .NET 6 SDK is required to compile the project.  This can be installed through one of the following methods
+Only the .NET 5 SDK is required to compile the project.  This can be installed through one of the following methods
 
 ## Using Chocolatey
 ```powershell
-choco install dotnet-sdk --version=6.0.201
+choco install dotnet-5.0-sdk
 # Needs to be removed, in order to resolve issue with Nuget being preconfigured wrong.  Will 
 # auto-regenerate on first run.
 Remove-Item "C:\Users\$Env:USERNAME\AppData\Roaming\NuGet\nuget.config"
 ```
 
 ## Manually
-The latest .NET 6.0 SDK can be found here : [.NET 6.0 SDK - Windows x64 Installer]( https://download.visualstudio.microsoft.com/download/pr/e4f4bbac-5660-45a9-8316-0ffc10765179/8ade57de09ce7f12d6411ed664f74eca/dotnet-sdk-6.0.202-win-x64.exe)
+The latest .NET 5.0 SDK can be found here : [.NET 5.0 SDK - Windows x64 Installer]( https://download.visualstudio.microsoft.com/download/pr/5303da13-69f7-407a-955a-788ec4ee269c/dc803f35ea6e4d831c849586a842b912/dotnet-sdk-5.0.403-win-x64.exe)
 
 # Compiling
 
@@ -52,3 +55,7 @@ Basic data for all [product codes](https://wowdev.wiki/CASC#NGDP_Program_Codes) 
 - Battle.net App
 
 ## Acknowledgements
+
+- https://github.com/Marlamin/BuildBackup
+- https://github.com/WoW-Tools/CASCExplorer
+- https://github.com/d07RiV/blizzget

@@ -7,10 +7,11 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using BuildBackup.DebugUtil.Models;
+using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils;
 using ByteSizeLib;
-using Shared;
 using ShellProgressBar;
+using Spectre.Console;
 
 namespace RequestReplayer
 {
@@ -147,11 +148,11 @@ namespace RequestReplayer
         {
             if (_failureCount > 0)
             {
-                Console.WriteLine($"     Total Errors : {Colors.Red(_failureCount)}");
+                AnsiConsole.WriteLine($"     Total Errors : {Colors.Red(_failureCount)}");
             }
             if (_fileNotFoundCount > 0)
             {
-                Console.WriteLine($"     Total files not found : {Colors.Yellow(_fileNotFoundCount)}");
+                AnsiConsole.WriteLine($"     Total files not found : {Colors.Yellow(_fileNotFoundCount)}");
             }
         }
     }

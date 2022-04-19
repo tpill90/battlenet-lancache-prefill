@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using BuildBackup;
-using BuildBackup.DebugUtil;
-using Colors = Shared.Colors;
+using BattleNetPrefill;
+using BattleNetPrefill.DebugUtil;
+using Spectre.Console;
+using Colors = BattleNetPrefill.Utils.Colors;
 
 namespace RequestReplayer
 {
@@ -12,10 +12,10 @@ namespace RequestReplayer
         private static readonly string BlizzardCdnBaseUri = "http://level3.blizzard.com";
         private static readonly string LogFileBasePath = @"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\RequestReplayer\Logs";
 
-        private static readonly TactProduct[] TargetProducts = 
+        private static readonly TactProducts[] TargetProducts = 
         {
             // Activision
-            TactProducts.CodBlackOpsColdWar,
+            TactProducts.CodBOCW,
             TactProducts.CodWarzone,
             TactProducts.CodVanguard,
             // Blizzard
@@ -34,7 +34,7 @@ namespace RequestReplayer
             foreach (var targetProduct in TargetProducts)
             {
                 string replayLogVersion = NginxLogParser.GetLatestLogVersionForProduct(LogFileBasePath, targetProduct);
-                Console.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
+                AnsiConsole.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
                 
                 var requestsToReplay = NginxLogParser.GetSavedRequestLogs(LogFileBasePath, targetProduct).ToList();
 
@@ -42,10 +42,10 @@ namespace RequestReplayer
                 downloader.DownloadRequestsParallel(requestsToReplay);
                 downloader.PrintStatistics();
 
-                Console.WriteLine();
+                AnsiConsole.WriteLine();
             }
 
-            Console.WriteLine("Done!");
+            AnsiConsole.WriteLine("Done!");
             Console.ReadLine();
         }
     }
