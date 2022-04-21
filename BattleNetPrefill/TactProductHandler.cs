@@ -19,7 +19,7 @@ namespace BattleNetPrefill
     public static class TactProductHandler
     {
         //TODO comment parameters
-        public static ComparisonResult ProcessProduct(TactProducts product, IAnsiConsole ansiConsole, 
+        public static ComparisonResult ProcessProduct(TactProduct product, IAnsiConsole ansiConsole, 
             bool useDebugMode = false, bool writeOutputFiles = false, bool showDebugStats = false, bool skipDiskCache = false)
         {
             var timer = Stopwatch.StartNew();
@@ -63,7 +63,7 @@ namespace BattleNetPrefill
                });
 
             // Actually start the download of any deferred requests
-            cdn.DownloadQueuedRequests(ansiConsole);
+            cdn.DownloadQueuedRequestsAsync(ansiConsole).Wait();
 
             timer.Stop();
             AnsiConsole.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");

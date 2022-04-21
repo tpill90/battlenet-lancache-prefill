@@ -10,7 +10,7 @@ namespace BattleNetPrefill.DebugUtil
     //TODO comment the purpose of this class
     public class FileSizeProvider
     {
-        private readonly TactProducts _targetProduct;
+        private readonly TactProduct _targetProduct;
         private readonly string _blizzardCdnBaseUri;
         private HttpClient _client = new HttpClient();
 
@@ -21,7 +21,7 @@ namespace BattleNetPrefill.DebugUtil
         private string CachedFileName => $"{_cacheDir}/{_targetProduct.ProductCode}.json";
         private object _cacheFileLock = new object();
 
-        public FileSizeProvider(TactProducts targetProduct, string baseCdnUri)
+        public FileSizeProvider(TactProduct targetProduct, string baseCdnUri)
         {
             _targetProduct = targetProduct;
             _blizzardCdnBaseUri = baseCdnUri;

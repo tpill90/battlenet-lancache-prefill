@@ -14,7 +14,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void Diablo3_UpToDate()
         {
-            var product = TactProducts.Diablo3;
+            var product = TactProduct.Diablo3;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -25,7 +25,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void Hearthstone_UpToDate()
         {
-            var product = TactProducts.Hearthstone;
+            var product = TactProduct.Hearthstone;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -36,7 +36,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void HeroesOfTheStorm_UpToDate()
         {
-            var product = TactProducts.HeroesOfTheStorm;
+            var product = TactProduct.HeroesOfTheStorm;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -47,7 +47,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void Starcraft1_UpToDate()
         {
-            var product = TactProducts.Starcraft1;
+            var product = TactProduct.Starcraft1;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -58,7 +58,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void Starcraft2_UpToDate()
         {
-            var product = TactProducts.Starcraft2;
+            var product = TactProduct.Starcraft2;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -69,7 +69,18 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void Overwatch_UpToDate()
         {
-            var product = TactProducts.Overwatch;
+            var product = TactProduct.Overwatch;
+
+            VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
+            var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
+
+            Assert.AreEqual(cdnVersion.versionsName, latestLogFile);
+        }
+
+        [Test]
+        public void Warcraft3_UpToDate()
+        {
+            var product = TactProduct.Warcraft3Reforged;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -80,7 +91,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void WorldOfWarcraft_UpToDate()
         {
-            var product = TactProducts.WorldOfWarcraft;
+            var product = TactProduct.WorldOfWarcraft;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -91,7 +102,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void WowClassic_UpToDate()
         {
-            var product = TactProducts.WowClassic;
+            var product = TactProduct.WowClassic;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);

@@ -12,14 +12,14 @@ namespace BattleNetPrefill.Handlers
     public class ArchiveIndexHandler
     {
         private readonly CDN _cdn;
-        private readonly TactProducts _targetProduct;
+        private readonly TactProduct _targetProduct;
 
         private const int CHUNK_SIZE = 4096;
 
         //TODO comment
         private List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
 
-        public ArchiveIndexHandler(CDN cdn, TactProducts targetProduct)
+        public ArchiveIndexHandler(CDN cdn, TactProduct targetProduct)
         {
             _cdn = cdn;
             _targetProduct = targetProduct;
@@ -33,7 +33,7 @@ namespace BattleNetPrefill.Handlers
             // This default performs well for most TactProducts.
             int maxTasks = 3;
             // Overwatch's indexes parse significantly faster when increasing the concurrency.
-            if (_targetProduct == TactProducts.Overwatch)
+            if (_targetProduct == TactProduct.Overwatch)
             {
                 maxTasks = 6;
             }

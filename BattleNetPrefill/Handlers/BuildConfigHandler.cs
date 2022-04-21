@@ -11,7 +11,7 @@ namespace BattleNetPrefill.Handlers
     //TODO rename to parser
     public static class BuildConfigHandler
     {
-        public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProducts targetProduct)
+        public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
         {
             var buildConfig = new BuildConfigFile();
 
@@ -19,7 +19,7 @@ namespace BattleNetPrefill.Handlers
             
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
-                AnsiConsole.WriteLine("Error reading build config!");
+                throw new Exception("Error reading build config!");
                 return buildConfig;
             }
 
@@ -30,6 +30,7 @@ namespace BattleNetPrefill.Handlers
                 {
                     continue;
                 }
+
                 var cols = lines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
@@ -144,6 +145,7 @@ namespace BattleNetPrefill.Handlers
                         // Purposefully doing nothing with these.  Don't care about these values.
                         break;
                     default:
+                        //TODO write a unit test for this
                         AnsiConsole.WriteLine($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
                         break;
                 }
@@ -156,7 +158,7 @@ namespace BattleNetPrefill.Handlers
             }
 
             // Diablo 3 doesn't make this request
-            if (targetProduct != TactProducts.Diablo3)
+            if (targetProduct != TactProduct.Diablo3)
             {
                 // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
                 cdn.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);

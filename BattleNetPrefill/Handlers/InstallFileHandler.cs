@@ -22,14 +22,14 @@ namespace BattleNetPrefill.Handlers
 
         //TODO comment
         public void HandleInstallFile(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, 
-            CDNConfigFile cdnConfigFile, TactProducts product)
+            CDNConfigFile cdnConfigFile, TactProduct product)
         {
             InstallFile installFile = ParseInstallFile(buildConfig.install[1]);
 
             List<InstallFileEntry> filtered;
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
-            if (product == TactProducts.CodVanguard)
+            if (product == TactProduct.CodVanguard)
             {
                 filtered = installFile.entries.Where(e => e.tags.Contains("2=enUS")).ToList();
             }

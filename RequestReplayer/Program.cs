@@ -12,21 +12,21 @@ namespace RequestReplayer
         private static readonly string BlizzardCdnBaseUri = "http://level3.blizzard.com";
         private static readonly string LogFileBasePath = @"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\RequestReplayer\Logs";
 
-        private static readonly TactProducts[] TargetProducts = 
+        private static readonly TactProduct[] TargetProducts = 
         {
             // Activision
-            TactProducts.CodBOCW,
-            TactProducts.CodWarzone,
-            TactProducts.CodVanguard,
+            TactProduct.CodBOCW,
+            TactProduct.CodWarzone,
+            TactProduct.CodVanguard,
             // Blizzard
-            TactProducts.Diablo3,
-            TactProducts.Hearthstone,
-            TactProducts.HeroesOfTheStorm,
-            TactProducts.Overwatch,
-            TactProducts.Starcraft1,
-            TactProducts.Starcraft2,
-            TactProducts.WorldOfWarcraft,
-            TactProducts.WowClassic
+            TactProduct.Diablo3,
+            TactProduct.Hearthstone,
+            TactProduct.HeroesOfTheStorm,
+            TactProduct.Overwatch,
+            TactProduct.Starcraft1,
+            TactProduct.Starcraft2,
+            TactProduct.WorldOfWarcraft,
+            TactProduct.WowClassic
         };
         
         public static void Main()

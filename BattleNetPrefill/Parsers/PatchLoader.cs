@@ -19,13 +19,13 @@ namespace BattleNetPrefill.DataAccess
             _cdnConfig = cdnConfig;
         }
 
-        public void HandlePatches(BuildConfigFile buildConfig, TactProducts targetProduct)
+        public void HandlePatches(BuildConfigFile buildConfig, TactProduct targetProduct)
         {
             // For whatever reason, CodVanguard + Warzone do not make this request.
             if (buildConfig.patchConfig != null
-                && targetProduct != TactProducts.CodVanguard && targetProduct != TactProducts.CodWarzone
-                && targetProduct != TactProducts.CodBOCW
-                && targetProduct != TactProducts.Hearthstone)
+                && targetProduct != TactProduct.CodVanguard && targetProduct != TactProduct.CodWarzone
+                && targetProduct != TactProduct.CodBOCW
+                && targetProduct != TactProduct.Hearthstone)
             {
                 _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
             }
@@ -36,7 +36,7 @@ namespace BattleNetPrefill.DataAccess
             }
 
             // Unused by Hearthstone
-            if (targetProduct != TactProducts.Hearthstone)
+            if (targetProduct != TactProduct.Hearthstone)
             {
                 _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
@@ -47,7 +47,7 @@ namespace BattleNetPrefill.DataAccess
             }
 
             // Unused by Hearthstone
-            if (_cdnConfig.patchArchives != null && targetProduct != TactProducts.Hearthstone)
+            if (_cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone)
             {
                 for (var i = 0; i < _cdnConfig.patchArchives.Length; i++)
                 {

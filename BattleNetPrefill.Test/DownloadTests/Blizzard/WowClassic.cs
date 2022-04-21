@@ -16,7 +16,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public void Setup()
         {
             // Run the download process only once
-            _results = TactProductHandler.ProcessProduct(TactProducts.WowClassic, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            _results = TactProductHandler.ProcessProduct(TactProduct.WowClassic, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
         [Test]

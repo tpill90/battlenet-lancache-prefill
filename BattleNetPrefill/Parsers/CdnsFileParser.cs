@@ -8,7 +8,7 @@ namespace BattleNetPrefill.Parsers
 {
     public static class CdnsFileParser
     {
-        public static CdnsFile ParseCdnsFile(CDN cdn, TactProducts targetProduct)
+        public static CdnsFile ParseCdnsFile(CDN cdn, TactProduct targetProduct)
         {
             string content = cdn.MakePatchRequest(targetProduct, "cdns");
 

@@ -1,5 +1,6 @@
 ﻿namespace BattleNetPrefill.Utils
 {
+    //TODO possibly get rid of this?
     public static class Colors
     {
         //TODO see if this kind of stuff can be pulled into the main Crayon package

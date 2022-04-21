@@ -11,7 +11,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void CodBlackOpsColdWar_UpToDate()
         {
-            var product = TactProducts.CodBOCW;
+            var product = TactProduct.CodBOCW;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -22,7 +22,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void CodWarzone_UpToDate()
         {
-            var product = TactProducts.CodWarzone;
+            var product = TactProduct.CodWarzone;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);
@@ -33,7 +33,7 @@ namespace BattleNetPrefill.Test.LogFileLatestVersionTests
         [Test]
         public void CodVanguard_UpToDate()
         {
-            var product = TactProducts.CodVanguard;
+            var product = TactProduct.CodVanguard;
 
             VersionsEntry cdnVersion = LogFileTestUtil.GetLatestCdnVersion(product);
             var latestLogFile = LogFileTestUtil.GetLatestLogFileVersion(product);

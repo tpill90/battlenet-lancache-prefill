@@ -16,7 +16,7 @@ namespace BattleNetPrefill.DebugUtil
         //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
       
-        public ComparisonResult CompareAgainstRealRequests(List<Request> generatedRequests, TactProducts product, bool writeOutputFiles)
+        public ComparisonResult CompareAgainstRealRequests(List<Request> generatedRequests, TactProduct product, bool writeOutputFiles)
         {
             AnsiConsole.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
@@ -78,7 +78,7 @@ namespace BattleNetPrefill.DebugUtil
                 fileSizeProvider.GetContentLength(request);
             });
             fileSizeProvider.Save();
-            AnsiConsole.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}".PadLeft(Config.Padding));
+            AnsiConsole.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         private void GetRequestSizes(List<Request> requests, FileSizeProvider fileSizeProvider)

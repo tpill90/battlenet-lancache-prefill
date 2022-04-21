@@ -23,7 +23,7 @@ namespace BattleNetPrefill.DebugUtil
         /// <param name="logBasePath">Root folder where all log files are stored.</param>
         /// <param name="product">Target product to be parsed.  Used to determine subfolder to search for files</param>
         /// <returns>A list of all requests made by the real Battle.Net client.</returns>
-        public static List<Request> GetSavedRequestLogs(string logBasePath, TactProducts product)
+        public static List<Request> GetSavedRequestLogs(string logBasePath, TactProduct product)
         {
             var timer = Stopwatch.StartNew();
             var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
@@ -117,7 +117,7 @@ namespace BattleNetPrefill.DebugUtil
 
         //TODO comment
         //TODO test
-        public static string GetLatestLogVersionForProduct(string logBasePath, TactProducts product)
+        public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
 

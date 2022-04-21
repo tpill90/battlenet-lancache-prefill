@@ -11,6 +11,7 @@ using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using ByteSizeLib;
+using Dasync.Collections;
 using Spectre.Console;
 using Colors = BattleNetPrefill.Utils.Colors;
 
@@ -64,7 +65,7 @@ namespace BattleNetPrefill.Web
             };
         }
 
-        public void LoadCdnsFile(TactProducts currentProduct)
+        public void LoadCdnsFile(TactProduct currentProduct)
         {
             // Loading CDNs
             var cdnsFile = CdnsFileParser.ParseCdnsFile(this, currentProduct);
@@ -105,35 +106,27 @@ namespace BattleNetPrefill.Web
             _queuedRequests.Add(request);
         }
         
-        public void DownloadQueuedRequests(IAnsiConsole ansiConsole)
+        public async Task DownloadQueuedRequestsAsync(IAnsiConsole ansiConsole)
         {
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
             
             var totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
             AnsiConsole.WriteLine($"Downloading {Colors.Cyan(coalescedRequests.Count)} total queued requests {Colors.Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
-            var progress = ansiConsole.Progress()
+            // Configuring the progress bar
+            var progressBar = ansiConsole.Progress()
                        .HideCompleted(false)
                        .AutoClear(false)
-                       .Columns(new ProgressColumn[]
-                       {
-                           new ProgressBarColumn(),
-                           new PercentageColumn(),
-                           new RemainingTimeColumn(),
-                           new DownloadedColumn(),
-                           new TransferSpeedColumn()
-                       });
-            progress.RefreshRate = TimeSpan.FromMilliseconds(100);
-            progress.Start(ctx =>
+                       .Columns(new ProgressBarColumn(), new PercentageColumn(), new RemainingTimeColumn(), new DownloadedColumn(), new TransferSpeedColumn());
+            
+            await progressBar.StartAsync(async ctx =>
             {
-                var task = ctx.AddTask("Downloading...", new ProgressTaskSettings
+                // Kicking off the download
+                var progressTask = ctx.AddTask("Downloading...", new ProgressTaskSettings { MaxValue = totalSize.Bytes });
+                await coalescedRequests.ParallelForEachAsync(async item =>
                 {
-                    MaxValue = totalSize.Bytes
-                });
-                Parallel.ForEach(coalescedRequests, new ParallelOptions { MaxDegreeOfParallelism = 4 }, entry =>
-                {
-                    GetRequestAsBytesAsync(entry, task).Wait();
-                });
+                    await GetRequestAsBytesAsync(item, progressTask);
+                }, maxDegreeOfParallelism: 3);
             });
             
         }
@@ -246,9 +239,9 @@ namespace BattleNetPrefill.Web
         }
 
         //TODO comment + possibly move to own file
-        public string MakePatchRequest(TactProducts TactProducts, string target)
+        public string MakePatchRequest(TactProduct tactProduct, string target)
         {
-            var cacheFile = $"{Config.CacheDir}/{target}-{TactProducts.ProductCode}.txt";
+            var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 1 hour
             if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
@@ -256,7 +249,7 @@ namespace BattleNetPrefill.Web
                 return File.ReadAllText(cacheFile);
             }
 
-            using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{TactProducts.ProductCode}/{target}")).Result;
+            using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/{target}")).Result;
             if (response.IsSuccessStatusCode)
             {
                 using HttpContent res = response.Content;

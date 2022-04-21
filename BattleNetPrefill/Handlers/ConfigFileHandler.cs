@@ -96,9 +96,9 @@ namespace BattleNetPrefill.Handlers
         }
 
         //TODO comment
-        public VersionsEntry GetLatestVersionEntry(TactProducts TactProducts)
+        public VersionsEntry GetLatestVersionEntry(TactProduct tactProduct)
         {
-            string content = cdn.MakePatchRequest(TactProducts, "versions");
+            string content = cdn.MakePatchRequest(tactProduct, "versions");
             var versions = new VersionsFile();
 
             content = content.Replace("\0", "");

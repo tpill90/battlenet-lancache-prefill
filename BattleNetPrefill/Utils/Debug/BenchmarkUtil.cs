@@ -10,7 +10,7 @@ namespace BattleNetPrefill.DebugUtil
 {
     public static class BenchmarkUtil
     {
-        public static void Benchmark(TactProducts targetProduct, int warmupRuns = 4, int totalRuns = 10)
+        public static void Benchmark(TactProduct targetProduct, int warmupRuns = 4, int totalRuns = 10)
         {
             AnsiConsole.WriteLine(Colors.Yellow("Starting benchmark..."));
 
@@ -36,7 +36,7 @@ namespace BattleNetPrefill.DebugUtil
             PrintStatistics(runResults);
         }
 
-        private static void Warmup(TactProducts targetProduct, int runs)
+        private static void Warmup(TactProduct targetProduct, int runs)
         {
             AnsiConsole.WriteLine(Colors.Yellow("Starting warmup..."));
             for (int i = 0; i < runs; i++)

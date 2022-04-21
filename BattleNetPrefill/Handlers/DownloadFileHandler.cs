@@ -91,7 +91,7 @@ namespace BattleNetPrefill.Handlers
         }
         
         //TODO document method
-        public void HandleDownloadFile(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProducts targetProduct)
+        public void HandleDownloadFile(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
             Dictionary<MD5Hash, IndexEntry> unarchivedFileIndex = IndexParser.ParseIndex(_cdn, RootFolder.data, cdnConfigFile.fileIndex);
 

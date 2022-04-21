@@ -16,7 +16,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         public void Setup()
         {
             // Run the download process only once
-            _results = TactProductHandler.ProcessProduct(TactProducts.CodWarzone, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            _results = TactProductHandler.ProcessProduct(TactProduct.CodWarzone, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
         [Test]
