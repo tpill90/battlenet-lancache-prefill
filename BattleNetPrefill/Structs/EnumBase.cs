@@ -18,18 +18,22 @@ namespace BattleNetPrefill.Structs
         // Despite analysis tool warnings, we want this static bool to be on this generic type (so that each T has its own bool).
         private static bool _invoked; //NOSONAR - See above message
 
+        private static object _lockObject = new object();
         public static List<T> AllEnumValues
         {
             get
             {
-                if (!_invoked)
+                lock (_lockObject)
                 {
-                    _invoked = true;
-                    // Force initialization by calling one of the derived fields/properties.  Failure to do this will result in this list being empty.
-                    typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.PropertyType == typeof(T))?.GetValue(null, null);
-                    typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.FieldType == typeof(T))?.GetValue(null);
+                    if (!_invoked)
+                    {
+                        _invoked = true;
+                        // Force initialization by calling one of the derived fields/properties.  Failure to do this will result in this list being empty.
+                        typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.PropertyType == typeof(T))?.GetValue(null, null);
+                        typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.FieldType == typeof(T))?.GetValue(null);
+                    }
+                    return _allEnumValues;
                 }
-                return _allEnumValues;
             }
         }
 

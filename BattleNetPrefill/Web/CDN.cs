@@ -20,8 +20,6 @@ namespace BattleNetPrefill.Web
     //TODO rename to something like HttpRequestHandler
     public class CDN
     {
-        private readonly IAnsiConsole _ansiConsole;
-
         private readonly HttpClient client;
 
         private readonly List<string> _cdnList = new List<string> 
@@ -41,8 +39,6 @@ namespace BattleNetPrefill.Web
 
         private readonly List<Request> _queuedRequests = new List<Request>();
 
-        private CachedStringLookup _cachedStringLookup;
-
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
         /// you won't need to wait for the full file transfer to complete.
@@ -54,7 +50,6 @@ namespace BattleNetPrefill.Web
 
         public CDN(IAnsiConsole ansiConsole, Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
         {
-            _ansiConsole = ansiConsole;
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
             DebugMode = useDebugMode;
@@ -65,13 +60,13 @@ namespace BattleNetPrefill.Web
             };
         }
 
+        //TODO assert that this must be required before using CDN class
         public void LoadCdnsFile(TactProduct currentProduct)
         {
             // Loading CDNs
             var cdnsFile = CdnsFileParser.ParseCdnsFile(this, currentProduct);
 
             _productBasePath = cdnsFile.entries[0].path;
-            _cachedStringLookup = new CachedStringLookup(_productBasePath);
 
             // Adds any missing CDN hosts
             foreach (var host in cdnsFile.entries.SelectMany(e => e.hosts))

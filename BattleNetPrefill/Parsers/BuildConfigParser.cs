@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
@@ -13,7 +14,7 @@ namespace BattleNetPrefill.Parsers
         public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
         {
             var buildConfig = new BuildConfigFile();
-
+            
             string content = Encoding.UTF8.GetString(cdn.GetRequestAsBytesAsync(RootFolder.config, versionsEntry.buildConfig).Result);
             
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
@@ -55,12 +56,19 @@ namespace BattleNetPrefill.Parsers
                         break;
                     case "build-name":
                         buildConfig.buildName = cols[1];
+                        if (String.IsNullOrWhiteSpace(buildConfig.buildName))
+                        {
+                            buildConfig.buildName = "UNKNOWN";
+                        }
                         break;
                     case "build-playbuild-installer":
                         buildConfig.buildPlaybuildInstaller = cols[1];
                         break;
                     case "build-product":
                         buildConfig.buildProduct = cols[1];
+                        break;
+                    case "build-token":
+                        buildConfig.buildToken = cols[1];
                         break;
                     case "build-uid":
                         buildConfig.buildUid = cols[1];
@@ -137,25 +145,31 @@ namespace BattleNetPrefill.Parsers
                     case "build-release-name":
                         buildConfig.buildReleaseName = cols[1];
                         break;
+                    case string a when Regex.IsMatch(a, "vfs-(\\d*)$"):
+                        buildConfig.vfs.Add(cols[0], cols[1]);
+                        break;
+                    case string a when Regex.IsMatch(a, "vfs-(\\d*)-size$"):
+                        buildConfig.vfsSize.Add(cols[0], cols[1]);
+                        break;
                     case "patch-index-size":
-                    case "vfs-1":
-                    case "vfs-1-size":
+                    case "build-changelist":
+                    case "build-data-branch":
+                    case "build-data-revision":
+                    case "build-source-revision":
+                    case "build-source-branch":
+                    case "build-status":
+                    case "build-stream":
+                    case "build-has-data":
+                    case "build-target-platform":
                         // Purposefully doing nothing with these.  Don't care about these values.
                         break;
                     default:
-                        //TODO write a unit test for this
                         AnsiConsole.WriteLine($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
+                        buildConfig.UnknownKeyPairs.Add(cols[0], cols[1]);
                         break;
                 }
             }
-
-            if (string.IsNullOrWhiteSpace(buildConfig.buildName))
-            {
-                AnsiConsole.WriteLine($"Missing buildname in buildConfig, setting build name!");
-                buildConfig.buildName = "UNKNOWN";
-            }
-
-            // Diablo 3 doesn't make this request
+            
             if (targetProduct != TactProduct.Diablo3)
             {
                 // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
