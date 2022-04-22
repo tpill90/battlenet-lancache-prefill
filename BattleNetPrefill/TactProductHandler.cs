@@ -4,6 +4,7 @@ using BattleNetPrefill.DataAccess;
 using BattleNetPrefill.DebugUtil;
 using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Handlers;
+using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Web;
 using Spectre.Console;
@@ -46,7 +47,7 @@ namespace BattleNetPrefill
 
                    // Getting other configuration files for this version, that detail where we can download the required files from.
                    ctx.Status("Getting latest config files...");
-                   BuildConfigFile buildConfig = BuildConfigHandler.GetBuildConfig(targetVersion, cdn, product);
+                   BuildConfigFile buildConfig = BuildConfigParser.GetBuildConfig(targetVersion, cdn, product);
                    CDNConfigFile cdnConfig = configFileHandler.GetCDNconfig(targetVersion);
 
                    ctx.Status("Building Archive Indexes...");

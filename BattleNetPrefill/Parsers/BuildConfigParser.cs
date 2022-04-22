@@ -6,10 +6,9 @@ using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
 using Spectre.Console;
 
-namespace BattleNetPrefill.Handlers
+namespace BattleNetPrefill.Parsers
 {
-    //TODO rename to parser
-    public static class BuildConfigHandler
+    public static class BuildConfigParser
     {
         public static BuildConfigFile GetBuildConfig(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
         {
@@ -20,7 +19,6 @@ namespace BattleNetPrefill.Handlers
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
                 throw new Exception("Error reading build config!");
-                return buildConfig;
             }
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
