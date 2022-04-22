@@ -48,7 +48,7 @@
         public MD5Hash fileIndex;
         public string fileIndexSize;
 
-        public MD5Hash patchFileIndex;
+        public MD5Hash? patchFileIndex;
         public int patchFileIndexSize;
     }
 

@@ -27,7 +27,7 @@ namespace BattleNetPrefill
             AnsiConsole.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
-            CDN cdn = new CDN(ansiConsole, Config.BattleNetPatchUri, useDebugMode, skipDiskCache);
+            CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdn);
             var configFileHandler = new ConfigFileHandler(cdn);
             var installFileHandler = new InstallFileHandler(cdn);
@@ -62,7 +62,7 @@ namespace BattleNetPrefill
                    var patchLoader = new PatchLoader(cdn, cdnConfig);
                    patchLoader.HandlePatches(buildConfig, product);
                });
-
+            
             // Actually start the download of any deferred requests
             cdn.DownloadQueuedRequestsAsync(ansiConsole).Wait();
 

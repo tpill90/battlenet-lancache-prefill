@@ -3,7 +3,6 @@ using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Web;
 using NUnit.Framework;
-using Spectre.Console.Testing;
 
 namespace BattleNetPrefill.Test.Parsers
 {
@@ -38,7 +37,7 @@ namespace BattleNetPrefill.Test.Parsers
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CDN cdn = new CDN(new TestConsole(), Config.BattleNetPatchUri, useDebugMode: true);
+            CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode: true);
             cdn.LoadCdnsFile(tactProduct);
             var configFileHandler = new ConfigFileHandler(cdn);
             VersionsEntry targetVersion = configFileHandler.GetLatestVersionEntry(tactProduct);

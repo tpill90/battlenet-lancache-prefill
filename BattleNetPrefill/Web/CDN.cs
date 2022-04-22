@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.DebugUtil;
 using BattleNetPrefill.DebugUtil.Models;
@@ -48,7 +49,7 @@ namespace BattleNetPrefill.Web
         //TODO document
         public bool SkipDiskCache = false;
 
-        public CDN(IAnsiConsole ansiConsole, Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
+        public CDN(Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
@@ -56,7 +57,8 @@ namespace BattleNetPrefill.Web
 
             client = new HttpClient
             {
-                Timeout = new TimeSpan(0, 5, 0)
+				//TODO is this needed?
+                Timeout = Timeout.InfiniteTimeSpan
             };
         }
 
@@ -78,7 +80,6 @@ namespace BattleNetPrefill.Web
             }
         }
 
-        //TODO finish making everything use this
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
             Request request = new Request
@@ -104,7 +105,7 @@ namespace BattleNetPrefill.Web
         public async Task DownloadQueuedRequestsAsync(IAnsiConsole ansiConsole)
         {
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
-            
+
             var totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
             AnsiConsole.WriteLine($"Downloading {Colors.Cyan(coalescedRequests.Count)} total queued requests {Colors.Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
@@ -118,10 +119,15 @@ namespace BattleNetPrefill.Web
             {
                 // Kicking off the download
                 var progressTask = ctx.AddTask("Downloading...", new ProgressTaskSettings { MaxValue = totalSize.Bytes });
+                //TODO is ParallelForEachAsync even necessary?
                 await coalescedRequests.ParallelForEachAsync(async item =>
                 {
+                    //TODO consider handling errors + retrying
                     await GetRequestAsBytesAsync(item, progressTask);
-                }, maxDegreeOfParallelism: 3);
+                }, maxDegreeOfParallelism: 4);
+
+                // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
+                progressTask.Increment(progressTask.MaxValue);
             });
             
         }
@@ -181,7 +187,7 @@ namespace BattleNetPrefill.Web
             }
             
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-            if (startBytes != 0 && endBytes != 0)
+            if (!request.DownloadWholeFile)
             {
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
             }
@@ -204,7 +210,7 @@ namespace BattleNetPrefill.Web
                         var read = await responseStream.ReadAsync(buffer, 0, buffer.Length);
                         if (read == 0)
                         {
-                            break;
+                            return null;
                         }
                         task.Increment(read);
                     }
@@ -216,8 +222,9 @@ namespace BattleNetPrefill.Web
                 
                 return null;
             }
+
             await using var memoryStream = new MemoryStream();
-            responseStream.CopyToAsync(memoryStream).Wait();
+            await responseStream.CopyToAsync(memoryStream);
 
             var byteArray = memoryStream.ToArray();
             if (SkipDiskCache)
@@ -245,22 +252,21 @@ namespace BattleNetPrefill.Web
             }
 
             using HttpResponseMessage response = client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/{target}")).Result;
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                using HttpContent res = response.Content;
-                string content = res.ReadAsStringAsync().Result;
+                throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
+            }
+            using HttpContent res = response.Content;
+            string content = res.ReadAsStringAsync().Result;
 
-                if (SkipDiskCache)
-                {
-                    return content;
-                }
-
-                // Writes results to disk, to be used as cache later
-                File.WriteAllText(cacheFile, content);
+            if (SkipDiskCache)
+            {
                 return content;
             }
 
-            throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);
+            // Writes results to disk, to be used as cache later
+            File.WriteAllText(cacheFile, content);
+            return content;
         }
     }
 }

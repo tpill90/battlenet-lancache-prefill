@@ -20,15 +20,22 @@ namespace BattleNetPrefill
         //TODO comment
         public static string CacheDir => "cache";
 
+        public static DebugConfig DebugConfig = new DebugConfig()
+        {
+
+        };
+
         public static readonly string LogFileBasePath = @"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\RequestReplayer\Logs";
         
-        public static int Padding = 31;
-
-        public static bool SkipDiskCache = false;
-
         public static bool UseCdnDebugMode = false;
         public static bool ShowDebugStats = false;
 
         public static bool WriteOutputFiles = false;
+    }
+
+    // TODO comment
+    public class DebugConfig
+    {
+
     }
 }

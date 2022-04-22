@@ -13,7 +13,7 @@ namespace BattleNetPrefill
         //TODO make a few "special" products.  Ex. AllProducts, Blizzard products, activision prodcuts
         #region Blizzard
 
-        //TODO this doesn't work
+        //TODO throws download errors
         public static readonly TactProduct BlizzardArcadeCollection = new TactProduct("rtro") { DisplayName = "Blizzard Arcade Collection", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
 
         public static readonly TactProduct Diablo2Resurrected = new TactProduct("osi") { DisplayName = "Diablo 2: Resurrected", IsBlizzard = true };
@@ -27,7 +27,6 @@ namespace BattleNetPrefill
 
         public static readonly TactProduct Overwatch = new TactProduct("pro") { DisplayName = "Overwatch", IsBlizzard = true };
 
-        //TODO Fix the build config errors that are being thrown
         public static readonly TactProduct Warcraft3Reforged = new TactProduct("w3") { DisplayName = "Warcraft 3: Reforged", IsBlizzard = true };
         public static readonly TactProduct WorldOfWarcraft = new TactProduct("wow") { DisplayName = "World Of Warcraft", IsBlizzard = true };
         public static readonly TactProduct WowClassic = new TactProduct("wow_classic") { DisplayName = "WoW Classic", DefaultTags = new[] { "Windows", "enUS", "x86_64" }, IsBlizzard = true };
@@ -36,11 +35,15 @@ namespace BattleNetPrefill
 
         #region Activision
 
-        //TODO doesnt work
+        //TODO throws download errors
         public static readonly TactProduct CodBO4 = new TactProduct("viper") { DisplayName = "Call of Duty: Black Ops 4", IsActivision = true };
+        //TODO throws download errors
         public static readonly TactProduct CodBOCW = new TactProduct("zeus") { DisplayName = "Call of Duty: Black Ops Cold War", DefaultTags = new string[] { "enUS", "cp", "mp", "zm", "zm2" }, IsActivision = true };
+        //TODO throws download errors
         public static readonly TactProduct CodWarzone = new TactProduct("odin") { DisplayName = "Call of Duty: Modern Warfare", IsActivision = true };
+        //TODO throws download errors
         public static readonly TactProduct CodMW2 = new TactProduct("lazr") { DisplayName = "Call of Duty: Modern Warfare 2", IsActivision = true };
+        //TODO throws download errors
         public static readonly TactProduct CodVanguard = new TactProduct("fore") { DisplayName = "Call of Duty: Vanguard", IsActivision = true };
 
         //TODO doesn't work

@@ -36,9 +36,9 @@ namespace BattleNetPrefill.DataAccess
             }
 
             // Unused by Hearthstone
-            if (targetProduct != TactProduct.Hearthstone)
+            if (_cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone)
             {
-                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
+                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex.Value,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
             
             if (buildConfig.patchIndex != null)
