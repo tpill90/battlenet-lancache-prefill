@@ -3,7 +3,6 @@ obj
 .vs
 *.ak
 lockfile
-Properties
 
 *.log
 *.coalesced.log
