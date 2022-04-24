@@ -1,23 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    <OutputType>Exe</OutputType>
+
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
     <StartupObject>BattleNetPrefill.Program</StartupObject>
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
     <Version>0.0.1</Version>
     <Authors>tpill90</Authors>
-    <Product />
-    <Company />
+
+    <!-- Code analysis settings -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <Features>strict</Features>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <WarningLevel>2</WarningLevel>
   </PropertyGroup>
 
@@ -25,12 +28,14 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <DefineConstants />
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AsyncEnumerator" Version="4.0.2" />
     <PackageReference Include="ByteSize" Version="2.0.0" />
-	<PackageReference Include="CliFx" Version="2.0.4" />
+	  <PackageReference Include="CliFx" Version="2.0.4" />
     <PackageReference Include="Crayon" Version="2.0.62" />
     <PackageReference Include="FastDeepCloner" Version="1.3.6" />
     <PackageReference Include="morelinq" Version="3.3.2" />

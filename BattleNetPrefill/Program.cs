@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using CliFx;
 
 namespace BattleNetPrefill
@@ -14,8 +15,16 @@ namespace BattleNetPrefill
     {
         public static async Task<int> Main()
         {
-            return await new CliApplicationBuilder()
+            var cliBuilder = new CliApplicationBuilder()
                          .AddCommandsFromThisAssembly()
+                         .SetTitle("BattleNetPrefill")
+                         .SetExecutableName("BattleNetPrefill");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                cliBuilder.SetExecutableName("BattleNetPrefill.exe");
+            }
+
+            return await cliBuilder
                          .Build()
                          .RunAsync();
         }

@@ -1,8 +1,6 @@
 
 # BattleNet-lancache-prefill
 
-## Description
-
 Automatically fills a [lancache](https://lancache.net/), so that subsequent downloads for the same content will be served from the lancache, improving speeds and reducing load on your internet connection.
 
 Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.
