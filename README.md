@@ -1,10 +1,23 @@
 
-# BattleNet-lancache-autofill
+# BattleNet-lancache-prefill
 
 ## Description
 
-- https://github.com/zeropingheroes/lancache-autofill
-- https://lancache.net/
+Automatically fills a [lancache](https://lancache.net/), so that subsequent downloads for the same content will be served from the lancache, improving speeds and reducing load on your internet connection.
+
+Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.
+
+# Features
+* Downloads specific games by product ID
+* Incredibly fast, can easily saturate a 10gbe line!
+* Game install writes no data to disk,  no unnecessary wear-and-tear to SSDs!
+* Multi-platform support (Windows, Linux, MacOS)
+* Self-contained application, no installation required!
+
+# Screenshots
+![Prefilling game](docs/screenshot1-prefill.png)
+
+# Quickstart
 
 # Development Pre-reqs
 
