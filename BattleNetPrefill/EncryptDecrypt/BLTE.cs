@@ -120,24 +120,6 @@ namespace BattleNetPrefill.EncryptDecrypt
                     throw new Exception("Unsupported mode " + data[0].ToString("X") + "!");
             }
         }
-        
-        private static string ReturnEncryptionKeyName(byte[] data)
-        {
-            byte keyNameSize = data[0];
-
-            if (keyNameSize == 0 || keyNameSize != 8)
-            {
-                AnsiConsole.WriteLine(keyNameSize.ToString());
-                throw new Exception("keyNameSize == 0 || keyNameSize != 8");
-            }
-
-            byte[] keyNameBytes = new byte[keyNameSize];
-            Array.Copy(data, 1, keyNameBytes, 0, keyNameSize);
-
-            Array.Reverse(keyNameBytes);
-
-            return BitConverter.ToString(keyNameBytes).Replace("-", "");
-        }
 
         private static byte[] Decrypt(byte[] data, int index)
         {
@@ -196,27 +178,6 @@ namespace BattleNetPrefill.EncryptDecrypt
             {
                 // ARC4 ?
                 throw new Exception("encType ENCRYPTION_ARC4 not implemented");
-            }
-        }
-
-        public static byte[] DecryptFile(string name, byte[] data, string decryptionKeyName)
-        {
-            byte[] key = new byte[16];
-
-            using (BinaryReader reader = new BinaryReader(new FileStream(decryptionKeyName + ".ak", FileMode.Open)))
-            {
-                key = reader.ReadBytes(16);
-            }
-
-            byte[] IV = name.ToByteArray();
-
-            Array.Copy(IV, 8, IV, 0, 8);
-            Array.Resize(ref IV, 8);
-
-            using (Salsa20 salsa = new Salsa20())
-            {
-                var decryptor = salsa.CreateDecryptor(key, IV);
-                return decryptor.TransformFinalBlock(data, 0, data.Length);
             }
         }
     }
