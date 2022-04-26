@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 
-namespace BattleNetPrefill.DebugUtil
+namespace BattleNetPrefill.Utils.Debug
 {
     //TODO comment the purpose of this class
     public class FileSizeProvider

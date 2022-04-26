@@ -1,16 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DataAccess;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
+using BattleNetPrefill.Utils.Debug.Models;
 using BattleNetPrefill.Web;
 using Spectre.Console;
-using Colors = BattleNetPrefill.Utils.Colors;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill
 {
@@ -21,7 +19,7 @@ namespace BattleNetPrefill
             bool useDebugMode = false, bool writeOutputFiles = false, bool showDebugStats = false, bool skipDiskCache = false)
         {
             var timer = Stopwatch.StartNew();
-            AnsiConsole.WriteLine($"Now starting processing of : {Colors.Cyan(product.DisplayName)}");
+            AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
             CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode, skipDiskCache);
@@ -66,7 +64,7 @@ namespace BattleNetPrefill
             await cdn.DownloadQueuedRequestsAsync(ansiConsole);
 
             timer.Stop();
-            AnsiConsole.WriteLine($"{Colors.Cyan(product.DisplayName)} pre-loaded in {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
+            AnsiConsole.MarkupLine($"{Blue(product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
 
             if (showDebugStats)
             {

@@ -7,7 +7,7 @@ using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
 
-namespace BattleNetPrefill.DataAccess
+namespace BattleNetPrefill.Parsers
 {
     public class PatchLoader
     {

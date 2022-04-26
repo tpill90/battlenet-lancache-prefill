@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
+using BattleNetPrefill.Utils.Debug;
+using BattleNetPrefill.Utils.Debug.Models;
 using NUnit.Framework;
 
 namespace BattleNetPrefill.Test.DebugUtilTests

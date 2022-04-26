@@ -4,12 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BattleNetPrefill.DataAccess;
 using BattleNetPrefill.EncryptDecrypt;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
+using ByteSizeLib;
+using Spectre.Console;
 
 namespace BattleNetPrefill.Handlers
 {
@@ -30,10 +31,11 @@ namespace BattleNetPrefill.Handlers
         {
             _downloadFile = new DownloadFile();
 
-            using var stream = new MemoryStream(await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]));
-            using var blteStream = new BLTEStream(stream, buildConfig.download[1]);
-            using BinaryReader bin = new BinaryReader(blteStream);
+            var content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]);
 
+            using var memoryStream = new MemoryStream(BLTE.Parse(content));
+            using BinaryReader bin = new BinaryReader(memoryStream);
+            
             // Reading header
             if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
             {

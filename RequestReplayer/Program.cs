@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using BattleNetPrefill;
-using BattleNetPrefill.DebugUtil;
+using BattleNetPrefill.Utils.Debug;
 using Spectre.Console;
-using Colors = BattleNetPrefill.Utils.Colors;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace RequestReplayer
 {
@@ -34,7 +34,7 @@ namespace RequestReplayer
             foreach (var targetProduct in TargetProducts)
             {
                 string replayLogVersion = NginxLogParser.GetLatestLogVersionForProduct(LogFileBasePath, targetProduct);
-                AnsiConsole.WriteLine($"Replaying requests for {Colors.Cyan(targetProduct.DisplayName)} {Colors.Yellow(replayLogVersion)}!");
+                AnsiConsole.MarkupLine($"Replaying requests for {Cyan(targetProduct.DisplayName)} {Yellow(replayLogVersion)}!");
                 
                 var requestsToReplay = NginxLogParser.GetSavedRequestLogs(LogFileBasePath, targetProduct).ToList();
 

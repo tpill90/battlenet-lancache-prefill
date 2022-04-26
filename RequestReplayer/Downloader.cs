@@ -7,11 +7,11 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil.Models;
-using BattleNetPrefill.Utils;
+using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using ShellProgressBar;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace RequestReplayer
 {
@@ -148,11 +148,11 @@ namespace RequestReplayer
         {
             if (_failureCount > 0)
             {
-                AnsiConsole.WriteLine($"     Total Errors : {Colors.Red(_failureCount)}");
+                AnsiConsole.MarkupLine($"     Total Errors : {Red(_failureCount)}");
             }
             if (_fileNotFoundCount > 0)
             {
-                AnsiConsole.WriteLine($"     Total files not found : {Colors.Yellow(_fileNotFoundCount)}");
+                AnsiConsole.MarkupLine($"     Total files not found : {Yellow(_fileNotFoundCount)}");
             }
         }
     }

@@ -29,7 +29,7 @@ namespace BattleNetPrefill.Parsers
 
             lines = lineList.ToArray();
 
-            if (lines.Count() > 0)
+            if (lines.Any())
             {
                 cdns.entries = new CdnsEntry[lines.Count() - 1];
 

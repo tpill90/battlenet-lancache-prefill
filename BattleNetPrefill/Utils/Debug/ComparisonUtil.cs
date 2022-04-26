@@ -3,11 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Utils.Debug
 {
@@ -34,10 +34,8 @@ namespace BattleNetPrefill.Utils.Debug
             {
                 var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
                 var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-                File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests,
-                    Formatting.Indented, jsonSettings));
-                File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests,
-                    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+                await File.WriteAllTextAsync($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests, Formatting.Indented, jsonSettings));
+                await File.WriteAllTextAsync($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests, Formatting.Indented, jsonSettings ));
             }
             var comparisonResult = new ComparisonResult
             {
@@ -58,7 +56,7 @@ namespace BattleNetPrefill.Utils.Debug
                 comparisonResult.SaveToDisk(@"C:\Users\Tim\Dropbox\Programming\dotnet-public");
             }
 
-            AnsiConsole.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            AnsiConsole.MarkupLine($"Comparison complete! {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
         }
 
@@ -78,7 +76,7 @@ namespace BattleNetPrefill.Utils.Debug
                 fileSizeProvider.GetContentLengthAsync(request).Wait();
             });
             fileSizeProvider.Save();
-            AnsiConsole.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            AnsiConsole.MarkupLine($"{Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         private async Task GetRequestSizesAsync(List<Request> requests, FileSizeProvider fileSizeProvider)

@@ -117,7 +117,7 @@ namespace BattleNetPrefill.Handlers
 
             lines = lineList.ToArray();
 
-            if (lines.Count() > 0)
+            if (lines.Any())
             {
                 versions.entries = new VersionsEntry[lines.Count() - 1];
 

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BattleNetPrefill.Utils;
 using ByteSizeLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
-namespace BattleNetPrefill.DebugUtil.Models
+namespace BattleNetPrefill.Utils.Debug.Models
 {
     //TODO comment what these fields mean
     public class ComparisonResult
@@ -51,20 +51,20 @@ namespace BattleNetPrefill.DebugUtil.Models
             // Formatting output to table
             var table = new Table();
             table.AddColumn(new TableColumn("").LeftAligned());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Current")).Centered());
-            table.AddColumn(new TableColumn(SpectreColors.Blue("Expected")).Centered());
+            table.AddColumn(new TableColumn(Blue("Current")).Centered());
+            table.AddColumn(new TableColumn(Blue("Expected")).Centered());
 
             table.AddRow("Requests made", RequestMadeCount.ToString(), RealRequestCount.ToString());
             table.AddRow("Bandwidth required", GeneratedRequestTotalSize.ToString(), RealRequestsTotalSize.ToString());
-            table.AddRow("Requests missing size", SpectreColors.Yellow(RequestsWithoutSize.ToString()), RealRequestsWithoutSize.ToString());
+            table.AddRow("Requests missing size", Yellow(RequestsWithoutSize.ToString()), RealRequestsWithoutSize.ToString());
             AnsiConsole.Write(table);
 
-            AnsiConsole.WriteLine($"Total Misses     : {Colors.Red(MissCount)}");
-            AnsiConsole.WriteLine($"Misses Bandwidth : {Colors.Red(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
+            AnsiConsole.MarkupLine($"Total Misses     : {Red(MissCount)}");
+            AnsiConsole.MarkupLine($"Misses Bandwidth : {Red(ByteSize.FromBytes(Misses.Sum(e => e.TotalBytes)))}");
             AnsiConsole.WriteLine();
 
-            AnsiConsole.WriteLine($"Unnecessary Requests : {Colors.Yellow(UnnecessaryRequests.Count)}");
-            AnsiConsole.WriteLine($"Wasted bandwidth     : {Colors.Yellow(ByteSize.FromBytes(UnnecessaryRequests.Sum(e => e.TotalBytes)))}");
+            AnsiConsole.MarkupLine($"Unnecessary Requests : {Yellow(UnnecessaryRequests.Count)}");
+            AnsiConsole.MarkupLine($"Wasted bandwidth     : {Yellow(ByteSize.FromBytes(UnnecessaryRequests.Sum(e => e.TotalBytes)))}");
             AnsiConsole.WriteLine();
         }
     }

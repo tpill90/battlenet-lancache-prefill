@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using NUnit.Framework;
 using Spectre.Console.Testing;
@@ -20,6 +20,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
             _results = await TactProductHandler.ProcessProductAsync(TactProduct.Hearthstone, new TestConsole(), useDebugMode: true, showDebugStats: true);
         }
 
+        //TODO fix the failed tests
         [Test]
         public void Misses()
         {

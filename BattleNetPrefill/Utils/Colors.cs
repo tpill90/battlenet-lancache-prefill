@@ -1,45 +1,35 @@
 ﻿namespace BattleNetPrefill.Utils
 {
-    //TODO possibly get rid of this?
-    public static class Colors
-    {
-        //TODO see if this kind of stuff can be pulled into the main Crayon package
-        public static string Cyan(object value)
-        {
-            return Crayon.Output.Cyan(value.ToString());
-        }
-
-        public static string Green(object value)
-        {
-            return Crayon.Output.Green(value.ToString());
-        }
-
-        public static string Magenta(object value)
-        {
-            return Crayon.Output.Magenta(value.ToString());
-        }
-
-        public static string Red(object value)
-        {
-            return Crayon.Output.Red(value.ToString());
-        }
-
-        public static string Yellow(object value)
-        {
-            return Crayon.Output.Yellow(value.ToString());
-        }
-    }
-
     public static class SpectreColors
     {
-        public static string Blue(string inputText)
+        public static string Blue(object inputObj)
         {
-            return $"[blue]{inputText}[/]";
+            return $"[blue]{inputObj}[/]";
         }
 
-        public static string Yellow(string inputText)
+        public static string Cyan(object inputObj)
         {
-            return $"[yellow]{inputText}[/]";
+            return $"[cyan]{inputObj}[/]";
+        }
+
+        public static string Green(object inputObj)
+        {
+            return $"[green]{inputObj}[/]";
+        }
+
+        public static string Magenta(object inputObj)
+        {
+            return $"[fuchsia]{inputObj}[/]";
+        }
+
+        public static string Red(object inputObj)
+        {
+            return $"[red]{inputObj}[/]";
+        }
+
+        public static string Yellow(object inputObj)
+        {
+            return $"[gold1]{inputObj}[/]";
         }
     }
 }

@@ -7,14 +7,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Utils.Debug;
+using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using Dasync.Collections;
 using Spectre.Console;
-using Colors = BattleNetPrefill.Utils.Colors;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Web
 {
@@ -106,7 +106,7 @@ namespace BattleNetPrefill.Web
         {
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
             ByteSize totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
-            AnsiConsole.WriteLine($"Downloading {Colors.Cyan(coalescedRequests.Count)} total queued requests {Colors.Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
+            AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
             // Configuring the progress bar
             var progressBar = ansiConsole.Progress()
@@ -156,7 +156,7 @@ namespace BattleNetPrefill.Web
 
         //TODO comment
         //TODO come up with a better name for writeToDevNull
-        public async Task<byte[]> GetRequestAsBytesAsync(Request request = null, ProgressTask task = null)
+        public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)
         {
             var writeToDevNull = request.WriteToDevNull;
             var startBytes = request.LowerByteRange;
@@ -170,7 +170,6 @@ namespace BattleNetPrefill.Web
                 return null;
             }
 
-            // TODO cache this in a dict
             var uri = new Uri($"http://{_cdnList[0]}/{request}");
 
             // Try to return a cached copy from the disk first, before making an actual request
@@ -214,7 +213,7 @@ namespace BattleNetPrefill.Web
                 }
                 catch (Exception)
                 {
-                    AnsiConsole.WriteLine(Colors.Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
+                    AnsiConsole.MarkupLine(Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
                 }
                 
                 return null;
