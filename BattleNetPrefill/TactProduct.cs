@@ -1,4 +1,5 @@
 ﻿using BattleNetPrefill.Structs;
+// ReSharper disable UnusedMember.Global Many of the TactProducts defined here are going to be unused, as this is simply a definition of all possible TactProducts.
 
 namespace BattleNetPrefill
 {

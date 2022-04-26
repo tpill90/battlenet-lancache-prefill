@@ -7,12 +7,15 @@ using CliFx.Attributes;
 using CliFx.Exceptions;
 using CliFx.Extensibility;
 using CliFx.Infrastructure;
+using JetBrains.Annotations;
 using Spectre.Console;
 
 namespace BattleNetPrefill
 {
+    [UsedImplicitly]
     public class CliCommands
     {
+        [UsedImplicitly]
         [Command("list-products", Description = "Lists all available products that can be pre-filled")]
         public class ListProductsCommand : ICommand
         {
@@ -38,6 +41,7 @@ namespace BattleNetPrefill
             }
         }
 
+        [UsedImplicitly]
         [Command("prefill", Description = "Downloads the latest files for one or more specified product(s)")]
         public class PrefillCommand : ICommand
         {

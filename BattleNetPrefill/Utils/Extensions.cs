@@ -5,21 +5,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using BattleNetPrefill.Structs;
 
-//TODO rename file to just Extensions.cs
 namespace BattleNetPrefill.Utils
 {
     public static class BinaryReaderExtensions
     {
-        public static int ReadInt32BE(this BinaryReader reader)
-        {
-            int val = reader.ReadInt32();
-            int ret = (val >> 24 & 0xFF) << 0;
-            ret |= (val >> 16 & 0xFF) << 8;
-            ret |= (val >> 8 & 0xFF) << 16;
-            ret |= (val >> 0 & 0xFF) << 24;
-            return ret;
-        }
-
         public static short ReadInt16BE(this BinaryReader reader)
         {
             byte[] val = reader.ReadBytes(2);
@@ -95,54 +84,14 @@ namespace BattleNetPrefill.Utils
             return Unsafe.ReadUnaligned<T>(ref result[0]);
         }
 
-        public static bool EqualsTo(this in MD5Hash key, byte[] array)
-        {
-            if (array.Length != 16)
-                return false;
-
-            ref MD5Hash other = ref Unsafe.As<byte, MD5Hash>(ref array[0]);
-
-            if (key.lowPart != other.lowPart || key.highPart != other.highPart)
-                return false;
-
-            return true;
-        }
-
-        public static bool EqualsTo9(this in MD5Hash key, byte[] array)
-        {
-            if (array.Length != 16)
-                return false;
-
-            ref MD5Hash other = ref Unsafe.As<byte, MD5Hash>(ref array[0]);
-
-            return EqualsTo9(key, other);
-        }
-
-        public static bool EqualsTo9(this in MD5Hash key, in MD5Hash other)
-        {
-            if (key.lowPart != other.lowPart)
-                return false;
-
-            if ((key.highPart & 0xFF) != (other.highPart & 0xFF))
-                return false;
-
-            return true;
-        }
-
         public static MD5Hash ToMD5(this string str)
         {
             var array = Convert.FromHexString(str);
             
             if (array.Length != 16)
+            {
                 throw new ArgumentException("array size != 16", nameof(array));
-
-            return Unsafe.As<byte, MD5Hash>(ref array[0]);
-        }
-
-        public static MD5Hash ToMD5(this byte[] array)
-        {
-            if (array.Length != 16)
-                throw new ArgumentException("array size != 16", nameof(array));
+            }
 
             return Unsafe.As<byte, MD5Hash>(ref array[0]);
         }
@@ -150,26 +99,20 @@ namespace BattleNetPrefill.Utils
 
     public static class CStringExtensions
     {
-        /// <summary> Reads the NULL terminated string from 
-        /// the current stream and advances the current position of the stream by string length + 1.
+        /// <summary>
+        /// Reads the NULL terminated string from the current stream and advances the current position of the stream by string length + 1.
         /// <seealso cref="BinaryReader.ReadString"/>
         /// </summary>
         public static string ReadCString(this BinaryReader reader)
         {
-            return reader.ReadCString(Encoding.UTF8);
-        }
-
-        /// <summary> Reads the NULL terminated string from 
-        /// the current stream and advances the current position of the stream by string length + 1.
-        /// <seealso cref="BinaryReader.ReadString"/>
-        /// </summary>
-        public static string ReadCString(this BinaryReader reader, Encoding encoding)
-        {
+            //TODO can this be improved to reduce allocs?
             var bytes = new List<byte>();
             byte b;
             while ((b = reader.ReadByte()) != 0)
+            {
                 bytes.Add(b);
-            return encoding.GetString(bytes.ToArray());
+            }
+            return Encoding.UTF8.GetString(bytes.ToArray());
         }
 
         public static byte[] ToByteArray(this string str)
@@ -187,18 +130,6 @@ namespace BattleNetPrefill.Utils
         public static byte[] FromHexString(this string str)
         {
             return Convert.FromHexString(str);
-        }
-    }
-
-    public static class Extensions
-    {
-        // copies whole stream
-        public static MemoryStream CopyToMemoryStream(this Stream src)
-        {
-            MemoryStream ms = new MemoryStream();
-            src.CopyTo(ms);
-            ms.Position = 0;
-            return ms;
         }
     }
 }
