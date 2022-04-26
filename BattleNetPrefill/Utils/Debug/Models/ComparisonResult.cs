@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BattleNetPrefill.Utils;
 using ByteSizeLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
 
-namespace BattleNetPrefill.DebugUtil.Models
+namespace BattleNetPrefill.Utils.Debug.Models
 {
     //TODO comment what these fields mean
     public class ComparisonResult

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using BattleNetPrefill;
-using BattleNetPrefill.DebugUtil;
+using BattleNetPrefill.Utils.Debug;
 using Spectre.Console;
 using Colors = BattleNetPrefill.Utils.Colors;
 

@@ -4,14 +4,13 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
-using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
+using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
 
-namespace BattleNetPrefill.DebugUtil
+namespace BattleNetPrefill.Utils.Debug
 {
     public static class NginxLogParser
     {

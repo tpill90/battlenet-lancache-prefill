@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using NUnit.Framework;
 using Spectre.Console.Testing;

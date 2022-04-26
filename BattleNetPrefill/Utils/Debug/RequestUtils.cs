@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 
-namespace BattleNetPrefill.DebugUtil
+namespace BattleNetPrefill.Utils.Debug
 {
     public static class RequestUtils
     {

@@ -17,7 +17,7 @@ namespace BattleNetPrefill.Handlers
         private const int CHUNK_SIZE = 4096;
 
         //TODO comment
-        private List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
+        private readonly List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
 
         public ArchiveIndexHandler(CDN cdn, TactProduct targetProduct)
         {

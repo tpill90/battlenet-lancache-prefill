@@ -1,13 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DataAccess;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
+using BattleNetPrefill.Utils.Debug.Models;
 using BattleNetPrefill.Web;
 using Spectre.Console;
 using Colors = BattleNetPrefill.Utils.Colors;

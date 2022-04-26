@@ -3,8 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.DebugUtil;
-using BattleNetPrefill.DebugUtil.Models;
+using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
@@ -34,10 +33,8 @@ namespace BattleNetPrefill.Utils.Debug
             {
                 var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
                 var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-                File.WriteAllText($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests,
-                    Formatting.Indented, jsonSettings));
-                File.WriteAllText($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests,
-                    Formatting.Indented, new JsonConverter[] { new StringEnumConverter() }));
+                await File.WriteAllTextAsync($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests, Formatting.Indented, jsonSettings));
+                await File.WriteAllTextAsync($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests, Formatting.Indented, jsonSettings ));
             }
             var comparisonResult = new ComparisonResult
             {

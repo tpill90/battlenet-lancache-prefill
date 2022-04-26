@@ -1,7 +1,7 @@
 ﻿using System;
-using BattleNetPrefill.DebugUtil;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Test.LogFileLatestVersionTests
