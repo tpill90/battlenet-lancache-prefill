@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace BattleNetPrefill.Test.Parsers
 {
+    [Parallelizable(ParallelScope.All)]
     [TestFixture]
     public class BuildConfigParserTests
     {
@@ -32,7 +33,6 @@ namespace BattleNetPrefill.Test.Parsers
         [TestCase("wow")]
         [TestCase("wow_classic")]
         [TestCase("zeus")]
-        [Parallelizable(ParallelScope.All)]
         public async Task BuildConfig_ShouldHaveNoUnknownKeyPairs(string productCode)
         {
             var tactProduct = TactProduct.Parse(productCode);

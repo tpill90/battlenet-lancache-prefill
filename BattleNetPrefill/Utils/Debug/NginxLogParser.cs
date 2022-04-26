@@ -127,9 +127,12 @@ namespace BattleNetPrefill.Utils.Debug
                 .OrderByDescending(e => e.LastWriteTime)
                 .FirstOrDefault();
 
+            if (latestFile == null)
+            {
+                return "";
+            }
+
             return latestFile.Name.Replace(".zip", "");
         }
-
-        
     }
 }

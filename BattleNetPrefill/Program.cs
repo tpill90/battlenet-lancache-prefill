@@ -5,7 +5,6 @@ using CliFx;
 namespace BattleNetPrefill
 {
     //TODO Add more analyzers
-    //TODO Repo - Squash old commits + generally cleanup repo history
     //TODO add documentation on how to add unicode support to windows https://spectreconsole.net/best-practices
     //TODO https://github.com/Tyrrrz/CliFx/wiki/Integrating-with-Spectre.Console
     //TODO research buffer pools https://www.google.com/search?client=firefox-b-1-d&q=c%23+binaryprimitives

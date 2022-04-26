@@ -23,6 +23,7 @@ namespace BattleNetPrefill
 
         };
 
+        //TODO move these log files to a root directory called "Logs".  Also remove the hardcoded path and use a relative path
         public static readonly string LogFileBasePath = @"C:\Users\Tim\Dropbox\Programming\dotnet-public\BattleNetBackup\RequestReplayer\Logs";
         
         public static bool UseCdnDebugMode = false;
