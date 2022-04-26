@@ -156,7 +156,7 @@ namespace BattleNetPrefill.Web
 
         //TODO comment
         //TODO come up with a better name for writeToDevNull
-        public async Task<byte[]> GetRequestAsBytesAsync(Request request = null, ProgressTask task = null)
+        public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)
         {
             var writeToDevNull = request.WriteToDevNull;
             var startBytes = request.LowerByteRange;
@@ -170,7 +170,6 @@ namespace BattleNetPrefill.Web
                 return null;
             }
 
-            // TODO cache this in a dict
             var uri = new Uri($"http://{_cdnList[0]}/{request}");
 
             // Try to return a cached copy from the disk first, before making an actual request
