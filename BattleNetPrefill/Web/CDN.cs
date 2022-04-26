@@ -14,7 +14,7 @@ using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using Dasync.Collections;
 using Spectre.Console;
-using Colors = BattleNetPrefill.Utils.Colors;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Web
 {
@@ -106,7 +106,7 @@ namespace BattleNetPrefill.Web
         {
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
             ByteSize totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
-            AnsiConsole.WriteLine($"Downloading {Colors.Cyan(coalescedRequests.Count)} total queued requests {Colors.Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
+            AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
             // Configuring the progress bar
             var progressBar = ansiConsole.Progress()
@@ -213,7 +213,7 @@ namespace BattleNetPrefill.Web
                 }
                 catch (Exception)
                 {
-                    AnsiConsole.WriteLine(Colors.Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
+                    AnsiConsole.MarkupLine(Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
                 }
                 
                 return null;

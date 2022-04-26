@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BattleNetPrefill;
 using BenchmarkDotNet.Attributes;
 using Spectre.Console.Testing;
@@ -10,10 +9,6 @@ namespace Benchmarks
     {
         public class Starcraft2Benchmark
         {
-            public Starcraft2Benchmark()
-            {
-            }
-
             [Benchmark]
             public async Task Current()
             {

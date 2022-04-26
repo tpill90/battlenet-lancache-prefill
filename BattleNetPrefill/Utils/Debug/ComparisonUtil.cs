@@ -7,6 +7,7 @@ using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Utils.Debug
 {
@@ -55,7 +56,7 @@ namespace BattleNetPrefill.Utils.Debug
                 comparisonResult.SaveToDisk(@"C:\Users\Tim\Dropbox\Programming\dotnet-public");
             }
 
-            AnsiConsole.WriteLine($"Comparison complete! {Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            AnsiConsole.MarkupLine($"Comparison complete! {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
         }
 
@@ -75,7 +76,7 @@ namespace BattleNetPrefill.Utils.Debug
                 fileSizeProvider.GetContentLengthAsync(request).Wait();
             });
             fileSizeProvider.Save();
-            AnsiConsole.WriteLine($"{Colors.Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            AnsiConsole.MarkupLine($"{Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
         }
 
         private async Task GetRequestSizesAsync(List<Request> requests, FileSizeProvider fileSizeProvider)

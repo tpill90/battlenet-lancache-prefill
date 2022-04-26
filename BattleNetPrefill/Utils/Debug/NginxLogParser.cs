@@ -9,6 +9,7 @@ using BattleNetPrefill.Utils.Debug.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Utils.Debug
 {
@@ -36,7 +37,7 @@ namespace BattleNetPrefill.Utils.Debug
             if (latestFile.FullName.Contains("coalesced"))
             {
                 var deserializedRequests = JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
-                AnsiConsole.WriteLine($"Parsed request logs in {Colors.Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
+                AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
 
                 return deserializedRequests;
             }
@@ -55,7 +56,7 @@ namespace BattleNetPrefill.Utils.Debug
                 var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
                 File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay, Formatting.Indented, jsonSettings));
 
-                AnsiConsole.WriteLine($"Parsed request logs in {Colors.Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
+                AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
                 return requestsToReplay;
             }
 

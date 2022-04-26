@@ -9,6 +9,7 @@ using CliFx.Extensibility;
 using CliFx.Infrastructure;
 using JetBrains.Annotations;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill
 {
@@ -27,7 +28,7 @@ namespace BattleNetPrefill
                 // Header
                 var table = new Table();
                 table.AddColumn(new TableColumn("Product Name"));
-                table.AddColumn(new TableColumn(SpectreColors.Blue("ID")));
+                table.AddColumn(new TableColumn(Blue("ID")));
 
                 foreach (var product in TactProduct.AllEnumValues)
                 {
@@ -70,7 +71,7 @@ namespace BattleNetPrefill
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
 
-                AnsiConsole.WriteLine($"Prefilling {Colors.Yellow(productsToProcess.Count)} products");
+                AnsiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
                     TactProductHandler.ProcessProductAsync(code, AnsiConsole.Create(new AnsiConsoleSettings()),
