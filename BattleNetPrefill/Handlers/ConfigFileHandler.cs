@@ -17,7 +17,7 @@ namespace BattleNetPrefill.Handlers
 
         public ConfigFileHandler(CdnRequestManager cdnRequestManager)
         {
-            this._cdnRequestManager = cdnRequestManager;
+            _cdnRequestManager = cdnRequestManager;
         }
 
         public async Task<CDNConfigFile> GetCdnConfigAsync(VersionsEntry targetVersion)
@@ -169,6 +169,7 @@ namespace BattleNetPrefill.Handlers
             }
 
             var targetVersion = versions.entries[0];
+            QueueKeyRingFile(targetVersion);
 
             return targetVersion;
         }

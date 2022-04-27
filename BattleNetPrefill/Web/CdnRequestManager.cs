@@ -38,6 +38,8 @@ namespace BattleNetPrefill.Web
         
         private readonly List<Request> _queuedRequests = new List<Request>();
 
+        public int ErrorCount { get; private set; }
+
         /// <summary>
         /// When enabled, will skip using any cached files from disk.  The disk cache can speed up repeated runs, however it can use up a non-trivial amount
         /// of storage in some cases (Wow uses several hundred mb of index files).
@@ -233,6 +235,7 @@ namespace BattleNetPrefill.Web
                 }
                 catch (Exception)
                 {
+                    ErrorCount++;
                     AnsiConsole.MarkupLine(Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
                 }
                 

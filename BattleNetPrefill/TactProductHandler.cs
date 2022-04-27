@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
@@ -24,6 +26,11 @@ namespace BattleNetPrefill
         /// <returns></returns>
         public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, DebugConfig debugConfig, bool skipDiskCache = false)
         {
+            var spectreStatus = ansiConsole.Status()
+                                   .AutoRefresh(true)
+                                   .SpinnerStyle(Style.Parse("green"))
+                                   .Spinner(Spinner.Known.Dots2);
+
             var timer = Stopwatch.StartNew();
             AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
 
@@ -34,33 +41,36 @@ namespace BattleNetPrefill
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
             var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, product);
 
-            var spectreStatus = ansiConsole.Status()
-                       .AutoRefresh(true)
-                       .SpinnerStyle(Style.Parse("green"))
-                       .Spinner(Spinner.Known.Dots2);
+            // Finding the latest version of the game
+            VersionsEntry? targetVersion = null;
+            await spectreStatus.StartAsync("Getting latest version info...", async ctx =>
+            {
+                await cdnRequestManager.InitializeAsync(product);
+                targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
+            });
 
-            //TODO not a fan of this startAsync pushing everything over 1 tab
+            // Skip prefilling if we've already prefilled the latest version 
+            if (!debugConfig.UseCdnDebugMode && IsProductUpToDate(product, targetVersion.Value))
+            {
+                AnsiConsole.MarkupLine($"{Green(product.DisplayName)} already up to date!  Skipping..");
+                return null;
+            }
+
             await spectreStatus.StartAsync("Start", async ctx =>
             {
-                // Finding the latest version of the game
-                ctx.Status("Getting latest version info...");
-                await cdnRequestManager.InitializeAsync(product);
-                var targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
-                configFileHandler.QueueKeyRingFile(targetVersion);
-
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
-                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdnRequestManager, product);
-                CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion);
+                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, product);
+                CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");
                 await archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig);
                 await downloadFileHandler.ParseDownloadFileAsync(buildConfig);
 
-                   // Start processing to determine which files need to be downloaded
-                   ctx.Status("Determining files to download...");
-                   await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, product);
-                   await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, product);
+                // Start processing to determine which files need to be downloaded
+                ctx.Status("Determining files to download...");
+                await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, product);
+                await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, product);
 
                 var patchLoader = new PatchLoader(cdnRequestManager, cdnConfig);
                 await patchLoader.HandlePatchesAsync(buildConfig, product);
@@ -71,17 +81,42 @@ namespace BattleNetPrefill
 
             timer.Stop();
             AnsiConsole.MarkupLine($"{Blue(product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
+            
+            SaveDownloadedProductVersion(product, cdnRequestManager, targetVersion.Value);
 
-            if (debugConfig.CompareAgainstRealRequests)
+            if (!debugConfig.CompareAgainstRealRequests)
             {
-                var comparisonUtil = new ComparisonUtil();
-                var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
-                result.ElapsedTime = timer.Elapsed;
-
-                return result;
+                return null;
             }
 
-            return null;
+            var comparisonUtil = new ComparisonUtil();
+            var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
+            result.ElapsedTime = timer.Elapsed;
+
+            return result;
+        }
+
+        public static void SaveDownloadedProductVersion(TactProduct product, CdnRequestManager cdn, VersionsEntry latestVersion, bool force = false)
+        {
+            if (cdn.ErrorCount != 0)
+            {
+                return;
+            }
+
+            var versionFile = $"{Config.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
+            File.WriteAllText(versionFile, latestVersion.versionsName);
+        }
+
+        private static bool IsProductUpToDate(TactProduct product, VersionsEntry latestVersion)
+        {
+            var versionFile = $"{Config.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
+            if (!File.Exists(versionFile))
+            {
+                return false;
+            }
+
+            var currentLogVersion = File.ReadAllText(versionFile);
+            return latestVersion.versionsName == currentLogVersion;
         }
     }
 }
