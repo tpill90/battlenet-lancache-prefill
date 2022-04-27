@@ -241,8 +241,8 @@ namespace BattleNetPrefill.Web
         {
             var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";
 
-            // Load cached version, only valid for 1 hour
-            if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddHours(1))
+            // Load cached version, only valid for 30 minutes so that updated versions don't get accidentally ignored
+            if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddMinutes(30))
             {
                 return await File.ReadAllTextAsync(cacheFile);
             }
