@@ -34,6 +34,11 @@ namespace BattleNetPrefill.Handlers
             {
                 maxTasks = 6;
             }
+            //TODO there is an issue w\ slicing with these products
+            if (_targetProduct == TactProduct.CodBO4 || _targetProduct == TactProduct.CodMW2 || _targetProduct == TactProduct.CrashBandicoot4)
+            {
+                maxTasks = 1;
+            }
 
             var tasks = new List<Task<Dictionary<MD5Hash, IndexEntry>>>();
 

@@ -16,6 +16,7 @@ namespace BattleNetPrefill.Utils.Debug
         //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
       
+        //TODO get rid of writeOutputFiles
         public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product, bool writeOutputFiles)
         {
             AnsiConsole.WriteLine("\nComparing requests against real request logs...");
@@ -35,7 +36,6 @@ namespace BattleNetPrefill.Utils.Debug
                 var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
                 var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
                 await File.WriteAllTextAsync($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests, Formatting.Indented, jsonSettings));
-                await File.WriteAllTextAsync($@"{baseUri}\real.json", JsonConvert.SerializeObject(realRequests, Formatting.Indented, jsonSettings ));
             }
             var comparisonResult = new ComparisonResult
             {
@@ -51,10 +51,6 @@ namespace BattleNetPrefill.Utils.Debug
             comparisonResult.UnnecessaryRequests = generatedRequests;
 
             comparisonResult.PrintOutput();
-            if (writeOutputFiles)
-            {
-                comparisonResult.SaveToDisk(@"C:\Users\Tim\Dropbox\Programming\dotnet-public");
-            }
 
             AnsiConsole.MarkupLine($"Comparison complete! {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
@@ -96,6 +92,7 @@ namespace BattleNetPrefill.Utils.Debug
             }
         }
         
+        //TODO improve the performance on this.  Extremely slow for some products like Overwatch and Wow
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
             CompareExactMatches(generatedRequests, originalRequests);

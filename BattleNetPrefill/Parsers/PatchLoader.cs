@@ -22,11 +22,13 @@ namespace BattleNetPrefill.Parsers
 
         public async Task HandlePatchesAsync(BuildConfigFile buildConfig, TactProduct targetProduct)
         {
-            // For whatever reason, CodVanguard + Warzone do not make this request.
-            if (buildConfig.patchConfig != null
-                && targetProduct != TactProduct.CodVanguard && targetProduct != TactProduct.CodWarzone
-                && targetProduct != TactProduct.CodBOCW
-                && targetProduct != TactProduct.Hearthstone)
+            // For whatever reason, these products do not actually make this request
+            var patchConfigExclusions = new List<TactProduct>
+            {
+                TactProduct.CodVanguard, TactProduct.CodWarzone, TactProduct.CodBOCW, TactProduct.Hearthstone,
+                TactProduct.BlizzardArcadeCollection
+            };
+            if (buildConfig.patchConfig != null && !patchConfigExclusions.Contains(targetProduct))
             {
                 _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
             }
@@ -37,7 +39,7 @@ namespace BattleNetPrefill.Parsers
             }
 
             // Unused by Hearthstone
-            if (_cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone)
+            if (_cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection)
             {
                 _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex.Value,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
@@ -48,7 +50,8 @@ namespace BattleNetPrefill.Parsers
             }
 
             // Unused by Hearthstone
-            if (_cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone)
+            if (_cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection
+                && targetProduct != TactProduct.Overwatch)
             {
                 for (var i = 0; i < _cdnConfig.patchArchives.Length; i++)
                 {

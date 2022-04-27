@@ -25,21 +25,14 @@ namespace BattleNetPrefill.Handlers
         public async Task HandleInstallFileAsync(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, 
             CDNConfigFile cdnConfigFile, TactProduct product)
         {
-            InstallFile installFile = await ParseInstallFileAsync(buildConfig.install[1]);
-
-            List<InstallFileEntry> filtered;
+            InstallFile installFile = await ParseInstallFileAsync(buildConfig);
+            
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
-            if (product == TactProduct.CodVanguard)
-            {
-                filtered = installFile.entries.Where(e => e.tags.Contains("2=enUS")).ToList();
-            }
-            else
-            {
-                filtered = installFile.entries
+            List<InstallFileEntry> filtered = installFile.entries
                     .Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows"))
                     .ToList();
-            }
+        
 
             if (!filtered.Any())
             {
@@ -75,11 +68,11 @@ namespace BattleNetPrefill.Handlers
             }
         }
 
-        private async Task<InstallFile> ParseInstallFileAsync(MD5Hash hash)
+        private async Task<InstallFile> ParseInstallFileAsync(BuildConfigFile buildConfig)
         {
             var install = new InstallFile();
-
-            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, hash);
+            var endBytes = Math.Max(4095, buildConfig.installSize[1] - 1);
+            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.install[1], startBytes: 0, endBytes: endBytes);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
             {

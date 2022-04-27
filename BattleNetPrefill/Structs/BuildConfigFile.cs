@@ -10,7 +10,7 @@ namespace BattleNetPrefill.Structs
         public string[] downloadSize;
 
         public MD5Hash[] install;
-        public string[] installSize;
+        public int[] installSize;
 
         public MD5Hash[] encoding;
         public int[] encodingSize;
