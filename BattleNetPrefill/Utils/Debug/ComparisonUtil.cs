@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
 
@@ -16,8 +13,7 @@ namespace BattleNetPrefill.Utils.Debug
         //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
       
-        //TODO get rid of writeOutputFiles
-        public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product, bool writeOutputFiles)
+        public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)
         {
             AnsiConsole.WriteLine("\nComparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
@@ -31,12 +27,6 @@ namespace BattleNetPrefill.Utils.Debug
             var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product).ToList();
             await GetRequestSizesAsync(realRequests, fileSizeProvider);
 
-            if (writeOutputFiles)
-            {
-                var baseUri = @"C:\Users\Tim\Dropbox\Programming\dotnet-public";
-                var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-                await File.WriteAllTextAsync($@"{baseUri}\generated.json", JsonConvert.SerializeObject(generatedRequests, Formatting.Indented, jsonSettings));
-            }
             var comparisonResult = new ComparisonResult
             {
                 GeneratedRequests = FastDeepCloner.DeepCloner.Clone(generatedRequests),

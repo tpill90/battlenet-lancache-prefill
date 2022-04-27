@@ -16,7 +16,7 @@ namespace BattleNetPrefill
     {
         //TODO comment parameters
         public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, 
-            bool useDebugMode = false, bool writeOutputFiles = false, bool showDebugStats = false, bool skipDiskCache = false)
+            bool useDebugMode = false, bool showDebugStats = false, bool skipDiskCache = false)
         {
             var timer = Stopwatch.StartNew();
             AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
@@ -69,7 +69,7 @@ namespace BattleNetPrefill
             if (showDebugStats)
             {
                 var comparisonUtil = new ComparisonUtil();
-                var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdn.allRequestsMade.ToList(), product, writeOutputFiles);
+                var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdn.allRequestsMade.ToList(), product);
                 result.ElapsedTime = timer.Elapsed;
 
                 return result;

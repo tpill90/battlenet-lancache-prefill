@@ -75,7 +75,7 @@ namespace BattleNetPrefill
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
                     TactProductHandler.ProcessProductAsync(code, AnsiConsole.Create(new AnsiConsoleSettings()),
-                        Config.UseCdnDebugMode, Config.WriteOutputFiles, Config.ShowDebugStats, NoLocalCache).Wait();
+                        Config.UseCdnDebugMode, Config.ShowDebugStats, NoLocalCache).Wait();
                 }
 
                 return default;
