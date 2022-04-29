@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Crayon" Version="2.0.62" />
     <PackageReference Include="ShellProgressBar" Version="5.0.0" />
   </ItemGroup>
 

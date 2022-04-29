@@ -10,6 +10,7 @@ using CliFx.Infrastructure;
 using JetBrains.Annotations;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
+// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
 
 namespace BattleNetPrefill
 {
@@ -20,23 +21,35 @@ namespace BattleNetPrefill
         [Command("list-products", Description = "Lists all available products that can be pre-filled")]
         public class ListProductsCommand : ICommand
         {
-            //TODO make this look nicer
             public ValueTask ExecuteAsync(IConsole console)
             {
-                AnsiConsole.WriteLine();
-
+                var table = new Table
+                {
+                    Border = TableBorder.MinimalHeavyHead
+                };
                 // Header
-                var table = new Table();
-                table.AddColumn(new TableColumn("Product Name"));
-                table.AddColumn(new TableColumn(Blue("ID")));
+                table.AddColumn(new TableColumn(White("Product Name")) { Width = 35 });
+                table.AddColumn(new TableColumn(White("ID")));
 
-                foreach (var product in TactProduct.AllEnumValues)
+                // Blizzard
+                var blizzMarkup = new Markup("Blizzard", new Style(Color.DodgerBlue1, decoration: Decoration.Bold | Decoration.Underline));
+                table.AddRow(blizzMarkup, new Markup(""));
+                foreach (var product in TactProduct.AllEnumValues.Where(e => e.IsBlizzard))
+                {
+                    table.AddRow(product.DisplayName, product.ProductCode);
+                }
+                
+                // Activision
+                table.AddEmptyRow();
+                var activisionMarkup = new Markup("Activision", new Style(Color.Green1, decoration: Decoration.Bold | Decoration.Underline));
+                table.AddRow(activisionMarkup, new Markup(""));
+                foreach (var product in TactProduct.AllEnumValues.Where(e => e.IsActivision))
                 {
                     table.AddRow(product.DisplayName, product.ProductCode);
                 }
 
-                AnsiConsole.Write(table);
-
+                var ansiConsole = console.CreateAnsiConsole();
+                ansiConsole.Write(table);
 
                 return default;
             }
@@ -61,7 +74,7 @@ namespace BattleNetPrefill
             [CommandOption("nocache", Description = "Skips using locally cached files.  Saves disk space, at the expense of slower subsequent runs.")]
             public bool NoLocalCache { get; init; }
 
-            public ValueTask ExecuteAsync(IConsole console)
+            public async ValueTask ExecuteAsync(IConsole console)
             {
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
 
@@ -71,32 +84,33 @@ namespace BattleNetPrefill
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
 
-                AnsiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
+                var ansiConsole = console.CreateAnsiConsole(); ;
+                ansiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    //TODO should there be only one of these ever created?
-                    var ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings());
-                    TactProductHandler.ProcessProductAsync(code, ansiConsole, NoLocalCache, debugConfig: Config.DebugConfig).Wait();
+                    await TactProductHandler.ProcessProductAsync(code, ansiConsole, NoLocalCache, debugConfig: Config.DebugConfig);
                 }
-
-                return default;
             }
 
             private List<TactProduct> BuildProductListFromArgs()
             {
                 var productsToProcess = new List<TactProduct>();
+                // -p flag
                 if (ProductCodes != null)
                 {
                     productsToProcess.AddRange(ProductCodes);
                 }
+                // --all flag
                 if (PrefillAllProducts)
                 {
                     productsToProcess.AddRange(TactProduct.AllEnumValues);
                 }
+                // --activision flag
                 if (PrefillActivision)
                 {
                     productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsActivision));
                 }
+                // --blizzard flag
                 if (PrefillBlizzard)
                 {
                     productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsBlizzard));
@@ -106,16 +120,10 @@ namespace BattleNetPrefill
             }
         }
 
-        public class TactProductConverter : BindingConverter<TactProduct>
+        private class TactProductConverter : BindingConverter<TactProduct>
         {
             public override TactProduct Convert(string rawValue)
             {
-                if (string.IsNullOrWhiteSpace(rawValue))
-                {
-                    //TODO test this
-                    return default;
-                }
-                
                 return TactProduct.Parse(rawValue);
             }
         }

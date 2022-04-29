@@ -27,6 +27,11 @@
             return $"[red]{inputObj}[/]";
         }
 
+        public static string White(object inputObj)
+        {
+            return $"[white]{inputObj}[/]";
+        }
+
         public static string Yellow(object inputObj)
         {
             return $"[gold1]{inputObj}[/]";
