@@ -113,7 +113,7 @@ namespace BattleNetPrefill.Parsers
                         buildConfig.buildManifestVersion = cols[1];
                         break;
                     case "install-size":
-                        buildConfig.installSize = cols[1].Split(' ');
+                        buildConfig.installSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
                     case "download-size":
                         buildConfig.downloadSize = cols[1].Split(' ');
@@ -184,7 +184,8 @@ namespace BattleNetPrefill.Parsers
             {
                 // Making a request to load "vfsRoot" files.  Not used by anything in our application,
                 // however it is called for some reason by the Actual Battle.Net client
-                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, buildConfig.vfsRootSize[1] - 1);
+                var endBytes = Math.Max(4095, buildConfig.vfsRootSize[1] - 1);
+                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, endBytes);
             }
             return buildConfig;
         }

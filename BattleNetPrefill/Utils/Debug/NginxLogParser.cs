@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -36,10 +37,7 @@ namespace BattleNetPrefill.Utils.Debug
             // Loading the pre-computed log file if it exists, speeds up subsequent runs
             if (latestFile.FullName.Contains("coalesced"))
             {
-                var deserializedRequests = JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
-                AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
-
-                return deserializedRequests;
+                return JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
             }
 
             if (latestFile.Extension == ".zip")
@@ -75,7 +73,7 @@ namespace BattleNetPrefill.Utils.Debug
                 {
                     continue;
                 }
-                if (rawRequest.Contains("bnt004"))
+                if (rawRequest.Contains("bnt002") || rawRequest.Contains("bnt004"))
                 {
                     continue;
                 }

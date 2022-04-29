@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using BattleNetPrefill;
 using BattleNetPrefill.Handlers;
@@ -17,17 +16,19 @@ namespace LogFileGenerator
 {
     public static class Program
     {
-        public static string RootInstallDir = @"E:\BattleNet\temp";
+        private static string RootInstallDir = @"E:\BattleNet";
+        private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
 
-        public static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CDN(Config.BattleNetPatchUri));
+        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CDN(Config.BattleNetPatchUri));
 
-        public static string bnetInstallerPath = Path.GetTempPath() + "BnetInstaller.exe";
+        private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
+        {
+            TactProduct.CodBOCW, TactProduct.CodWarzone, TactProduct.CodVanguard, TactProduct.Hearthstone
+        };
 
         public static void Main()
         {
             EnsureBnetInstallerIsDownloaded();
-
-            DeleteGameFiles();
 
             var products = TactProduct.AllEnumValues;
             foreach (var product in products)
@@ -40,7 +41,16 @@ namespace LogFileGenerator
                 AnsiConsole.MarkupLine($"{Yellow(product.DisplayName)} logs are out of date!  Generating latest logs..");
 
                 ClearLancacheLogs();
-                InstallProduct(product);
+
+                if (ManualInstallProducts.Contains(product))
+                {
+                    ManuallyInstallProduct(product);
+                }
+                else
+                {
+                    InstallProduct(product);
+                }
+                
                 CopyLogsToHost(product);
             }
 
@@ -72,11 +82,11 @@ namespace LogFileGenerator
         {
             var downloadUrl = "https://github.com/barncastle/Battle.Net-Installer/releases/download/v1.6/BNetInstaller.exe";
 
-            if (!File.Exists(bnetInstallerPath))
+            if (!File.Exists(BnetInstallerPath))
             {
                 using (var client = new WebClient())
                 {
-                    client.DownloadFile(downloadUrl, bnetInstallerPath);
+                    client.DownloadFile(downloadUrl, BnetInstallerPath);
                 }
             }
         }
@@ -101,6 +111,12 @@ namespace LogFileGenerator
             AnsiConsole.MarkupLine($"Installing done!");
         }
 
+        private static void ManuallyInstallProduct(TactProduct product)
+        {
+            AnsiConsole.MarkupLine($"{Yellow(product.DisplayName)} requires a manual install.  Install then press Enter when finished to continue....");
+            Console.ReadLine();
+        }
+
         private static void CopyLogsToHost(TactProduct product)
         {
             AnsiConsole.WriteLine($"Copying logs to host...");
@@ -121,6 +137,8 @@ namespace LogFileGenerator
             };
             var process = Process.Start(info);
             process.WaitForExit();
+
+            //TODO cleanup crappy log entries before zipping.  Remove things like Steam logs, or bnt004
 
             // Creating a zip file
             var zipPath = @$"{logFileFolder}\{cdnVersion.versionsName}.zip";

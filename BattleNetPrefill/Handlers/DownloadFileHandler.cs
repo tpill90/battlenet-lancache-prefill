@@ -9,8 +9,6 @@ using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
-using ByteSizeLib;
-using Spectre.Console;
 
 namespace BattleNetPrefill.Handlers
 {
@@ -136,7 +134,9 @@ namespace BattleNetPrefill.Handlers
                     if (unarchivedFileIndex.ContainsKey(current.hash))
                     {
                         IndexEntry file = unarchivedFileIndex[current.hash];
-                        var endBytes = file.offset + file.size - 1;
+                        //TODO i might be able to remove the weird 4096 byte coalescing logic now that this is here
+                        var endBytes = Math.Max(file.offset + file.size - 1, file.offset + 4095);
+
                         _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes);
                     }
                     continue;

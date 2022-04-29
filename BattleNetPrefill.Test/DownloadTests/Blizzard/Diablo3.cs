@@ -1,7 +1,5 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
 using NUnit.Framework;
 using Spectre.Console.Testing;
 
@@ -29,15 +27,13 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         [Test]
         public void MissedBandwidth()
         {
-            var missedBandwidth = ByteSize.FromBytes(_results.Misses.Sum(e => e.TotalBytes));
-            Assert.AreEqual(0, missedBandwidth.Bytes);
+            Assert.AreEqual(0, _results.MissedBandwidth.Bytes);
         }
 
         [Test]
         public void WastedBandwidth()
         {
-            var wastedBandwidth = ByteSize.FromBytes(_results.UnnecessaryRequests.Sum(e => e.TotalBytes));
-            Assert.AreEqual(0, wastedBandwidth.Bytes);
+            Assert.AreEqual(0, _results.WastedBandwidth.Bytes);
         }
     }
 }
