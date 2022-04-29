@@ -15,7 +15,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public async Task Setup()
         {
             // Run the download process only once
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.Warcraft3Reforged, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
+            _results = await TactProductHandler.ProcessProductAsync(TactProduct.Warcraft3Reforged, new TestConsole(), debugConfig: debugConfig);
         }
 
         [Test]

@@ -12,7 +12,7 @@ namespace Benchmarks
             [Benchmark]
             public async Task Current()
             {
-                await TactProductHandler.ProcessProductAsync(TactProduct.Starcraft2, new TestConsole() { EmitAnsiSequences = false}, true, false, false);
+                await TactProductHandler.ProcessProductAsync(TactProduct.Starcraft2, new TestConsole() { EmitAnsiSequences = false} );
             }
 
         }

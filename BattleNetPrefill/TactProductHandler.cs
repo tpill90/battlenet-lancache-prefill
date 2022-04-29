@@ -16,13 +16,13 @@ namespace BattleNetPrefill
     {
         //TODO comment parameters
         public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, 
-            bool useDebugMode = false, bool showDebugStats = false, bool skipDiskCache = false)
+            bool skipDiskCache = false, DebugConfig debugConfig = null)
         {
             var timer = Stopwatch.StartNew();
             AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
-            CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode, skipDiskCache);
+            CDN cdn = new CDN(Config.BattleNetPatchUri, debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdn);
             var configFileHandler = new ConfigFileHandler(cdn);
             var installFileHandler = new InstallFileHandler(cdn);
@@ -66,7 +66,7 @@ namespace BattleNetPrefill
             timer.Stop();
             AnsiConsole.MarkupLine($"{Blue(product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
 
-            if (showDebugStats)
+            if (debugConfig.CompareAgainstRealRequests)
             {
                 var comparisonUtil = new ComparisonUtil();
                 var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdn.allRequestsMade.ToList(), product);

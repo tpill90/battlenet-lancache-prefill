@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
 using NUnit.Framework;
 using Spectre.Console.Testing;
@@ -16,7 +15,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         public async Task Setup()
         {
             // Run the download process only once
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.CodMW2, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
+            _results = await TactProductHandler.ProcessProductAsync(TactProduct.CodMW2, new TestConsole(), debugConfig: debugConfig);
         }
 
         [Test]

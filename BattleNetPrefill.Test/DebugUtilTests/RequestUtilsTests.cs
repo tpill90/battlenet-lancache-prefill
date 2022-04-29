@@ -17,8 +17,8 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Creating two requests that are exact duplicates
-                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -68,8 +68,8 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Requests differ by LowerByteRange, won't be combined
-                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request() { ProductRootUri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);

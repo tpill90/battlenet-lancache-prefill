@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
 using NUnit.Framework;
 using Spectre.Console.Testing;
 
@@ -16,7 +15,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public async Task Setup()
         {
             // Run the download process only once
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.HeroesOfTheStorm, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
+            _results = await TactProductHandler.ProcessProductAsync(TactProduct.HeroesOfTheStorm, new TestConsole(), debugConfig: debugConfig);
         }
 
         [Test]
