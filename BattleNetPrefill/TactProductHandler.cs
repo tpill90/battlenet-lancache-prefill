@@ -75,7 +75,7 @@ namespace BattleNetPrefill
             if (debugConfig.CompareAgainstRealRequests)
             {
                 var comparisonUtil = new ComparisonUtil();
-                var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade, product);
+                var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
                 result.ElapsedTime = timer.Elapsed;
 
                 return result;

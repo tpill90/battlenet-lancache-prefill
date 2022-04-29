@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -53,8 +54,10 @@ namespace BattleNetPrefill.Web
 
         /// <summary>
         /// Used only for debugging purposes.  Records all requests made, so that they can be later compared against the expected requests made.
+        ///
+        /// Must always be a ConcurrentBag, otherwise odd issues with unit tests can pop up due to concurrency
         /// </summary>
-        public List<Request> allRequestsMade = new List<Request>();
+        public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         #endregion
 

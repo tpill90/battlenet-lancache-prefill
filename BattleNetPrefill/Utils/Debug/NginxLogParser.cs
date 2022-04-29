@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -7,8 +6,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
 
@@ -37,9 +34,8 @@ namespace BattleNetPrefill.Utils.Debug
             // Loading the pre-computed log file if it exists, speeds up subsequent runs
             if (latestFile.FullName.Contains("coalesced"))
             {
-                return JsonConvert.DeserializeObject<List<Request>>(File.ReadAllText(latestFile.FullName));
+                return Utf8Json.JsonSerializer.Deserialize<List<Request>>(File.ReadAllText(latestFile.FullName));
             }
-
             if (latestFile.Extension == ".zip")
             {
                 // Extract the logs, so that we can read them while debugging
@@ -51,8 +47,7 @@ namespace BattleNetPrefill.Utils.Debug
 
                 // Save the coalesced results to speed up future runs
                 var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".zip", ".coalesced.log")}";
-                var jsonSettings = new JsonConverter[] { new StringEnumConverter() };
-                File.WriteAllText(coalescedFileName, JsonConvert.SerializeObject(requestsToReplay, Formatting.Indented, jsonSettings));
+                File.WriteAllText(coalescedFileName, Utf8Json.JsonSerializer.ToJsonString(requestsToReplay));
 
                 AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
                 return requestsToReplay;
