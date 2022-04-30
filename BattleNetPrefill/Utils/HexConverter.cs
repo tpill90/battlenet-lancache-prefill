@@ -20,7 +20,7 @@ namespace BattleNetPrefill.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static char ToCharLower(int value)
+        public static char ToCharLower(uint value)
         {
             value &= 0xF;
             value += '0';

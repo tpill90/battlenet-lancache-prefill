@@ -40,7 +40,7 @@ namespace BattleNetPrefill.Handlers
             }
 
             var encodingFileHandler = new EncodingFileHandler(_cdn);
-            EncodingTable encodingTable = await encodingFileHandler.BuildEncodingTableAsync(buildConfig);
+            EncodingFile encodingTable = await encodingFileHandler.GetEncodingAsync(buildConfig);
 
             foreach (var file in filtered)
             {

@@ -66,7 +66,7 @@ namespace BattleNetPrefill.Handlers
         private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, CDN cdn, int start, int finish)
         {
             //TODO does pre allocating help performance?
-            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(MD5HashEqualityComparer.Instance);
+            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(Md5HashEqualityComparer.Instance);
             
             for (int i = start; i <= finish; i++)
             {
