@@ -7,7 +7,6 @@ using BattleNetPrefill.Utils;
 
 namespace BattleNetPrefill.EncryptDecrypt
 {
-    //TODO determine if this is really needed to be kept around
     public static class BLTE
     {
         public static byte[] Parse(byte[] content)

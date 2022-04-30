@@ -14,9 +14,15 @@ namespace BattleNetPrefill
 {
     public static class TactProductHandler
     {
-        //TODO comment parameters
-        public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, 
-            bool skipDiskCache = false, DebugConfig debugConfig = null)
+        /// <summary>
+        /// Downloads a specified game, in the same manner that Battle.net does.  
+        /// </summary>
+        /// <param name="product">The targeted game that should be downloaded</param>
+        /// <param name="ansiConsole"></param>
+        /// <param name="debugConfig"></param>
+        /// <param name="skipDiskCache">If set to true, then no cache files will be written to disk.  Every run will re-request the required files</param>
+        /// <returns></returns>
+        public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, DebugConfig debugConfig, bool skipDiskCache = false)
         {
             var timer = Stopwatch.StartNew();
             AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
@@ -47,18 +53,18 @@ namespace BattleNetPrefill
                    BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdn, product);
                    CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion);
 
-                   ctx.Status("Building Archive Indexes...");
-                   await archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig);
-                   await downloadFileHandler.ParseDownloadFileAsync(buildConfig);
+                ctx.Status("Building Archive Indexes...");
+                await archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig);
+                await downloadFileHandler.ParseDownloadFileAsync(buildConfig);
 
                    // Start processing to determine which files need to be downloaded
                    ctx.Status("Determining files to download...");
                    await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, product);
                    await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, product);
 
-                   var patchLoader = new PatchLoader(cdn, cdnConfig);
-                   await patchLoader.HandlePatchesAsync(buildConfig, product);
-               });
+                var patchLoader = new PatchLoader(cdn, cdnConfig);
+                await patchLoader.HandlePatchesAsync(buildConfig, product);
+            });
 
             // Actually start the download of any deferred requests
             await cdn.DownloadQueuedRequestsAsync(ansiConsole);

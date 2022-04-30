@@ -8,7 +8,9 @@ using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Handlers
 {
-    //TODO document this class
+    /// <summary>
+    /// https://wowdev.wiki/TACT#Archive_Indexes_.28.index.29
+    /// </summary>
     public class ArchiveIndexHandler
     {
         private readonly CDN _cdn;
@@ -16,7 +18,8 @@ namespace BattleNetPrefill.Handlers
 
         private const int CHUNK_SIZE = 4096;
 
-        //TODO comment
+        // Archives are built out using multiple dictionaries, since in some cases the large number of entries (possibly 3 million) causes performance issues
+        // with C#'s Dictionary class.  Building them out in parallel, then doing multiple lookups ends up being faster than having a single Dictionary.
         private readonly List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
 
         public ArchiveIndexHandler(CDN cdn, TactProduct targetProduct)
@@ -25,6 +28,29 @@ namespace BattleNetPrefill.Handlers
             _targetProduct = targetProduct;
         }
 
+        /// <summary>
+        /// Checks the archive indexes to see if a file (EKey) exists in the archives.  If it does, then an IndexEntry describing
+        /// which archive contains the file will be returned.
+        ///
+        /// <see cref="BuildArchiveIndexesAsync"/> must be called prior to using this method.
+        /// </summary>
+        /// <param name="eKey">The MD5 hash of the file to lookup.  An EKey is the hash of the file itself. </param>
+        /// <returns>An IndexEntry if the file exists in an archive.  Null if it is not an archived file.</returns>
+        public IndexEntry? ArchivesContainKey(in MD5Hash eKey)
+        {
+            foreach (var dict in _indexDictionaries)
+            {
+                if (dict.TryGetValue(eKey, out IndexEntry returnValue))
+                {
+                    return returnValue;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Downloads all archive indexes, and builds the archive index lookup dictionary for the specified product.
+        /// </summary>
         public async Task BuildArchiveIndexesAsync(CDNConfigFile cdnConfig)
         {
             // This default performs well for most TactProducts.
@@ -34,43 +60,38 @@ namespace BattleNetPrefill.Handlers
             {
                 maxTasks = 6;
             }
-            //TODO there is an issue w\ slicing with these products
-            if (_targetProduct == TactProduct.CodBO4 || _targetProduct == TactProduct.CodMW2 || _targetProduct == TactProduct.CrashBandicoot4)
-            {
-                maxTasks = 1;
-            }
-
+            
+            // Building the archive index dictionaries in parallel.  Slicing up the work across multiple tasks.
             var tasks = new List<Task<Dictionary<MD5Hash, IndexEntry>>>();
-
-            int sliceAmount = cdnConfig.archives.Length / maxTasks;
-            for (int i = 0; i <= maxTasks; i++)
+            int sliceAmount = (int)Math.Ceiling((double)cdnConfig.archives.Length / maxTasks);
+            
+            for (int i = 0; i < maxTasks; i++)
             {
                 var lowerLimit = (i * sliceAmount);
                 int upperLimit = Math.Min(((i + 1) * sliceAmount) - 1, cdnConfig.archives.Length - 1);
 
-                if (lowerLimit > cdnConfig.archives.Length)
+                if (lowerLimit >= cdnConfig.archives.Length)
                 {
                     continue;
                 }
-                tasks.Add(ProcessArchiveAsync(cdnConfig, _cdn, lowerLimit, upperLimit));
+                tasks.Add(ProcessArchiveAsync(cdnConfig, lowerLimit, upperLimit));
             }
             await Task.WhenAll(tasks);
 
-            // Aggregate the results
+            // Aggregate the multiple computed dictionaries into a single list
             foreach (var task in tasks)
             {
                 _indexDictionaries.Add(await task);
             }
         }
         
-        private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, CDN cdn, int start, int finish)
+        private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, int start, int finish)
         {
-            //TODO does pre allocating help performance?
             var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(Md5HashEqualityComparer.Instance);
-            
+
             for (int i = start; i <= finish; i++)
             {
-                byte[] indexContent = await cdn.GetRequestAsBytesAsync(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
+                byte[] indexContent = await _cdn.GetRequestAsBytesAsync(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
 
                 using (var stream = new MemoryStream(indexContent))
                 using (BinaryReader br = new BinaryReader(stream))
@@ -103,7 +124,6 @@ namespace BattleNetPrefill.Handlers
             return indexDictionary;
         }
 
-        //TODO comment
         private int ValidateArchiveIndexFooter(MemoryStream stream, BinaryReader br)
         {
             // Footer should always be the last 20 bytes of the file
@@ -147,20 +167,6 @@ namespace BattleNetPrefill.Handlers
 
             stream.Seek(0, SeekOrigin.Begin);
             return numElements;
-        }
-
-        //TODO document
-        public IndexEntry? TryGet(in MD5Hash lookupKey)
-        {
-            foreach (var dict in _indexDictionaries)
-            {
-                if (dict.TryGetValue(lookupKey, out IndexEntry returnValue))
-                {
-                    return returnValue;
-                }
-            }
-
-            return null;
         }
     }
 }

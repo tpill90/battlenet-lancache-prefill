@@ -15,7 +15,6 @@ using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace RequestReplayer
 {
-    //TODO comment class
     public class Downloader
     {
         private readonly string _blizzardCdnBaseUri;

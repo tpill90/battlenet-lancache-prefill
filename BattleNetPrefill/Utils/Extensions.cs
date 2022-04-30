@@ -76,7 +76,6 @@ namespace BattleNetPrefill.Utils
         /// </summary>
         public static string ReadCString(this BinaryReader reader)
         {
-            //TODO can this be improved to reduce allocs?
             var bytes = new List<byte>();
             byte b;
             while ((b = reader.ReadByte()) != 0)

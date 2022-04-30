@@ -123,7 +123,7 @@ namespace BattleNetPrefill.Handlers
                     continue;
                 }
 
-                IndexEntry? archiveIndex = archiveIndexHandler.TryGet(current.hash);
+                IndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(current.hash);
                 // If a file is not found in the archive index, then there is a possibility that it is an "unarchived" file.
                 if (archiveIndex == null)
                 {
