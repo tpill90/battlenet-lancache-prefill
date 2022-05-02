@@ -1,15 +1,14 @@
 ﻿namespace BattleNetPrefill.Structs
 {
-    //TODO document how this works
     public sealed class DownloadFile
     {
         public uint numEntries;
         public uint numTags;
+
         public DownloadEntry[] entries;
         public DownloadTag[] tags;
     }
-
-    //TODO document how this works
+    
     public struct DownloadEntry
     {
         public MD5Hash hash;
@@ -19,8 +18,7 @@
             return hash.ToString();
         }
     }
-
-    //TODO document how this works
+    
     public struct DownloadTag
     {
         public string Name;
