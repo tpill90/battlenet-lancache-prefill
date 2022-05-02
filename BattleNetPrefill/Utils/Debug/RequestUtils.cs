@@ -13,7 +13,7 @@ namespace BattleNetPrefill.Utils.Debug
             var coalesced = new List<Request>();
 
             //Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
-            var requestsGroupedByUri = initialRequests.GroupBy(e => new {e.RootFolder, e.CdnKey, e.IsIndex }).ToList();
+            var requestsGroupedByUri = initialRequests.GroupBy(e => new { e.RootFolder, e.CdnKey, e.IsIndex }).ToList();
             foreach (var grouping in requestsGroupedByUri)
             {
                 var merged = grouping.OrderBy(e => e.LowerByteRange).MergeOverlapping(isBattleNetClient).ToList();
@@ -24,7 +24,7 @@ namespace BattleNetPrefill.Utils.Debug
             return coalesced;
         }
 
-        public static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source, bool isBattleNetClient)
+        private static IEnumerable<Request> MergeOverlapping(this IEnumerable<Request> source, bool isBattleNetClient)
         {
             using (var enumerator = source.GetEnumerator())
             {

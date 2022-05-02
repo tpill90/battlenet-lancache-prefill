@@ -14,13 +14,18 @@ namespace BattleNetPrefill.Utils.Debug.Models
         ///     tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708
         /// </summary>
         private string _uri;
-        public string Uri2
+        public string Uri
         {
             get
             {
                 if (_uri == null)
                 {
-                    _uri = this.ToString();
+                    var hashId = CdnKey.ToStringLower();
+                    _uri = $"{ProductRootUri}/{RootFolder.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+                    if (IsIndex)
+                    {
+                        _uri = $"{_uri}.index";
+                    }
                 }
                 return _uri;
             }
@@ -45,57 +50,37 @@ namespace BattleNetPrefill.Utils.Debug.Models
 
         public bool WriteToDevNull { get; set; }
 
-        /* TODO some requests have a total bytes in the response that differs from the number of bytes requested.  Should this be handled?  Diff comparison would like to know this info
-            Ex. "GET /tpr/sc1live/data/1f/79/1f797ab411c882e5f80a57e1a26d8e0d.index HTTP/1.1" 206 8268 "-" "-" "HIT" "level3.blizzard.com" "bytes=0-1048575"
-            This requested a range of 0-1048575, but only got 8268 bytes back.
-         */
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
         public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
-
-        //TODO benchmark and see if this is slowing down anything
-        public override string ToString()
-        {
-            //TODO remove this ToLower() call
-            var hashId = CdnKey.ToString().ToLower();
-            var uri = $"{ProductRootUri}/{RootFolder.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-            if (IsIndex)
-            {
-                uri = $"{uri}.index";
-            }
-            return uri;
-        }
-
-        //TODO write some individual unit tests for this
+        
         public bool Overlaps(Request request2, bool isBattleNetClient)
         {
             int overlap = 1;
             if (isBattleNetClient)
             {
-                //TODO do some more testing on this?  The client considers anything within 4kb as being combined?
-                //TODO comment why this is even necessary
+                // For some reason, the real Battle.Net client seems to combine requests if their ranges are within 4kb of each other.  
+                // This does not make intuitive sense, as looking at the entries in the Archive Index shows that the range should not be requested,
+                // ex. only bytes 0-340 and bytes 1400-2650 should be individually requested.  However these two individual requests get combined into 0-2650
                 overlap = 4096;
             }
-
+            
             if (LowerByteRange <= request2.LowerByteRange)
             {
-                var overlaps = UpperByteRange >= request2.LowerByteRange;
-                if (!overlaps)
+                // Checks to see if ranges are overlapping ex 0-100 and 50-200
+                var areOverlapping = UpperByteRange >= request2.LowerByteRange;
+                if (!areOverlapping)
                 {
-                    // Seeing if adjacent ranges can be combined
+                    // Seeing if adjacent ranges can be combined, ex 0-100 and 101-200
                     if (UpperByteRange + overlap >= request2.LowerByteRange)
                     {
                         return true;
                     }
                 }
-                return overlaps;
+                return areOverlapping;
             }
-            else
-            {
-                return request2.UpperByteRange >= LowerByteRange;
-            }
+            return request2.UpperByteRange >= LowerByteRange;
         }
 
-        //TODO write some individual unit tests for this
         public Request MergeWith(Request request2)
         {
             return new Request
@@ -109,7 +94,6 @@ namespace BattleNetPrefill.Utils.Debug.Models
                 UpperByteRange = Math.Max(UpperByteRange, request2.UpperByteRange),
 
                 WriteToDevNull = WriteToDevNull,
-                //TODO this might not be right
                 DownloadWholeFile = DownloadWholeFile
             };
         }

@@ -170,7 +170,7 @@ namespace BattleNetPrefill.Web
                 return null;
             }
 
-            var uri = new Uri($"http://{_cdnList[0]}/{request}");
+            var uri = new Uri($"http://{_cdnList[0]}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)

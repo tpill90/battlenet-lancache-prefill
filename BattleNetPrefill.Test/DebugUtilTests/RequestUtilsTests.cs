@@ -68,8 +68,8 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             var requests = new List<Request>
             {
                 // Requests differ by LowerByteRange, won't be combined
-                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request { ProductRootUri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100, DownloadWholeFile = true }
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 0, UpperByteRange = 100 },
+                new Request { ProductRootUri = "SampleUri", LowerByteRange = 9999, UpperByteRange = 100 }
             };
 
             var result = RequestUtils.CoalesceRequests(requests);
@@ -116,7 +116,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(200, combinedResult.UpperByteRange);
         }
 
-
         [Test]
         public void SequentialByteRanges_WillBeCombined_ReversedOrder()
         {
@@ -153,11 +152,11 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(2, results.Count);
 
             // Validating that the requests are untouched
-            var firstRequest = results.Single(e => e.Uri2.Contains("SampleUri"));
+            var firstRequest = results.Single(e => e.Uri.Contains("SampleUri"));
             Assert.AreEqual(0, firstRequest.LowerByteRange);
             Assert.AreEqual(100, firstRequest.UpperByteRange);
 
-            var secondRequest = results.Single(e => e.Uri2.Contains("DifferentUri"));
+            var secondRequest = results.Single(e => e.Uri.Contains("DifferentUri"));
             Assert.AreEqual(101, secondRequest.LowerByteRange);
             Assert.AreEqual(200, secondRequest.UpperByteRange);
         }

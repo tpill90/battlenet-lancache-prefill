@@ -50,20 +50,20 @@ namespace BattleNetPrefill.Utils.Debug
 
         public bool HasBeenCached(Request request)
         {
-            return _cachedContentLengths.ContainsKey(request.Uri2);
+            return _cachedContentLengths.ContainsKey(request.Uri);
         }
 
         public async Task<long> GetContentLengthAsync(Request request)
         {
-            if (_cachedContentLengths.ContainsKey(request.Uri2))
+            if (_cachedContentLengths.ContainsKey(request.Uri))
             {
-                return _cachedContentLengths[request.Uri2];
+                return _cachedContentLengths[request.Uri];
             }
 
-            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri2}")));
+            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri}")));
             var contentLength = response.Content.Headers.ContentLength.Value;
 
-            _cachedContentLengths.TryAdd(request.Uri2, contentLength);
+            _cachedContentLengths.TryAdd(request.Uri, contentLength);
             _cacheMisses++;
 
             if (_cacheMisses == 100)
