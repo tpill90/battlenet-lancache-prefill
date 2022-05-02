@@ -5,11 +5,6 @@
         public VersionsEntry[] entries;
     }
 
-    public struct CdnsFile
-    {
-        public CdnsEntry[] entries;
-    }
-
     public struct Archive
     {
         public string hashId;

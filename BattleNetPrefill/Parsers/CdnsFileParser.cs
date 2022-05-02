@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
@@ -12,66 +11,57 @@ namespace BattleNetPrefill.Parsers
         public static async Task<CdnsFile> ParseCdnsFileAsync(CDN cdn, TactProduct targetProduct)
         {
             string content = await cdn.MakePatchRequestAsync(targetProduct, "cdns");
+            var lines = content.Split(new [] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                               .Where(e => e[0] != '#')
+                               .ToArray();
 
-            CdnsFile cdns = new CdnsFile();
-
-            var lines = content.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
-
-            var lineList = new List<string>();
-
-            for (var i = 0; i < lines.Count(); i++)
+            if (!lines.Any())
             {
-                if (lines[i][0] != '#')
-                {
-                    lineList.Add(lines[i]);
-                }
+                throw new Exception($"Unexpected empty CDNs file for {targetProduct.DisplayName}.  CDNs file cannot be empty!");
             }
 
-            lines = lineList.ToArray();
-
-            if (lines.Any())
+            var cdns = new CdnsFile
             {
-                cdns.entries = new CdnsEntry[lines.Count() - 1];
+                entries = new CdnsEntry[lines.Count() - 1]
+            };
 
-                var cols = lines[0].Split('|');
+            var cols = lines[0].Split('|').Select(e => e.Replace("!STRING:0", "")).ToList();
 
-                for (var c = 0; c < cols.Count(); c++)
+            for (var c = 0; c < cols.Count(); c++)
+            {
+                for (var i = 1; i < lines.Count(); i++)
                 {
-                    var friendlyName = cols[c].Split('!').ElementAt(0);
+                    var row = lines[i].Split('|');
 
-                    for (var i = 1; i < lines.Count(); i++)
+                    switch (cols[c])
                     {
-                        var row = lines[i].Split('|');
-
-                        switch (friendlyName)
-                        {
-                            case "Name":
-                                cdns.entries[i - 1].name = row[c];
-                                break;
-                            case "Path":
-                                cdns.entries[i - 1].path = row[c];
-                                break;
-                            case "Hosts":
-                                var hosts = row[c].Split(' ');
-                                cdns.entries[i - 1].hosts = new string[hosts.Count()];
-                                for (var h = 0; h < hosts.Count(); h++)
-                                {
-                                    cdns.entries[i - 1].hosts[h] = hosts[h];
-                                }
-                                break;
-                            case "ConfigPath":
-                                cdns.entries[i - 1].configPath = row[c];
-                                break;
-                            default:
-                                //TODO
-                                //Console.WriteLine("!!!!!!!! Unknown cdns variable '" + friendlyName + "'");
-                                break;
-                        }
+                        case "Name":
+                            cdns.entries[i - 1].name = row[c];
+                            break;
+                        case "Path":
+                            cdns.entries[i - 1].path = row[c];
+                            break;
+                        case "Hosts":
+                            var hosts = row[c].Split(' ');
+                            cdns.entries[i - 1].hosts = new string[hosts.Count()];
+                            for (var h = 0; h < hosts.Count(); h++)
+                            {
+                                cdns.entries[i - 1].hosts[h] = hosts[h];
+                            }
+                            break;
+                        case "ConfigPath":
+                            cdns.entries[i - 1].configPath = row[c];
+                            break;
+                        case "Servers":
+                            cdns.entries[i - 1].servers = row[c];
+                            break;
+                        default:
+                            cdns.UnknownKeyPairs.Add(row[c]);
+                            break;
                     }
                 }
-
             }
-
+            
             if (cdns.entries == null || !cdns.entries.Any())
             {
                 throw new Exception($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
