@@ -9,9 +9,9 @@ namespace BattleNetPrefill.Parsers
 {
     public static class CdnsFileParser
     {
-        public static async Task<CdnsFile> ParseCdnsFileAsync(CDN cdn, TactProduct targetProduct)
+        public static async Task<CdnsFile> ParseCdnsFileAsync(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
-            string content = await cdn.MakePatchRequestAsync(targetProduct, PatchRequest.cdns);
+            string content = await cdnRequestManager.MakePatchRequestAsync(targetProduct, PatchRequest.cdns);
             var lines = content.Split(new [] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
                                .Where(e => e[0] != '#')
                                .ToArray();

@@ -11,12 +11,12 @@ namespace BattleNetPrefill.Parsers
 {
     public class PatchLoader
     {
-        private readonly CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
         private readonly CDNConfigFile _cdnConfig;
 
-        public PatchLoader(CDN cdn, CDNConfigFile cdnConfig)
+        public PatchLoader(CdnRequestManager cdnRequestManager, CDNConfigFile cdnConfig)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
             _cdnConfig = cdnConfig;
         }
 
@@ -30,7 +30,7 @@ namespace BattleNetPrefill.Parsers
             };
             if (buildConfig.patchConfig != null && !patchConfigExclusions.Contains(targetProduct))
             {
-                _cdn.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
+                _cdnRequestManager.QueueRequest(RootFolder.config, buildConfig.patchConfig.Value);
             }
 
             if (buildConfig.patch != null)
@@ -41,12 +41,12 @@ namespace BattleNetPrefill.Parsers
             // Unused by Hearthstone
             if (_cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection)
             {
-                _cdn.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex.Value,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
+                _cdnRequestManager.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex.Value,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
             
             if (buildConfig.patchIndex != null)
             {
-                _cdn.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095);
+                _cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095);
             }
 
             // Unused by Hearthstone
@@ -56,7 +56,7 @@ namespace BattleNetPrefill.Parsers
                 for (var i = 0; i < _cdnConfig.patchArchives.Length; i++)
                 {
                     var patchIndex = _cdnConfig.patchArchives[i];
-                    _cdn.QueueRequest(RootFolder.patch, patchIndex, 0, _cdnConfig.patchArchivesIndexSize[i] - 1, isIndex: true);
+                    _cdnRequestManager.QueueRequest(RootFolder.patch, patchIndex, 0, _cdnConfig.patchArchivesIndexSize[i] - 1, isIndex: true);
                 }
             }
         }
@@ -65,7 +65,7 @@ namespace BattleNetPrefill.Parsers
         {
             var patchFile = new PatchFile();
 
-            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.patch, hash);
+            byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.patch, hash);
 
             using (BinaryReader bin = new BinaryReader(new MemoryStream(content)))
             {

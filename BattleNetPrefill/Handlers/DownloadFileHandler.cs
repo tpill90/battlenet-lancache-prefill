@@ -15,13 +15,13 @@ namespace BattleNetPrefill.Handlers
     //TODO document
     public class DownloadFileHandler
     {
-        private readonly CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
 
         private DownloadFile _downloadFile;
 
-        public DownloadFileHandler(CDN cdn)
+        public DownloadFileHandler(CdnRequestManager cdnRequestManager)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
         }
 
         //TODO document
@@ -29,7 +29,7 @@ namespace BattleNetPrefill.Handlers
         {
             _downloadFile = new DownloadFile();
 
-            var content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]);
+            var content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]);
 
             using var memoryStream = new MemoryStream(BLTE.Parse(content));
             using BinaryReader bin = new BinaryReader(memoryStream);
@@ -94,7 +94,7 @@ namespace BattleNetPrefill.Handlers
         //TODO document method
         public async Task HandleDownloadFileAsync(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
-            Dictionary<MD5Hash, IndexEntry> unarchivedFileIndex = await IndexParser.ParseIndexAsync(_cdn, RootFolder.data, cdnConfigFile.fileIndex);
+            Dictionary<MD5Hash, IndexEntry> unarchivedFileIndex = await IndexParser.ParseIndexAsync(_cdnRequestManager, RootFolder.data, cdnConfigFile.fileIndex);
 
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
@@ -134,7 +134,7 @@ namespace BattleNetPrefill.Handlers
                         //TODO i might be able to remove the weird 4096 byte coalescing logic now that this is here
                         var endBytes = Math.Max(file.offset + file.size - 1, file.offset + 4095);
 
-                        _cdn.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes);
+                        _cdnRequestManager.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes);
                     }
                     continue;
                 }
@@ -144,7 +144,7 @@ namespace BattleNetPrefill.Handlers
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 var startBytes = e.offset;
                 uint upperByteRange = (e.offset + e.size - 1);
-                _cdn.QueueRequest(RootFolder.data, archiveIndexKey, startBytes, upperByteRange);
+                _cdnRequestManager.QueueRequest(RootFolder.data, archiveIndexKey, startBytes, upperByteRange);
             }
         }
 

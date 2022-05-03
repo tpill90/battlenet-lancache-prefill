@@ -13,7 +13,7 @@ namespace BattleNetPrefill.Handlers
     /// </summary>
     public class ArchiveIndexHandler
     {
-        private readonly CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
         private readonly TactProduct _targetProduct;
 
         private const int CHUNK_SIZE = 4096;
@@ -22,9 +22,9 @@ namespace BattleNetPrefill.Handlers
         // with C#'s Dictionary class.  Building them out in parallel, then doing multiple lookups ends up being faster than having a single Dictionary.
         private readonly List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
 
-        public ArchiveIndexHandler(CDN cdn, TactProduct targetProduct)
+        public ArchiveIndexHandler(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
             _targetProduct = targetProduct;
         }
 
@@ -91,7 +91,7 @@ namespace BattleNetPrefill.Handlers
 
             for (int i = start; i <= finish; i++)
             {
-                byte[] indexContent = await _cdn.GetRequestAsBytesAsync(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
+                byte[] indexContent = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
 
                 using (var stream = new MemoryStream(indexContent))
                 using (BinaryReader br = new BinaryReader(stream))

@@ -16,11 +16,11 @@ namespace BattleNetPrefill.Handlers
     /// </summary>
     public class EncodingFileHandler
     {
-        private readonly CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
 
-        public EncodingFileHandler(CDN cdn)
+        public EncodingFileHandler(CdnRequestManager cdnRequestManager)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
         }
 
         public async Task<EncodingFile> GetEncodingAsync(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
@@ -37,11 +37,11 @@ namespace BattleNetPrefill.Handlers
 
             var encoding = new EncodingFile();
 
-            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
+            byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
+                content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {

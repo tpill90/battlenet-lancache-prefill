@@ -12,11 +12,11 @@ namespace BattleNetPrefill.Parsers
 {
     public static class BuildConfigParser
     {
-        public static async Task<BuildConfigFile> GetBuildConfigAsync(VersionsEntry versionsEntry, CDN cdn, TactProduct targetProduct)
+        public static async Task<BuildConfigFile> GetBuildConfigAsync(VersionsEntry versionsEntry, CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
             var buildConfig = new BuildConfigFile();
             
-            string content = Encoding.UTF8.GetString(await cdn.GetRequestAsBytesAsync(RootFolder.config, versionsEntry.buildConfig));
+            string content = Encoding.UTF8.GetString(await cdnRequestManager.GetRequestAsBytesAsync(RootFolder.config, versionsEntry.buildConfig));
             
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
@@ -174,18 +174,18 @@ namespace BattleNetPrefill.Parsers
             if (targetProduct != TactProduct.Diablo3)
             {
                 // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
-                cdn.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
+                cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
             }
             
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
-            cdn.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);
+            cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);
             
             if (buildConfig.vfsRoot != null)
             {
                 // Making a request to load "vfsRoot" files.  Not used by anything in our application,
                 // however it is called for some reason by the Actual Battle.Net client
                 var endBytes = Math.Max(4095, buildConfig.vfsRootSize[1] - 1);
-                cdn.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, endBytes);
+                cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.vfsRoot[1], 0, endBytes);
             }
             return buildConfig;
         }

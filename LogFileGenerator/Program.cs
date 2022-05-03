@@ -19,7 +19,7 @@ namespace LogFileGenerator
         private static string RootInstallDir = @"E:\BattleNet";
         private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
 
-        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CDN(Config.BattleNetPatchUri));
+        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(Config.BattleNetPatchUri));
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {

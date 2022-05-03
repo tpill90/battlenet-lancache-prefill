@@ -10,10 +10,9 @@ namespace BattleNetPrefill.Parsers
 {
     public static class IndexParser
     {
-        //TODO document
-        public static async Task<Dictionary<MD5Hash, IndexEntry>> ParseIndexAsync(CDN cdn, RootFolder folder, MD5Hash hashId)
+        public static async Task<Dictionary<MD5Hash, IndexEntry>> ParseIndexAsync(CdnRequestManager cdnRequestManager, RootFolder folder, MD5Hash hashId)
         {
-            byte[] indexContent = await cdn.GetRequestAsBytesAsync(folder, hashId, isIndex: true);
+            byte[] indexContent = await cdnRequestManager.GetRequestAsBytesAsync(folder, hashId, isIndex: true);
 
             var indexDict = new Dictionary<MD5Hash, IndexEntry>();
 

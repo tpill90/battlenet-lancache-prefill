@@ -37,10 +37,10 @@ namespace BattleNetPrefill.Test.Parsers
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode: true);
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
 
             // Parsing the CDN file
-            var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(cdn, tactProduct);
+            var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(cdnRequestManager, tactProduct);
            
             // Expecting that there are no unknown keypairs left after parsing.
             Assert.AreEqual(0, cdnsFile.UnknownKeyPairs.Count);

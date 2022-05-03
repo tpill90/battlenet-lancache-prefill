@@ -11,16 +11,16 @@ namespace Benchmarks
     {
         public class ArchiveIndexHandlerBenchmark
         {
-            private readonly CDN _cdn;
+            private readonly CdnRequestManager _cdnRequestManager;
             private readonly TactProduct _targetProduct = TactProduct.Starcraft2;
             private readonly CDNConfigFile _cdnConfig;
 
             public ArchiveIndexHandlerBenchmark()
             {
-                _cdn = new CDN(Config.BattleNetPatchUri, useDebugMode: true);
-                _cdn.LoadCdnsFileAsync(_targetProduct).Wait();
+                _cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
+                _cdnRequestManager.InitializeAsync(_targetProduct).Wait();
 
-                var configFileHandler = new ConfigFileHandler(_cdn);
+                var configFileHandler = new ConfigFileHandler(_cdnRequestManager);
                 var targetVersion = configFileHandler.GetLatestVersionEntryAsync(_targetProduct).Result;
                 _cdnConfig = configFileHandler.GetCdnConfigAsync(targetVersion).Result;
             }
@@ -28,7 +28,7 @@ namespace Benchmarks
             [Benchmark]
             public async Task NoPreallocation()
             {
-                var archiveIndexHandler = new ArchiveIndexHandler(_cdn, _targetProduct);
+                var archiveIndexHandler = new ArchiveIndexHandler(_cdnRequestManager, _targetProduct);
                 await archiveIndexHandler.BuildArchiveIndexesAsync(_cdnConfig);
             }
         }

@@ -37,13 +37,13 @@ namespace BattleNetPrefill.Test.Parsers
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CDN cdn = new CDN(Config.BattleNetPatchUri, useDebugMode: true);
-            await cdn.LoadCdnsFileAsync(tactProduct);
-            var configFileHandler = new ConfigFileHandler(cdn);
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
+            await cdnRequestManager.InitializeAsync(tactProduct);
+            var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);
 
             // Parsing the build config
-            var buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdn, tactProduct);
+            var buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdnRequestManager, tactProduct);
 
             // Expecting that there are no unknown keypairs left after parsing.
             Assert.AreEqual(0, buildConfig.UnknownKeyPairs.Count);

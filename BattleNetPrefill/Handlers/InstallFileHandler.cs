@@ -17,11 +17,11 @@ namespace BattleNetPrefill.Handlers
     /// </summary>
     public class InstallFileHandler
     {
-        private CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
 
-        public InstallFileHandler(CDN cdn)
+        public InstallFileHandler(CdnRequestManager cdnRequestManager)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace BattleNetPrefill.Handlers
                 return;
             }
 
-            var encodingFileHandler = new EncodingFileHandler(_cdn);
+            var encodingFileHandler = new EncodingFileHandler(_cdnRequestManager);
             EncodingFile encodingTable = await encodingFileHandler.GetEncodingAsync(buildConfig);
 
             foreach (var file in filtered)
@@ -76,7 +76,7 @@ namespace BattleNetPrefill.Handlers
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
-                _cdn.QueueRequest(RootFolder.data, archiveIndexKey, (int)e.offset, upperByteRange);
+                _cdnRequestManager.QueueRequest(RootFolder.data, archiveIndexKey, (int)e.offset, upperByteRange);
             }
         }
 
@@ -84,7 +84,7 @@ namespace BattleNetPrefill.Handlers
         {
             var install = new InstallFile();
             var endBytes = Math.Max(4095, buildConfig.installSize[1] - 1);
-            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.install[1], startBytes: 0, endBytes: endBytes);
+            byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.install[1], startBytes: 0, endBytes: endBytes);
 
             using BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content)));
             if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN")
