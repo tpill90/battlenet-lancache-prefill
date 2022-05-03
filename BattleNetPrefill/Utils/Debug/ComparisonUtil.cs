@@ -249,7 +249,6 @@ namespace BattleNetPrefill.Utils.Debug
             {
                 var lowerSlice = new Request
                 {
-                    //TODO should probably unit test the range calculations as well
                     LowerByteRange = match.LowerByteRange,
                     UpperByteRange = current.LowerByteRange - 1,
 
@@ -266,7 +265,6 @@ namespace BattleNetPrefill.Utils.Debug
             {
                 var upperSlice = new Request
                 {
-                    //TODO should probably unit test the range calculations as well
                     LowerByteRange = current.UpperByteRange + 1,
                     UpperByteRange = match.UpperByteRange,
 

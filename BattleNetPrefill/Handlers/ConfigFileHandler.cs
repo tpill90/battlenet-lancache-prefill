@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Structs.Enums;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
 using Spectre.Console;
@@ -99,7 +100,7 @@ namespace BattleNetPrefill.Handlers
         //TODO comment
         public async Task<VersionsEntry> GetLatestVersionEntryAsync(TactProduct tactProduct)
         {
-            string content = await cdn.MakePatchRequestAsync(tactProduct, "versions");
+            string content = await cdn.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
             var versions = new VersionsFile();
 
             content = content.Replace("\0", "");

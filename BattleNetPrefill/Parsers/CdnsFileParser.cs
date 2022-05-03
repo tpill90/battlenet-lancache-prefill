@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Structs.Enums;
 using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Parsers
@@ -10,7 +11,7 @@ namespace BattleNetPrefill.Parsers
     {
         public static async Task<CdnsFile> ParseCdnsFileAsync(CDN cdn, TactProduct targetProduct)
         {
-            string content = await cdn.MakePatchRequestAsync(targetProduct, "cdns");
+            string content = await cdn.MakePatchRequestAsync(targetProduct, PatchRequest.cdns);
             var lines = content.Split(new [] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
                                .Where(e => e[0] != '#')
                                .ToArray();

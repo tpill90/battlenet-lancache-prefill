@@ -8,14 +8,21 @@ using Newtonsoft.Json;
 
 namespace BattleNetPrefill.Utils.Debug
 {
-    //TODO comment the purpose of this class
+    /// <summary>
+    /// The majority of requests made by Battle.Net specify a byte range, ex 0-100.
+    /// However not all requests for all products do this, some products will actually request the whole file from the CDN.
+    ///
+    /// The purpose of this class, is that it will figure out the response size of these "whole file" requests, and cache them for future use.
+    /// This greatly helps with debugging, as we will be able to compare range requests against range requests, without having to implement "whole file" comparison logic.
+    /// </summary>
     public class FileSizeProvider
     {
         private readonly TactProduct _targetProduct;
         private readonly string _blizzardCdnBaseUri;
-        private HttpClient _client = new HttpClient();
 
-        private ConcurrentDictionary<string, long> _cachedContentLengths;
+        private readonly HttpClient _client = new HttpClient();
+
+        private readonly ConcurrentDictionary<string, long> _cachedContentLengths;
         private int _cacheMisses;
         
         private string _cacheDir = "cache/cachedContentLengths";
@@ -39,6 +46,9 @@ namespace BattleNetPrefill.Utils.Debug
             _cachedContentLengths = new ConcurrentDictionary<string, long>();
         }
 
+        /// <summary>
+        /// Saves current cache to disk
+        /// </summary>
         public void Save()
         {
             lock (_cacheFileLock)

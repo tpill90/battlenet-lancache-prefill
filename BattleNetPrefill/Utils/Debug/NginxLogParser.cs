@@ -61,7 +61,7 @@ namespace BattleNetPrefill.Utils.Debug
             throw new FileNotFoundException($"Unable to find replay logs for {product.DisplayName}");
         }
 
-        //TODO comment
+        //TODO comment + test
         private static List<Request> ParseRequestLogs(string[] rawRequests)
         {
             var parsedRequests = new List<Request>();
@@ -113,8 +113,7 @@ namespace BattleNetPrefill.Utils.Debug
             return parsedRequests;
         }
 
-        //TODO comment
-        //TODO test
+        //TODO comment + test
         public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
