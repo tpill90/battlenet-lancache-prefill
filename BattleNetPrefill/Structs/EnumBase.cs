@@ -54,18 +54,14 @@ namespace BattleNetPrefill.Structs
         /// <returns>A strongly typed "enum" equivalent.</returns>
         public static T Parse(string toParse)
         {
-            /*
-             * TODO this sometimes throws "Collection was modified; enumeration operation may not execute" exceptions in some cases when running parallel tests
-             * This seems to only occur if the logs have not yet been coalesced, re-running the tests afterwards doesn't seem to show this issue.
-            */
-            foreach (var type in AllEnumValues)
+            for (var index = 0; index < AllEnumValues.Count; index++)
             {
+                var type = AllEnumValues[index];
                 if (toParse == type.Name)
                 {
                     return type;
                 }
             }
-
             throw new FormatException($"{toParse} is not a valid enum value for {typeof(T).Name}!");
         }
 

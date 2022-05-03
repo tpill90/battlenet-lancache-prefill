@@ -9,7 +9,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
     [TestFixture]
     public class ComparisonUtilTests
     {
-        //TODO comment
         [Test]
         public void NoMatchesFound()
         {
@@ -31,7 +30,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(2, expectedRequests.Count);
         }
 
-        //TODO comment
         [Test]
         public void ExactMatches_AreRemoved()
         {
@@ -53,7 +51,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.IsEmpty(expectedRequests);
         }
 
-        //TODO comment
         [Test]
         public void RangeMatches_FullSubset_FoundInCenterOfRange()
         {
@@ -76,7 +73,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.IsEmpty(expectedRequests);
         }
 
-        //TODO comment
         [Test]
         public void RangeMatches_FullSubset_FoundAtEndOfRange()
         {
@@ -99,7 +95,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.IsEmpty(expectedRequests);
         }
 
-        //TODO comment
         [Test]
         public void RangeMatches_FullSubset_FoundAtEndOfRange_Reversed()
         {
@@ -125,7 +120,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(49, expectedRequests[0].UpperByteRange);
         }
 
-        //TODO comment
         [Test]
         public void RangeMatches_FullSubset_FoundAtBeginningOfRange()
         {
@@ -148,7 +142,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.IsEmpty(expectedRequests);
         }
 
-        //TODO comment
         [Test]
         public void RangeMatches_FullSubset_FoundAtBeginningOfRange_Reversed()
         {
@@ -175,7 +168,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(1, expectedRequests.Count);
         }
 
-        //TODO comment
         [Test]
         public void PartialMatch_FoundAtBeginningOfRange()
         {
@@ -201,7 +193,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(75, expectedRequests[0].UpperByteRange);
         }
 
-        //TODO comment
         [Test]
         public void PartialMatch_FoundAtEndOfRange()
         {
@@ -227,8 +218,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(49, expectedRequests[0].UpperByteRange);
         }
 
-        //TODO comment
-        //TODO rename
         [Test]
         public void PartialMatchLower_WholeGeneratedRequestMatches_EndOfRange()
         {
@@ -252,7 +241,6 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(44526, expectedRequests[0].UpperByteRange);
         }
 
-        //TODO comment
         [Test]
         public void Indexes_IgnoreByteRanges()
         {

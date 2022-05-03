@@ -7,7 +7,6 @@ using NUnit.Framework;
 namespace BattleNetPrefill.Test
 {
     [TestFixture]
-    [Parallelizable(ParallelScope.Self)]
     public class LogFileUpToDateTests
     {
         [Test]
