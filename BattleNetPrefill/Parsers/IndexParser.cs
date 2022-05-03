@@ -39,7 +39,7 @@ namespace BattleNetPrefill.Parsers
             if ((footer.numElements & 0xff000000) != 0)
             {
                 bin.BaseStream.Position -= footer.checksumSize + 4;
-                footer.numElements = bin.ReadUInt32InvertEndian();
+                footer.numElements = bin.ReadUInt32BigEndian();
             }
 
             bin.BaseStream.Position = 0;
@@ -65,7 +65,7 @@ namespace BattleNetPrefill.Parsers
 
                     if (footer.sizeBytes == 4)
                     {
-                        indexEntry.size = bin.ReadUInt32InvertEndian();
+                        indexEntry.size = bin.ReadUInt32BigEndian();
                     }
                     else
                     {
@@ -75,7 +75,7 @@ namespace BattleNetPrefill.Parsers
                     if (footer.offsetBytes == 4)
                     {
                         // Archive index
-                        indexEntry.offset = bin.ReadUInt32InvertEndian();
+                        indexEntry.offset = bin.ReadUInt32BigEndian();
                     }
                     else if (footer.offsetBytes == 6)
                     {

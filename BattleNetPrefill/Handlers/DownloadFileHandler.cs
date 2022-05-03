@@ -42,10 +42,10 @@ namespace BattleNetPrefill.Handlers
             byte version = bin.ReadByte();
             byte hash_size_ekey = bin.ReadByte();
             byte hasChecksumInEntry = bin.ReadByte();
-            _downloadFile.numEntries = bin.ReadUInt32(true);
+            _downloadFile.numEntries = bin.ReadUInt32BigEndian();
             _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
 
-            _downloadFile.numTags = bin.ReadUInt16(true);
+            _downloadFile.numTags = bin.ReadUInt16BigEndian();
             _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
 
             int entryExtra = 6;
@@ -76,7 +76,7 @@ namespace BattleNetPrefill.Handlers
             {
                 DownloadTag tag = new DownloadTag();
                 tag.Name = bin.ReadCString();
-                tag.Type = bin.ReadInt16BE();
+                tag.Type = bin.ReadInt16BigEndian();
 
                 tag.Mask = bin.ReadBytes(numMaskBytes);
 
@@ -98,20 +98,17 @@ namespace BattleNetPrefill.Handlers
 
             //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
             //TODO do a check to make sure that the tags being used are actually valid for the product
-            List<DownloadTag> tagsToUse = new List<DownloadTag>();
+            List<DownloadTag> tagsToUse = _downloadFile.tags.Where(e => e.Name.Contains("enUS") ||
+                                                                                    e.Name.Contains("Windows") ||
+                                                                                    e.Name.Contains("x86") ||
+                                                                                    e.Name.Contains("noigr")).ToList();
             if (targetProduct.DefaultTags != null)
             {
+                tagsToUse.Clear();
                 foreach (var tag in targetProduct.DefaultTags)
                 {
                     tagsToUse.Add(_downloadFile.tags.FirstOrDefault(e => e.Name.Contains(tag)));
                 }
-            }
-            else
-            {
-                tagsToUse = _downloadFile.tags.Where(e => e.Name.Contains("enUS") ||
-                                                          e.Name.Contains("Windows") ||
-                                                          e.Name.Contains("x86") ||
-                                                          e.Name.Contains("noigr")).ToList();
             }
 
             var computedMask = BuildDownloadMask(tagsToUse);

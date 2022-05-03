@@ -76,12 +76,12 @@ namespace BattleNetPrefill.Parsers
                 patchFile.sizeB = bin.ReadByte();
                 patchFile.patchKeySize = bin.ReadByte();
                 patchFile.blockSizeBits = bin.ReadByte();
-                patchFile.blockCount = bin.ReadUInt16(true);
+                patchFile.blockCount = bin.ReadUInt16BigEndian();
                 patchFile.flags = bin.ReadByte();
                 patchFile.encodingContentKey = bin.ReadBytes(16);
                 patchFile.encodingEncodingKey = bin.ReadBytes(16);
-                patchFile.decodedSize = bin.ReadUInt32InvertEndian();
-                patchFile.encodedSize = bin.ReadUInt32(true);
+                patchFile.decodedSize = bin.ReadUInt32BigEndian();
+                patchFile.encodedSize = bin.ReadUInt32BigEndian();
                 patchFile.especLength = bin.ReadByte();
                 patchFile.encodingSpec = new string(bin.ReadChars(patchFile.especLength));
 
@@ -90,7 +90,7 @@ namespace BattleNetPrefill.Parsers
                 {
                     patchFile.blocks[i].lastFileContentKey = bin.ReadBytes(patchFile.fileKeySize);
                     patchFile.blocks[i].blockMD5 = bin.ReadBytes(16);
-                    patchFile.blocks[i].blockOffset = bin.ReadUInt32(true);
+                    patchFile.blocks[i].blockOffset = bin.ReadUInt32BigEndian();
 
                     var prevPos = bin.BaseStream.Position;
 
@@ -104,7 +104,7 @@ namespace BattleNetPrefill.Parsers
                         file.numPatches = bin.ReadByte();
                         if (file.numPatches == 0) break;
                         file.targetFileContentKey = bin.ReadBytes(patchFile.fileKeySize);
-                        file.decodedSize = bin.ReadUInt40(true);
+                        file.decodedSize = bin.ReadUInt40BigEndian();
 
                         var filePatches = new List<FilePatch>();
 
@@ -112,9 +112,9 @@ namespace BattleNetPrefill.Parsers
                         {
                             var filePatch = new FilePatch();
                             filePatch.sourceFileEncodingKey = bin.ReadBytes(patchFile.fileKeySize);
-                            filePatch.decodedSize = bin.ReadUInt40(true);
+                            filePatch.decodedSize = bin.ReadUInt40BigEndian();
                             filePatch.patchEncodingKey = bin.ReadBytes(patchFile.patchKeySize);
-                            filePatch.patchSize = bin.ReadUInt32(true);
+                            filePatch.patchSize = bin.ReadUInt32BigEndian();
                             filePatch.patchIndex = bin.ReadByte();
                             filePatches.Add(filePatch);
                         }

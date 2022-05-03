@@ -9,49 +9,28 @@ namespace BattleNetPrefill.Utils
 {
     public static class BinaryReaderExtensions
     {
-        public static short ReadInt16BE(this BinaryReader reader)
+        public static short ReadInt16BigEndian(this BinaryReader reader)
         {
             byte[] val = reader.ReadBytes(2);
             return (short)(val[1] | val[0] << 8);
         }
 
-        public static Int32 ReadInt32(this BinaryReader reader, bool invertEndian = false)
+        public static Int32 ReadInt32BigEndian(this BinaryReader reader)
         {
-            if (invertEndian)
-            {
-                return BitConverter.ToInt32(reader.ReadInvertedBytes(4), 0);
-            }
-
-            return reader.ReadInt32();
+            return BitConverter.ToInt32(reader.ReadInvertedBytes(4), 0);
         }
 
-        public static UInt16 ReadUInt16(this BinaryReader reader, bool invertEndian = false)
+        public static UInt16 ReadUInt16BigEndian(this BinaryReader reader)
         {
-            if (invertEndian)
-            {
-                return BitConverter.ToUInt16(reader.ReadInvertedBytes(2), 0);
-            }
-
-            return reader.ReadUInt16();
+            return BitConverter.ToUInt16(reader.ReadInvertedBytes(2), 0);
         }
 
-        public static UInt32 ReadUInt32(this BinaryReader reader, bool invertEndian = false)
-        {
-            if (invertEndian)
-            {
-                return BitConverter.ToUInt32(reader.ReadInvertedBytes(4), 0);
-            }
-
-            return reader.ReadUInt32();
-        }
-
-        //TODO comment.  This is the opposite of ReadUInt32
-        public static UInt32 ReadUInt32InvertEndian(this BinaryReader reader)
+        public static UInt32 ReadUInt32BigEndian(this BinaryReader reader)
         {
             return BitConverter.ToUInt32(reader.ReadInvertedBytes(4), 0);
         }
-        
-        public static UInt64 ReadUInt40(this BinaryReader reader, bool invertEndian = false)
+
+        public static UInt64 ReadUInt40BigEndian(this BinaryReader reader)
         {
             ulong b1 = reader.ReadByte();
             ulong b2 = reader.ReadByte();
@@ -59,14 +38,7 @@ namespace BattleNetPrefill.Utils
             ulong b4 = reader.ReadByte();
             ulong b5 = reader.ReadByte();
 
-            if (invertEndian)
-            {
-                return (ulong)(b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5);
-            }
-            else
-            {
-                return (ulong)(b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
-            }
+            return (ulong)(b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5);
         }
 
         private static byte[] ReadInvertedBytes(this BinaryReader reader, int byteCount)
@@ -95,10 +67,7 @@ namespace BattleNetPrefill.Utils
 
             return Unsafe.As<byte, MD5Hash>(ref array[0]);
         }
-    }
 
-    public static class CStringExtensions
-    {
         /// <summary>
         /// Reads the NULL terminated string from the current stream and advances the current position of the stream by string length + 1.
         /// <seealso cref="BinaryReader.ReadString"/>
@@ -113,23 +82,6 @@ namespace BattleNetPrefill.Utils
                 bytes.Add(b);
             }
             return Encoding.UTF8.GetString(bytes.ToArray());
-        }
-
-        public static byte[] ToByteArray(this string str)
-        {
-            str = str.Replace(" ", string.Empty);
-
-            var res = new byte[str.Length / 2];
-            for (int i = 0; i < res.Length; ++i)
-            {
-                res[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
-            }
-            return res;
-        }
-
-        public static byte[] FromHexString(this string str)
-        {
-            return Convert.FromHexString(str);
         }
     }
 }
