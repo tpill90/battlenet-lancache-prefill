@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace BattleNetPrefill.Test.Parsers
 {
-    [Parallelizable(ParallelScope.All)]
     [TestFixture]
     public class BuildConfigParserTests
     {

@@ -24,7 +24,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public void Misses()
         {
             //TODO improve
-            Assert.AreEqual(2, _results.MissCount);
+            Assert.AreEqual(5, _results.MissCount);
         }
 
         [Test]
