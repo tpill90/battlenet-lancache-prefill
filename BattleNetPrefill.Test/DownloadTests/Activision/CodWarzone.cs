@@ -16,7 +16,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         public async Task Setup()
         {
             // Run the download process only once
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.CodWarzone, new TestConsole(), useDebugMode: true, showDebugStats: true);
+            var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
+            _results = await TactProductHandler.ProcessProductAsync(TactProduct.CodWarzone, new TestConsole(), debugConfig: debugConfig);
         }
 
         [Test]

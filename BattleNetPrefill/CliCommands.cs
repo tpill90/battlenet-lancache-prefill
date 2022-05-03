@@ -74,8 +74,9 @@ namespace BattleNetPrefill
                 AnsiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    TactProductHandler.ProcessProductAsync(code, AnsiConsole.Create(new AnsiConsoleSettings()),
-                        Config.UseCdnDebugMode, Config.WriteOutputFiles, Config.ShowDebugStats, NoLocalCache).Wait();
+                    //TODO should there be only one of these ever created?
+                    var ansiConsole = AnsiConsole.Create(new AnsiConsoleSettings());
+                    TactProductHandler.ProcessProductAsync(code, ansiConsole, NoLocalCache, debugConfig: Config.DebugConfig).Wait();
                 }
 
                 return default;

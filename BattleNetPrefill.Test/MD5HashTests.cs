@@ -13,7 +13,7 @@ namespace BattleNetPrefill.Test
         [TestCase(8794752618514365567UL,  2740871278436135544UL, "7f3cfcf1e83c0d7a78b241eee7870926")]
         public void ToString_ProducesCorrectResults(ulong lowPart, ulong highPart, string expected)
         {
-            var hash = new MD5Hash((ulong)lowPart, highPart).ToString();
+            var hash = new MD5Hash(lowPart, highPart).ToString();
             Assert.AreEqual(expected.ToUpper(), hash);
         }
     }
