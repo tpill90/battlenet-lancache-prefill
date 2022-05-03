@@ -83,17 +83,5 @@ namespace BattleNetPrefill.Utils
             }
             return Encoding.UTF8.GetString(bytes.ToArray());
         }
-
-        public static byte[] ToByteArray(this string str)
-        {
-            str = str.Replace(" ", string.Empty);
-
-            var res = new byte[str.Length / 2];
-            for (int i = 0; i < res.Length; ++i)
-            {
-                res[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
-            }
-            return res;
-        }
     }
 }
