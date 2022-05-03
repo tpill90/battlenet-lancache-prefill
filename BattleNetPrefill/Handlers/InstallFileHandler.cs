@@ -86,8 +86,8 @@ namespace BattleNetPrefill.Handlers
                 install.hashSize = bin.ReadByte();
                 if (install.hashSize != 16) throw new Exception("Unsupported install hash size!");
 
-                install.numTags = bin.ReadUInt16(true);
-                install.numEntries = bin.ReadUInt32(true);
+                install.numTags = bin.ReadUInt16BigEndian();
+                install.numEntries = bin.ReadUInt32BigEndian();
 
                 int bytesPerTag = ((int)install.numEntries + 7) / 8;
 
@@ -96,7 +96,7 @@ namespace BattleNetPrefill.Handlers
                 for (var i = 0; i < install.numTags; i++)
                 {
                     install.tags[i].name = bin.ReadCString();
-                    install.tags[i].type = bin.ReadUInt16(true);
+                    install.tags[i].type = bin.ReadUInt16BigEndian();
 
                     var filebits = bin.ReadBytes(bytesPerTag);
 
@@ -112,7 +112,7 @@ namespace BattleNetPrefill.Handlers
                 {
                     install.entries[i].name = bin.ReadCString();
                     install.entries[i].contentHash = bin.Read<MD5Hash>();
-                    install.entries[i].size = bin.ReadUInt32(true);
+                    install.entries[i].size = bin.ReadUInt32BigEndian();
                     install.entries[i].tags = new List<string>();
                     for (var j = 0; j < install.numTags; j++)
                     {

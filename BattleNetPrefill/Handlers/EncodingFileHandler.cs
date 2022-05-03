@@ -66,12 +66,12 @@ namespace BattleNetPrefill.Handlers
                 encoding.unk1 = bin.ReadByte();
                 encoding.checksumSizeA = bin.ReadByte();
                 encoding.checksumSizeB = bin.ReadByte();
-                encoding.sizeA = bin.ReadUInt16(true);
-                encoding.sizeB = bin.ReadUInt16(true);
-                encoding.numEntriesA = bin.ReadUInt32(true);
-                encoding.numEntriesB = bin.ReadUInt32(true);
+                encoding.sizeA = bin.ReadUInt16BigEndian();
+                encoding.sizeB = bin.ReadUInt16BigEndian();
+                encoding.numEntriesA = bin.ReadUInt32BigEndian();
+                encoding.numEntriesB = bin.ReadUInt32BigEndian();
                 bin.ReadByte(); // unk
-                encoding.stringBlockSize = bin.ReadUInt32(true);
+                encoding.stringBlockSize = bin.ReadUInt32BigEndian();
 
                 var headerLength = bin.BaseStream.Position;
                 var stringBlockEntries = new List<string>();
@@ -191,8 +191,8 @@ namespace BattleNetPrefill.Handlers
                 var key = BitConverter.ToString(bin.ReadBytes(16)).Replace("-", "");
                 EncodingFileDescEntry entry = new EncodingFileDescEntry()
                 {
-                    stringIndex = bin.ReadUInt32(true),
-                    compressedSize = bin.ReadUInt40(true)
+                    stringIndex = bin.ReadUInt32BigEndian(),
+                    compressedSize = bin.ReadUInt40BigEndian()
                 };
 
                 if (entry.stringIndex == uint.MaxValue) break;

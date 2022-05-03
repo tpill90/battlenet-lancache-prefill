@@ -23,7 +23,7 @@ namespace BattleNetPrefill.EncryptDecrypt
                     throw new Exception("Not a BLTE file");
                 }
 
-                var blteSize = bin.ReadUInt32(true);
+                var blteSize = bin.ReadUInt32BigEndian();
 
                 BLTEChunkInfo[] chunkInfos;
 
@@ -59,8 +59,8 @@ namespace BattleNetPrefill.EncryptDecrypt
                     for (int i = 0; i < chunkCount; i++)
                     {
                         chunkInfos[i].isFullChunk = true;
-                        chunkInfos[i].compSize = bin.ReadInt32(true);
-                        chunkInfos[i].decompSize = bin.ReadInt32(true);
+                        chunkInfos[i].compSize = bin.ReadInt32BigEndian();
+                        chunkInfos[i].decompSize = bin.ReadInt32BigEndian();
                         chunkInfos[i].checkSum = new byte[16];
                         chunkInfos[i].checkSum = bin.ReadBytes(16);
                     }

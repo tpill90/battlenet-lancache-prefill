@@ -84,8 +84,8 @@ namespace BattleNetPrefill.Handlers
                         var entry = new IndexEntry
                         {
                             index = (short)i,
-                            size = br.ReadUInt32(true),
-                            offset = br.ReadUInt32(true)
+                            size = br.ReadUInt32BigEndian(),
+                            offset = br.ReadUInt32BigEndian()
                         };
                         indexDictionary.Add(key, entry);
 
