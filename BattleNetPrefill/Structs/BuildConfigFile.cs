@@ -24,6 +24,7 @@ namespace BattleNetPrefill.Structs
         public MD5Hash? patchConfig;
 
         public MD5Hash[] patchIndex;
+        public int[] patchIndexSize;
 
         public MD5Hash[] vfsRoot;
         public int[] vfsRootSize;

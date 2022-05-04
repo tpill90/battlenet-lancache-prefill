@@ -2,7 +2,9 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
+using ByteSizeLib;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
 
@@ -15,26 +17,31 @@ namespace BattleNetPrefill.Utils.Debug
       
         public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)
         {
-            AnsiConsole.WriteLine("\nComparing requests against real request logs...");
+            AnsiConsole.WriteLine("Comparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
 
-            var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
-
+            // Need to re-coalesce, in the case that we made duplicate requests.  Doesn't really matter, since the lancache can serve them again so quickly
             generatedRequests = RequestUtils.CoalesceRequests(generatedRequests, true);
-            var requestsWithoutSize = generatedRequests.Count(e => e.DownloadWholeFile);
-            await GetRequestSizesAsync(generatedRequests, fileSizeProvider);
-
-            var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product).ToList();
-            await GetRequestSizesAsync(realRequests, fileSizeProvider);
+            //TODO this takes about 200ms on wow_classic
+            var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product);
 
             var comparisonResult = new ComparisonResult
             {
-                GeneratedRequests = FastDeepCloner.DeepCloner.Clone(generatedRequests),
-                RealRequests = FastDeepCloner.DeepCloner.Clone(realRequests),
+                RequestMadeCount = generatedRequests.Count,
+                RealRequestCount = realRequests.Count,
 
-                RequestsWithoutSize = requestsWithoutSize,
-                RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0)
+                RequestsWithoutSize = generatedRequests.Count(e => e.DownloadWholeFile),
+                RealRequestsWithoutSize = realRequests.Count(e => e.TotalBytes == 0 || e.DownloadWholeFile)
             };
+
+            // Populating the response size for any "whole file" requests
+            var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
+            await fileSizeProvider.PopulateRequestSizesAsync(generatedRequests);
+            await fileSizeProvider.PopulateRequestSizesAsync(realRequests);
+            fileSizeProvider.Save();
+
+            comparisonResult.GeneratedRequestTotalSize = ByteSize.FromBytes(generatedRequests.Sum(e => e.TotalBytes));
+            comparisonResult.RealRequestsTotalSize = ByteSize.FromBytes(realRequests.Sum(e => e.TotalBytes));
 
             CompareRequests(generatedRequests, realRequests);
             comparisonResult.Misses = realRequests;
@@ -46,58 +53,24 @@ namespace BattleNetPrefill.Utils.Debug
             return comparisonResult;
         }
 
-        private void PreLoadHeaderSizes(List<Request> requests, FileSizeProvider fileSizeProvider)
-        {
-            var timer = Stopwatch.StartNew();
-            
-            var wholeFileRequests = requests.Where(e => e.DownloadWholeFile && !fileSizeProvider.HasBeenCached(e)).ToList();
-            if (!wholeFileRequests.Any())
-            {
-                return;
-            }
-
-            // Speeding up by pre-caching the content-length headers in parallel.
-            Parallel.ForEach(wholeFileRequests, new ParallelOptions { MaxDegreeOfParallelism = 25 }, request =>
-            {
-                fileSizeProvider.GetContentLengthAsync(request).Wait();
-            });
-            fileSizeProvider.Save();
-            AnsiConsole.MarkupLine($"{Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
-        }
-
-        private async Task GetRequestSizesAsync(List<Request> requests, FileSizeProvider fileSizeProvider)
-        {
-            PreLoadHeaderSizes(requests, fileSizeProvider);
-
-            foreach (var request in requests)
-            {
-                if (request.DownloadWholeFile)
-                {
-                    request.DownloadWholeFile = false;
-                    request.LowerByteRange = 0;
-                    // Subtracting 1, because it seems like the byte ranges are "inclusive".  Ex range 0-9 == 10 bytes length.
-                    var contentLength = await fileSizeProvider.GetContentLengthAsync(request);
-                    request.UpperByteRange = contentLength - 1;
-                }
-            }
-        }
-        
-        //TODO improve the performance on this.  Extremely slow for some products like Overwatch and Wow
+        //TODO improve the performance on this.  Extremely slow for Wow
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
             CompareExactMatches(generatedRequests, originalRequests);
             CompareRangeMatches(generatedRequests, originalRequests);
             CompareRangeMatches(originalRequests, generatedRequests);
-            //TODO not sure why this is required.  but it is
-            CompareRangeMatches(generatedRequests, originalRequests);
-            CompareRangeMatches(originalRequests, generatedRequests);
+            ComparePartialMatches(generatedRequests, originalRequests);
+        }
 
+        private static void ComparePartialMatches(List<Request> generatedRequests, List<Request> originalRequests)
+        {
             // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
             var requestsToProcess = new List<Request>(originalRequests.Count);
             foreach (var request in originalRequests)
             {
                 requestsToProcess.Add(request);
             }
+
             originalRequests.Clear();
 
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
@@ -165,17 +138,28 @@ namespace BattleNetPrefill.Utils.Debug
             }
             originalRequests.Clear();
 
+            // Bucketing requests by MD5 to speed up comparisons
+            Dictionary<MD5Hash, IGrouping<MD5Hash, Request>> generatedGrouped = generatedRequests.GroupBy(e => e.CdnKey).ToDictionary(e => e.Key, e => e);
+            
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
             while (requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
 
+                // Checking to see if we have any requests that match on MD5
+                if (!generatedGrouped.TryGetValue(current.CdnKey, out var group))
+                {
+                    // No match found, continuing
+                    requestsToProcess.RemoveAt(0);
+                    originalRequests.Add(current);
+                    continue;
+                }
+
                 // Special case for indexes
                 if (current.IsIndex)
                 {
                     //TODO doesn't look like RootFolder is being deserialized correctly.
-                    var indexMatch = generatedRequests.FirstOrDefault(e => e.IsIndex && e.CdnKey == current.CdnKey
-                                                                                     && e.RootFolder.Name == current.RootFolder.Name);
+                    var indexMatch = group.FirstOrDefault(e => e.IsIndex && e.RootFolder.Name == current.RootFolder.Name);
                     if (indexMatch != null)
                     {
                         requestsToProcess.RemoveAt(0);
@@ -185,10 +169,9 @@ namespace BattleNetPrefill.Utils.Debug
                 }
 
                 // Exact match, remove from both lists
-                var exactMatch = generatedRequests.FirstOrDefault(e => e.CdnKey == current.CdnKey
-                                                                       && e.RootFolder.Name == current.RootFolder.Name
-                                                                       && e.LowerByteRange == current.LowerByteRange
-                                                                       && e.UpperByteRange == current.UpperByteRange);
+                var exactMatch = group.FirstOrDefault(e => e.LowerByteRange == current.LowerByteRange
+                                                           && e.UpperByteRange == current.UpperByteRange
+                                                           && e.RootFolder.Name == current.RootFolder.Name);
                 if (exactMatch != null)
                 {
                     requestsToProcess.RemoveAt(0);

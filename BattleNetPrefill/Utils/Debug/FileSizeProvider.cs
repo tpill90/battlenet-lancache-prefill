@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
-using Newtonsoft.Json;
 
 namespace BattleNetPrefill.Utils.Debug
 {
@@ -39,7 +39,7 @@ namespace BattleNetPrefill.Utils.Debug
             }
             if (File.Exists(CachedFileName))
             {
-                _cachedContentLengths = JsonConvert.DeserializeObject<ConcurrentDictionary<string, long>>(File.ReadAllText(CachedFileName));
+                _cachedContentLengths = Utf8Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, long>>(File.ReadAllText(CachedFileName));
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace BattleNetPrefill.Utils.Debug
             lock (_cacheFileLock)
             {
                 _cacheMisses = 0;
-                File.WriteAllText(CachedFileName, JsonConvert.SerializeObject(_cachedContentLengths));
+                File.WriteAllText(CachedFileName, Utf8Json.JsonSerializer.ToJsonString(_cachedContentLengths));
             }
         }
 
@@ -82,6 +82,23 @@ namespace BattleNetPrefill.Utils.Debug
             }
 
             return contentLength;
+        }
+
+        public async Task PopulateRequestSizesAsync(List<Request> requests)
+        {
+            foreach (var request in requests)
+            {
+                if (!request.DownloadWholeFile)
+                {
+                    continue;
+                }
+
+                request.DownloadWholeFile = false;
+                request.LowerByteRange = 0;
+                // Subtracting 1, because byte ranges are "inclusive".  Ex range 0-9 == 10 bytes length.
+                var contentLength = await GetContentLengthAsync(request);
+                request.UpperByteRange = contentLength - 1;
+            }
         }
     }
 }

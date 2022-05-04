@@ -86,6 +86,9 @@ namespace BattleNetPrefill.Parsers
                     case "patch-index":
                         buildConfig.patchIndex = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
+                    case "patch-index-size":
+                        buildConfig.patchIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
+                        break;
                     case "build-branch": // Overwatch
                         buildConfig.buildBranch = cols[1];
                         break;
@@ -152,7 +155,6 @@ namespace BattleNetPrefill.Parsers
                     case string a when Regex.IsMatch(a, "vfs-(\\d*)-size$"):
                         buildConfig.vfsSize.Add(cols[0], cols[1]);
                         break;
-                    case "patch-index-size":
                     case "build-changelist":
                     case "build-data-branch":
                     case "build-data-revision":
@@ -177,7 +179,8 @@ namespace BattleNetPrefill.Parsers
                 cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
             }
             
-            // This can sometimes be skipped over, as it isn't always required to parse the encoding table.  Requesting it anyway
+            // This can sometimes be skipped over, as it isn't always required to parse the encoding table.
+            // Requesting it anyway since almost every product will download it in the real Battle.net client.
             cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);
             
             if (buildConfig.vfsRoot != null)

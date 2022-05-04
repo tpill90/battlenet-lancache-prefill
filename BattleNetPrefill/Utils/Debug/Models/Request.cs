@@ -1,5 +1,6 @@
 ﻿using System;
 using BattleNetPrefill.Structs;
+using ByteSizeLib;
 
 namespace BattleNetPrefill.Utils.Debug.Models
 {
@@ -52,7 +53,18 @@ namespace BattleNetPrefill.Utils.Debug.Models
 
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
         public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
-        
+
+        public override string ToString()
+        {
+            if (DownloadWholeFile)
+            {
+                return $"{Uri} - -";
+            }
+
+            var size = ByteSize.FromBytes((double)TotalBytes);
+            return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
+        }
+
         public bool Overlaps(Request request2, bool isBattleNetClient)
         {
             int overlap = 1;
@@ -80,7 +92,7 @@ namespace BattleNetPrefill.Utils.Debug.Models
             }
             return request2.UpperByteRange >= LowerByteRange;
         }
-
+         
         public Request MergeWith(Request request2)
         {
             return new Request

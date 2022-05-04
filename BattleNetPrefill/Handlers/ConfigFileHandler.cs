@@ -96,8 +96,7 @@ namespace BattleNetPrefill.Handlers
             
             return cdnConfig;
         }
-
-        //TODO comment
+        
         public async Task<VersionsEntry> GetLatestVersionEntryAsync(TactProduct tactProduct)
         {
             string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
