@@ -14,45 +14,59 @@ using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill
 {
-    public static class TactProductHandler
+    public class TactProductHandler
     {
+        private readonly TactProduct _product;
+        private readonly IAnsiConsole _ansiConsole;
+        private readonly DebugConfig _debugConfig;
+
         /// <summary>
-        /// Downloads a specified game, in the same manner that Battle.net does.  
+        /// Creates a new TactProductHandler for the specified product.
         /// </summary>
         /// <param name="product">The targeted game that should be downloaded</param>
         /// <param name="ansiConsole"></param>
         /// <param name="debugConfig"></param>
+        public TactProductHandler(TactProduct product, IAnsiConsole ansiConsole, DebugConfig debugConfig)
+        {
+            _product = product;
+            _ansiConsole = ansiConsole;
+            _debugConfig = debugConfig;
+        }
+
+        /// <summary>
+        /// Downloads a specified game, in the same manner that Battle.net does.  Should be used to pre-fill a LanCache with game data from Blizzard's CDN.
+        /// </summary>
         /// <param name="skipDiskCache">If set to true, then no cache files will be written to disk.  Every run will re-request the required files</param>
         /// <returns></returns>
-        public static async Task<ComparisonResult> ProcessProductAsync(TactProduct product, IAnsiConsole ansiConsole, DebugConfig debugConfig, bool skipDiskCache = false)
+        public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false)
         {
-            var spectreStatus = ansiConsole.Status()
-                                   .AutoRefresh(true)
-                                   .SpinnerStyle(Style.Parse("green"))
-                                   .Spinner(Spinner.Known.Dots2);
+            var spectreStatus = _ansiConsole.Status()
+                                            .AutoRefresh(true)
+                                            .SpinnerStyle(Style.Parse("green"))
+                                            .Spinner(Spinner.Known.Dots2);
 
             var timer = Stopwatch.StartNew();
-            AnsiConsole.MarkupLine($"Now starting processing of : {Blue(product.DisplayName)}");
+            AnsiConsole.MarkupLine($"Now starting processing of : {Blue(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, debugConfig.UseCdnDebugMode, skipDiskCache);
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
-            var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, product);
+            var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, _product);
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = null;
             await spectreStatus.StartAsync("Getting latest version info...", async ctx =>
             {
-                await cdnRequestManager.InitializeAsync(product);
-                targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
+                await cdnRequestManager.InitializeAsync(_product);
+                targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
             });
 
             // Skip prefilling if we've already prefilled the latest version 
-            if (!debugConfig.UseCdnDebugMode && IsProductUpToDate(product, targetVersion.Value))
+            if (!_debugConfig.UseCdnDebugMode && IsProductUpToDate(_product, targetVersion.Value))
             {
-                AnsiConsole.MarkupLine($"{Green(product.DisplayName)} already up to date!  Skipping..");
+                AnsiConsole.MarkupLine($"{Green(_product.DisplayName)} already up to date!  Skipping..");
                 return null;
             }
 
@@ -60,7 +74,7 @@ namespace BattleNetPrefill
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
-                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, product);
+                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, _product);
                 CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");
@@ -69,28 +83,28 @@ namespace BattleNetPrefill
 
                 // Start processing to determine which files need to be downloaded
                 ctx.Status("Determining files to download...");
-                await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, product);
-                await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, product);
+                await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, _product);
+                await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
 
                 var patchLoader = new PatchLoader(cdnRequestManager, cdnConfig);
-                await patchLoader.HandlePatchesAsync(buildConfig, product);
+                await patchLoader.HandlePatchesAsync(buildConfig, _product);
             });
 
             // Actually start the download of any deferred requests
-            await cdnRequestManager.DownloadQueuedRequestsAsync(ansiConsole);
+            await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
 
             timer.Stop();
-            AnsiConsole.MarkupLine($"{Blue(product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
+            AnsiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
             
-            SaveDownloadedProductVersion(product, cdnRequestManager, targetVersion.Value);
+            SaveDownloadedProductVersion(_product, cdnRequestManager, targetVersion.Value);
 
-            if (!debugConfig.CompareAgainstRealRequests)
+            if (!_debugConfig.CompareAgainstRealRequests)
             {
                 return null;
             }
 
             var comparisonUtil = new ComparisonUtil();
-            var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
+            var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), _product);
             result.ElapsedTime = timer.Elapsed;
 
             return result;

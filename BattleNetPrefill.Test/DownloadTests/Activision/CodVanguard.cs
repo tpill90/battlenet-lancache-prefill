@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
 using NUnit.Framework;
 using Spectre.Console.Testing;
 
@@ -17,7 +16,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         {
             // Run the download process only once
             var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.CodVanguard, new TestConsole(), debugConfig: debugConfig);
+            var tactProductHandler = new TactProductHandler(TactProduct.CodVanguard, new TestConsole(), debugConfig: debugConfig);
+            _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
         }
 
         [Test]

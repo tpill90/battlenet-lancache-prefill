@@ -88,7 +88,8 @@ namespace BattleNetPrefill
                 ansiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    await TactProductHandler.ProcessProductAsync(code, ansiConsole, Config.DebugConfig, NoLocalCache);
+                    var tactProductHandler = new TactProductHandler(code, ansiConsole, Config.DebugConfig);
+                    await tactProductHandler.ProcessProductAsync(NoLocalCache);
                 }
             }
 
