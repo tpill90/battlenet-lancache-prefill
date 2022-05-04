@@ -4,6 +4,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using BattleNetPrefill.Structs;
+using CliFx.Infrastructure;
+using Spectre.Console;
 
 namespace BattleNetPrefill.Utils
 {
@@ -82,6 +84,19 @@ namespace BattleNetPrefill.Utils
                 bytes.Add(b);
             }
             return Encoding.UTF8.GetString(bytes.ToArray());
+        }
+    }
+
+    public static class Extensions
+    {
+        public static IAnsiConsole CreateAnsiConsole(this IConsole console)
+        {
+            return AnsiConsole.Create(new AnsiConsoleSettings
+            {
+                Ansi = AnsiSupport.Detect,
+                ColorSystem = ColorSystemSupport.Detect,
+                Out = new AnsiConsoleOutput(console.Output)
+            });
         }
     }
 }
