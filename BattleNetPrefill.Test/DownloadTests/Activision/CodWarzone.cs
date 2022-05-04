@@ -23,15 +23,13 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         [Test]
         public void Misses()
         {
-            //TODO improve this
-            Assert.LessOrEqual(_results.MissCount, 9);
+            Assert.AreEqual(0, _results.MissCount);
         }
 
         [Test]
         public void MissedBandwidth()
         {
-            //TODO improve this
-            Assert.Less(_results.MissedBandwidth.Bytes, ByteSize.FromMegaBytes(5).Bytes);
+            Assert.AreEqual(0, _results.MissedBandwidth.Bytes);
         }
 
         [Test]

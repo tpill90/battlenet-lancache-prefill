@@ -82,7 +82,7 @@ namespace BattleNetPrefill.Utils.Debug.Models
                 AnsiConsole.MarkupLine(Red("Missed Requests :"));
                 foreach (var miss in Misses.Take(10))
                 {
-                    AnsiConsole.WriteLine($"{miss} {miss.LowerByteRange}-{miss.UpperByteRange}");
+                    AnsiConsole.WriteLine($"{miss}");
                 }
             }
 
@@ -91,7 +91,7 @@ namespace BattleNetPrefill.Utils.Debug.Models
                 AnsiConsole.MarkupLine(Yellow("Unnecessary Requests :"));
                 foreach (var req in UnnecessaryRequests.Take(10))
                 {
-                    AnsiConsole.WriteLine($"{req} {req.LowerByteRange}-{req.UpperByteRange}");
+                    AnsiConsole.WriteLine($"{req}");
                 }
             }
 

@@ -131,9 +131,14 @@ namespace BattleNetPrefill.Handlers
                     if (unarchivedFileIndex.ContainsKey(current.hash))
                     {
                         IndexEntry file = unarchivedFileIndex[current.hash];
-                        //TODO i might be able to remove the weird 4096 byte coalescing logic now that this is here
-                        var endBytes = Math.Max(file.offset + file.size - 1, file.offset + 4095);
 
+                        uint endBytes = file.offset + file.size - 1;
+                        if (targetProduct == TactProduct.Warcraft3Reforged)
+                        {
+                            //TODO i might be able to remove the weird 4096 byte coalescing logic now that this is here
+                            // Only Warcraft 3 does this weird logic, not entirely sure why no other products do it.
+                            endBytes = Math.Max(endBytes, file.offset + 4095);
+                        }
                         _cdnRequestManager.QueueRequest(RootFolder.data, current.hash, file.offset, endBytes);
                     }
                     continue;

@@ -62,6 +62,8 @@ namespace BattleNetPrefill.Utils.Debug
             ComparePartialMatches(generatedRequests, originalRequests);
         }
 
+        private static void ComparePartialMatches(List<Request> generatedRequests, List<Request> originalRequests)
+        {
             // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
             var requestsToProcess = new List<Request>(originalRequests.Count);
             foreach (var request in originalRequests)

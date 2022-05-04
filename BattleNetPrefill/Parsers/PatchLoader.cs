@@ -46,7 +46,8 @@ namespace BattleNetPrefill.Parsers
             
             if (buildConfig.patchIndex != null)
             {
-                _cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, 4095);
+                var upperByteRange = Math.Max(4095, buildConfig.patchIndexSize[1] - 1);
+                _cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.patchIndex[1], 0, upperByteRange);
             }
 
             // Unused by Hearthstone
