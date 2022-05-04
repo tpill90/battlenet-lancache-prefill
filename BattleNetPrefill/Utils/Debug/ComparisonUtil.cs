@@ -101,7 +101,7 @@ namespace BattleNetPrefill.Utils.Debug
             originalRequests.Clear();
 
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
-            while(requestsToProcess.Any())
+            while (requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
 
@@ -242,14 +242,13 @@ namespace BattleNetPrefill.Utils.Debug
             }
         }
 
-        private static List<Request> SplitRequests(Request match, Request current)
+        private List<Request> SplitRequests(Request match, Request current)
         {
             var results = new List<Request>();
             if (match.LowerByteRange != current.LowerByteRange)
             {
                 var lowerSlice = new Request
                 {
-                    //TODO should probably unit test the range calculations as well
                     LowerByteRange = match.LowerByteRange,
                     UpperByteRange = current.LowerByteRange - 1,
 
@@ -266,7 +265,6 @@ namespace BattleNetPrefill.Utils.Debug
             {
                 var upperSlice = new Request
                 {
-                    //TODO should probably unit test the range calculations as well
                     LowerByteRange = current.UpperByteRange + 1,
                     UpperByteRange = match.UpperByteRange,
 

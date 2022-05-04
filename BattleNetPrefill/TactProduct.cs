@@ -1,5 +1,4 @@
-﻿using System;
-using BattleNetPrefill.Structs;
+﻿using BattleNetPrefill.Structs;
 
 namespace BattleNetPrefill
 {
@@ -14,7 +13,7 @@ namespace BattleNetPrefill
         #region Blizzard
         
         public static readonly TactProduct BlizzardArcadeCollection = new TactProduct("rtro") { DisplayName = "Blizzard Arcade Collection", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
-        
+
         public static readonly TactProduct Diablo2Resurrected = new TactProduct("osi") { DisplayName = "Diablo 2: Resurrected", IsBlizzard = true };
         public static readonly TactProduct Diablo3 = new TactProduct("d3") { DisplayName = "Diablo 3", IsBlizzard = true };
 
@@ -50,10 +49,15 @@ namespace BattleNetPrefill
 
         #endregion
 
-        //TODO document properties
+        /// <summary>
+        /// Official name of the game.
+        /// </summary>
         public string DisplayName { get; private init; }
 
-        public string ProductCode => this.Name;
+        /// <summary>
+        /// TACT Product code.  Used to find content on Blizzard CDNs.
+        /// </summary>
+        public string ProductCode => Name;
 
         //TODO convert this to a better type
         public string[] DefaultTags { get; private init; }

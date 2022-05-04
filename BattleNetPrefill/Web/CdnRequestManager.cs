@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Structs.Enums;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
@@ -18,10 +18,9 @@ using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Web
 {
-    //TODO rename to something like HttpRequestHandler
-    public class CDN
+    public class CdnRequestManager
     {
-        private readonly HttpClient client;
+        private readonly HttpClient _client;
 
         private readonly List<string> _cdnList = new List<string> 
         {
@@ -29,41 +28,53 @@ namespace BattleNetPrefill.Web
             "cdn.blizzard.com"          // Official regionless CDN
         };
 
-        //TODO comment
+        /// <summary>
+        /// The root path used to find the product's data on the CDN.  Must be queried from the patch API.
+        /// </summary>
         private string _productBasePath;
 
-        //TODO comment
-       
         private readonly Uri _battleNetPatchUri;
         
-        public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
-
         private readonly List<Request> _queuedRequests = new List<Request>();
+
+        /// <summary>
+        /// When enabled, will skip using any cached files from disk.  The disk cache can speed up repeated runs, however it can use up a non-trivial amount
+        /// of storage in some cases (Wow uses several hundred mb of index files).
+        /// </summary>
+        private bool SkipDiskCache;
+
+        #region Debugging
 
         /// <summary>
         /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
         /// you won't need to wait for the full file transfer to complete.
         /// </summary>
-        public bool DebugMode = false;
+        private bool DebugMode;
 
-        //TODO document
-        public bool SkipDiskCache = false;
+        /// <summary>
+        /// Used only for debugging purposes.  Records all requests made, so that they can be later compared against the expected requests made.
+        /// </summary>
+        public List<Request> allRequestsMade = new List<Request>();
 
-        public CDN(Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
+        #endregion
+
+        public CdnRequestManager(Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
             DebugMode = useDebugMode;
 
-            client = new HttpClient
+            _client = new HttpClient
             {
 				//TODO is this needed?
                 Timeout = Timeout.InfiniteTimeSpan
             };
         }
 
-        //TODO assert that this must be required before using CDN class
-        public async Task LoadCdnsFileAsync(TactProduct currentProduct)
+        /// <summary>
+        /// Initialization logic must be called prior to using this class.  Determines which root folder to download the CDN data from
+        /// </summary>
+        public async Task InitializeAsync(TactProduct currentProduct)
         {
             // Loading CDNs
             var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(this, currentProduct);
@@ -129,8 +140,16 @@ namespace BattleNetPrefill.Web
             });
         }
 
-        public async Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, bool writeToDevNull = false,
-            long? startBytes = null, long? endBytes = null)
+        /// <summary>
+        /// Requests data from Blizzard's CDN, and returns the raw response.
+        /// </summary>
+        /// <param name="isIndex">If true, will attempt to download a .index file for the specified hash</param>
+        /// <param name="writeToDevNull">If true, the response data will be ignored, and dumped to a null stream.
+        ///                              This can be used with "non-required" requests, to speed up processing since we only care about reading the data once to prefill.
+        /// </param>
+        /// <returns></returns>
+        public async Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
+            bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             Request request = new Request
             {
@@ -154,8 +173,6 @@ namespace BattleNetPrefill.Web
             return await GetRequestAsBytesAsync(request);
         }
 
-        //TODO comment
-        //TODO come up with a better name for writeToDevNull
         public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)
         {
             var writeToDevNull = request.WriteToDevNull;
@@ -170,7 +187,7 @@ namespace BattleNetPrefill.Web
                 return null;
             }
 
-            var uri = new Uri($"http://{_cdnList[0]}/{request}");
+            var uri = new Uri($"http://{_cdnList[0]}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)
@@ -188,7 +205,7 @@ namespace BattleNetPrefill.Web
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
             }
 
-            using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+            using var responseMessage = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
             await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
 
             if (!responseMessage.IsSuccessStatusCode)
@@ -236,10 +253,15 @@ namespace BattleNetPrefill.Web
             return await Task.FromResult(byteArray);
         }
 
-        //TODO comment
-        public async Task<string> MakePatchRequestAsync(TactProduct tactProduct, string target)
+        /// <summary>
+        /// Makes a request to the Patch API.  Caches the response if possible.
+        ///
+        /// https://wowdev.wiki/TACT#HTTP_URLs
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> MakePatchRequestAsync(TactProduct tactProduct, PatchRequest endpoint)
         {
-            var cacheFile = $"{Config.CacheDir}/{target}-{tactProduct.ProductCode}.txt";
+            var cacheFile = $"{Config.CacheDir}/{endpoint.Name}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 30 minutes so that updated versions don't get accidentally ignored
             if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddMinutes(30))
@@ -247,7 +269,7 @@ namespace BattleNetPrefill.Web
                 return await File.ReadAllTextAsync(cacheFile);
             }
 
-            using HttpResponseMessage response = await client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/{target}"));
+            using HttpResponseMessage response = await _client.GetAsync(new Uri($"{_battleNetPatchUri}{tactProduct.ProductCode}/{endpoint.Name}"));
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception("Error during retrieving HTTP cdns: Received bad HTTP code " + response.StatusCode);

@@ -11,27 +11,19 @@ using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Handlers
 {
+    /// <summary>
+    /// https://wowdev.wiki/TACT#Encoding_table
+    /// </summary>
     public class EncodingFileHandler
     {
-        private readonly CDN _cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
 
-        public EncodingFileHandler(CDN cdn)
+        public EncodingFileHandler(CdnRequestManager cdnRequestManager)
         {
-            _cdn = cdn;
+            _cdnRequestManager = cdnRequestManager;
         }
 
-        //TODO remove this
-        public async Task<EncodingTable> BuildEncodingTableAsync(BuildConfigFile buildConfig)
-        {
-            EncodingFile encodingFile = await GetEncodingAsync(buildConfig);
-
-            EncodingTable encodingTable = new EncodingTable();
-            encodingTable.encodingFile = encodingFile;
-
-            return encodingTable;
-        }
-
-        private async Task<EncodingFile> GetEncodingAsync(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
+        public async Task<EncodingFile> GetEncodingAsync(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
             int encodingSize;
             if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
@@ -45,11 +37,11 @@ namespace BattleNetPrefill.Handlers
 
             var encoding = new EncodingFile();
 
-            byte[] content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
+            byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
 
             if (encodingSize != 0 && encodingSize != content.Length)
             {
-                content = await _cdn.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
+                content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.encoding[1]);
 
                 if (encodingSize != content.Length && encodingSize != 0)
                 {
@@ -109,7 +101,7 @@ namespace BattleNetPrefill.Handlers
                 var tableAstart = bin.BaseStream.Position;
 
                 //encoding.aEntries = new Dictionary<MD5Hash, MD5Hash>(MD5HashEqualityComparer.Instance);
-                encoding.aEntriesReversed = new Dictionary<MD5Hash, MD5Hash>(MD5HashEqualityComparer.Instance);
+                encoding.aEntriesReversed = new Dictionary<MD5Hash, MD5Hash>(Md5HashEqualityComparer.Instance);
                 for (int i = 0; i < encoding.numEntriesA; i++)
                 {
                     ushort keysCount;

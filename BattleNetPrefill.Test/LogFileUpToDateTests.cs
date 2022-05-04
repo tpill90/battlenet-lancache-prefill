@@ -41,7 +41,7 @@ namespace BattleNetPrefill.Test
         private static VersionsEntry GetLatestCdnVersion(TactProduct product)
         {
             // Finding the latest version of the game
-            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CDN(Config.BattleNetPatchUri));
+            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CdnRequestManager(Config.BattleNetPatchUri));
             VersionsEntry cdnVersion = configFileHandler.GetLatestVersionEntryAsync(product).Result;
             return cdnVersion;
         }

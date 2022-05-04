@@ -14,6 +14,9 @@ namespace BattleNetPrefill
             }
         }
 
+        /// <summary>
+        /// https://wowdev.wiki/TACT#HTTP_URLs
+        /// </summary>
         public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
         public static string CacheDir => "cache";
 

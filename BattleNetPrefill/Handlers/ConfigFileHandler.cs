@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Structs.Enums;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
 using Spectre.Console;
@@ -12,18 +13,18 @@ namespace BattleNetPrefill.Handlers
 {
     public class ConfigFileHandler
     {
-        private readonly CDN cdn;
+        private readonly CdnRequestManager _cdnRequestManager;
 
-        public ConfigFileHandler(CDN cdn)
+        public ConfigFileHandler(CdnRequestManager cdnRequestManager)
         {
-            this.cdn = cdn;
+            this._cdnRequestManager = cdnRequestManager;
         }
 
         public async Task<CDNConfigFile> GetCdnConfigAsync(VersionsEntry targetVersion)
         {
             var cdnConfig = new CDNConfigFile();
 
-            var content = Encoding.UTF8.GetString(await cdn.GetRequestAsBytesAsync(RootFolder.config, targetVersion.cdnConfig));
+            var content = Encoding.UTF8.GetString(await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.config, targetVersion.cdnConfig));
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Count(); i++)
@@ -99,7 +100,7 @@ namespace BattleNetPrefill.Handlers
         //TODO comment
         public async Task<VersionsEntry> GetLatestVersionEntryAsync(TactProduct tactProduct)
         {
-            string content = await cdn.MakePatchRequestAsync(tactProduct, "versions");
+            string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
             var versions = new VersionsFile();
 
             content = content.Replace("\0", "");
@@ -179,7 +180,7 @@ namespace BattleNetPrefill.Handlers
             // by the Actual Battle.Net client
             if (targetVersion.keyRing != null)
             {
-                cdn.QueueRequest(RootFolder.config, targetVersion.keyRing.Value);
+                _cdnRequestManager.QueueRequest(RootFolder.config, targetVersion.keyRing.Value);
             }
         }
     }

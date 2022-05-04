@@ -8,10 +8,10 @@ using NUnit.Framework;
 namespace BattleNetPrefill.Test.Parsers
 {
     [TestFixture]
-    public class BuildConfigParserTests
+    public class CdnsFileParserTests
     {
         /// <summary>
-        /// This test is to ensure that all possible BuildConfig fields are being properly handled.
+        /// This test is to ensure that all possible CdnFile fields are being properly handled.
         /// Also it should hopefully catch any new fields introduced in the future.
         /// </summary>
         [Test]
@@ -32,21 +32,18 @@ namespace BattleNetPrefill.Test.Parsers
         [TestCase("wow")]
         [TestCase("wow_classic")]
         [TestCase("zeus")]
-        public async Task BuildConfig_ShouldHaveNoUnknownKeyPairs(string productCode)
+        public async Task CdnsFile_ShouldHaveNoUnknownKeyPairs(string productCode)
         {
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
             CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
-            await cdnRequestManager.InitializeAsync(tactProduct);
-            var configFileHandler = new ConfigFileHandler(cdnRequestManager);
-            VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);
 
-            // Parsing the build config
-            var buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdnRequestManager, tactProduct);
-
+            // Parsing the CDN file
+            var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(cdnRequestManager, tactProduct);
+           
             // Expecting that there are no unknown keypairs left after parsing.
-            Assert.AreEqual(0, buildConfig.UnknownKeyPairs.Count);
+            Assert.AreEqual(0, cdnsFile.UnknownKeyPairs.Count);
         }
     }
 }

@@ -1,5 +1,10 @@
 ﻿namespace BattleNetPrefill.Structs
 {
+    public struct VersionsFile
+    {
+        public VersionsEntry[] entries;
+    }
+
     public struct VersionsEntry
     {
         public string region;

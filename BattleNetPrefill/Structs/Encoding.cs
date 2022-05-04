@@ -2,15 +2,9 @@
 
 namespace BattleNetPrefill.Structs
 {
-    //TODO comment
-    public class EncodingTable
-    {
-        public Dictionary<MD5Hash, MD5Hash> ReversedEncodingDictionary => encodingFile.aEntriesReversed;
-
-
-        public EncodingFile encodingFile;
-    }
-
+    /// <summary>
+    /// https://wowdev.wiki/TACT#Encoding_table
+    /// </summary>
     public struct EncodingFile
     {
         public byte unk1;
@@ -25,7 +19,13 @@ namespace BattleNetPrefill.Structs
         public string[] stringBlockEntries;
         public EncodingHeaderEntry[] aHeaders;
         //public Dictionary<MD5Hash, MD5Hash> aEntries;
+
         public Dictionary<MD5Hash, MD5Hash> aEntriesReversed;
+
+        /// <summary>
+        /// Lookup from EncodingKey -> CdnKey.  Lookup can be used to take the Md5 for a file, and lookup where it can be downloaded from on the CDNs.
+        /// </summary>
+        public Dictionary<MD5Hash, MD5Hash> ReversedEncodingDictionary => aEntriesReversed;
 
         public EncodingHeaderEntry[] bHeaders;
         public Dictionary<string, EncodingFileDescEntry> bEntries;
