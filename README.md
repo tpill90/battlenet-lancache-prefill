@@ -65,6 +65,10 @@ However, in some scenarios this disk cache can potentially take up a non-trivial
 
 By running with the additional flag `--nocache`, **BattleNetPrefill** will no longer cache any files locally, at the expense of slower runtime.
 
+### -f|--force
+By default, **BattleNetPrefill** will keep track of the most recently prefilled product, and will only attempt to prefill if there it determines there a newer version available for download.  This default behavior will work best for most use cases, as no time will be wasted re-downloading files that have been previously prefilled.
+
+Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the specified product.  This flag may be useful for diagnostics, or benchmarking network performance.
 
 # Other Docs
 * [Development Configuration](/docs/Development.md)

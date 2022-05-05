@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
@@ -20,6 +19,11 @@ namespace BattleNetPrefill
         private readonly IAnsiConsole _ansiConsole;
         private readonly DebugConfig _debugConfig;
 
+        private Status SpectreStatusSpinner => _ansiConsole.Status()
+                                           .AutoRefresh(true)
+                                           .SpinnerStyle(Style.Parse("green"))
+                                           .Spinner(Spinner.Known.Dots2);
+
         /// <summary>
         /// Creates a new TactProductHandler for the specified product.
         /// </summary>
@@ -37,16 +41,12 @@ namespace BattleNetPrefill
         /// Downloads a specified game, in the same manner that Battle.net does.  Should be used to pre-fill a LanCache with game data from Blizzard's CDN.
         /// </summary>
         /// <param name="skipDiskCache">If set to true, then no cache files will be written to disk.  Every run will re-request the required files</param>
-        /// <returns></returns>
-        public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false)
+        /// <param name="forcePrefill">By default, a product will be skipped if it has already prefilled the latest product version.
+        ///                             Setting this to true will force a prefill regardless of previous runs.</param>
+        public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
         {
-            var spectreStatus = _ansiConsole.Status()
-                                            .AutoRefresh(true)
-                                            .SpinnerStyle(Style.Parse("green"))
-                                            .Spinner(Spinner.Known.Dots2);
-
             var timer = Stopwatch.StartNew();
-            AnsiConsole.MarkupLine($"Now starting processing of : {Blue(_product.DisplayName)}");
+            AnsiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
             CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
@@ -57,20 +57,21 @@ namespace BattleNetPrefill
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = null;
-            await spectreStatus.StartAsync("Getting latest version info...", async ctx =>
+            await SpectreStatusSpinner.StartAsync("Getting latest version info...", async ctx =>
             {
                 await cdnRequestManager.InitializeAsync(_product);
                 targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
             });
 
             // Skip prefilling if we've already prefilled the latest version 
-            if (!_debugConfig.UseCdnDebugMode && IsProductUpToDate(_product, targetVersion.Value))
+            if (!forcePrefill && IsProductUpToDate(targetVersion.Value))
             {
-                AnsiConsole.MarkupLine($"{Green(_product.DisplayName)} already up to date!  Skipping..");
+                //TODO I feel like this is a bit hard to read.  Formatting could be better
+                AnsiConsole.MarkupLine($"   {Green("Up to date! Skipping..")}");
                 return null;
             }
 
-            await spectreStatus.StartAsync("Start", async ctx =>
+            await SpectreStatusSpinner.StartAsync("Start", async ctx =>
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
@@ -94,9 +95,9 @@ namespace BattleNetPrefill
             await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
 
             timer.Stop();
-            AnsiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}\n\n");
+            AnsiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
             
-            SaveDownloadedProductVersion(_product, cdnRequestManager, targetVersion.Value);
+            SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
 
             if (!_debugConfig.CompareAgainstRealRequests)
             {
@@ -110,27 +111,32 @@ namespace BattleNetPrefill
             return result;
         }
 
-        public static void SaveDownloadedProductVersion(TactProduct product, CdnRequestManager cdn, VersionsEntry latestVersion, bool force = false)
+        /// <summary>
+        /// Checks to see if the previously prefilled version is up to date with the latest version on the CDN
+        /// </summary>
+        private bool IsProductUpToDate(VersionsEntry latestVersion)
+        {
+            // Checking to see if a file has been previously prefilled
+            var versionFilePath = $"{Config.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            if (!File.Exists(versionFilePath))
+            {
+                return false;
+            }
+
+            // Checking to see if the game version previously prefilled is up to date with the latest version on the CDN.
+            var lastPrefilledVersion = File.ReadAllText(versionFilePath);
+            return latestVersion.versionsName == lastPrefilledVersion;
+        }
+
+        private void SaveDownloadedProductVersion(CdnRequestManager cdn, VersionsEntry latestVersion)
         {
             if (cdn.ErrorCount != 0)
             {
                 return;
             }
 
-            var versionFile = $"{Config.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
-            File.WriteAllText(versionFile, latestVersion.versionsName);
-        }
-
-        private static bool IsProductUpToDate(TactProduct product, VersionsEntry latestVersion)
-        {
-            var versionFile = $"{Config.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
-            if (!File.Exists(versionFile))
-            {
-                return false;
-            }
-
-            var currentLogVersion = File.ReadAllText(versionFile);
-            return latestVersion.versionsName == currentLogVersion;
+            var versionFilePath = $"{Config.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }
     }
 }
