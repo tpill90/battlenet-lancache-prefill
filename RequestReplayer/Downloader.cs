@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using ShellProgressBar;
@@ -47,7 +48,7 @@ namespace RequestReplayer
         /// <param name="requestsToReplay"></param>
         public void DownloadRequestsParallel(List<Request> requestsToReplay)
         {
-            _totalDownloadSize = ByteSize.FromBytes(requestsToReplay.Sum(e => e.TotalBytes));
+            _totalDownloadSize = requestsToReplay.SumTotalBytes();
             _elapsedDownloadTime = Stopwatch.StartNew();
             
             // Setting up the progress bar

@@ -40,8 +40,8 @@ namespace BattleNetPrefill.Utils.Debug
             await fileSizeProvider.PopulateRequestSizesAsync(realRequests);
             fileSizeProvider.Save();
 
-            comparisonResult.GeneratedRequestTotalSize = ByteSize.FromBytes(generatedRequests.Sum(e => e.TotalBytes));
-            comparisonResult.RealRequestsTotalSize = ByteSize.FromBytes(realRequests.Sum(e => e.TotalBytes));
+            comparisonResult.GeneratedRequestTotalSize = generatedRequests.SumTotalBytes();
+            comparisonResult.RealRequestsTotalSize = realRequests.SumTotalBytes();
 
             CompareRequests(generatedRequests, realRequests);
             comparisonResult.Misses = realRequests;
