@@ -73,6 +73,9 @@ namespace BattleNetPrefill
 
             [CommandOption("nocache", Description = "Skips using locally cached files.  Saves disk space, at the expense of slower subsequent runs.")]
             public bool NoLocalCache { get; init; }
+            
+            [CommandOption("force", shortName: 'f', Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.")]
+            public bool ForcePrefill { get; init; }
 
             public async ValueTask ExecuteAsync(IConsole console)
             {
@@ -88,7 +91,8 @@ namespace BattleNetPrefill
                 ansiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    await TactProductHandler.ProcessProductAsync(code, ansiConsole, Config.DebugConfig, NoLocalCache);
+                    var tactProductHandler = new TactProductHandler(code, ansiConsole, Config.DebugConfig);
+                    await tactProductHandler.ProcessProductAsync(NoLocalCache, ForcePrefill);
                 }
             }
 

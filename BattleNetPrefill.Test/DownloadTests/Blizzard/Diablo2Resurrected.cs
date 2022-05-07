@@ -16,7 +16,8 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         {
             // Run the download process only once
             var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
-            _results = await TactProductHandler.ProcessProductAsync(TactProduct.Diablo2Resurrected, new TestConsole(), debugConfig: debugConfig);
+            var tactProductHandler = new TactProductHandler(TactProduct.Diablo2Resurrected, new TestConsole(), debugConfig: debugConfig);
+            _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
         }
 
         [Test]
