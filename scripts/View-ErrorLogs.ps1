@@ -1,0 +1,1 @@
+sudo docker exec -it lancache tail -f /data/logs/error.log

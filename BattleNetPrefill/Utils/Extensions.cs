@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Utils.Debug.Models;
+using ByteSizeLib;
 using CliFx.Infrastructure;
 using Spectre.Console;
 
@@ -86,7 +89,7 @@ namespace BattleNetPrefill.Utils
         }
     }
 
-    public static class Extensions
+    public static class AnsiConsoleExtensions
     {
         public static IAnsiConsole CreateAnsiConsole(this IConsole console)
         {
@@ -96,6 +99,39 @@ namespace BattleNetPrefill.Utils
                 ColorSystem = ColorSystemSupport.Detect,
                 Out = new AnsiConsoleOutput(console.Output)
             });
+        }
+
+        public static Status CreateSpectreStatusSpinner(this IAnsiConsole ansiConsole)
+        {
+            return ansiConsole.Status()
+                              .AutoRefresh(true)
+                              .SpinnerStyle(Style.Parse("green"))
+                              .Spinner(Spinner.Known.Dots2);
+        }
+
+        public static Progress CreateSpectreProgress(this IAnsiConsole ansiConsole)
+        {
+            var spectreProgress = ansiConsole.Progress()
+                                             .HideCompleted(true)
+                                             .AutoClear(true)
+                                             .Columns(
+                                                 new TaskDescriptionColumn(),
+                                                 new ProgressBarColumn(), 
+                                                 new PercentageColumn(), 
+                                                 new RemainingTimeColumn(), 
+                                                 new DownloadedColumn(), 
+                                                 new TransferSpeedColumn());
+            return spectreProgress;
+        }
+
+    }
+
+    public static class Extensions
+    {
+        //TODO implement this throughout the codebase
+        public static ByteSize ToByteSize(this List<Request> requests)
+        {
+            return ByteSize.FromBytes(requests.Sum(e => e.TotalBytes));
         }
     }
 }

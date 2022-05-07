@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using BattleNetPrefill.Web;
@@ -18,11 +19,6 @@ namespace BattleNetPrefill
         private readonly TactProduct _product;
         private readonly IAnsiConsole _ansiConsole;
         private readonly DebugConfig _debugConfig;
-
-        private Status SpectreStatusSpinner => _ansiConsole.Status()
-                                           .AutoRefresh(true)
-                                           .SpinnerStyle(Style.Parse("green"))
-                                           .Spinner(Spinner.Known.Dots2);
 
         /// <summary>
         /// Creates a new TactProductHandler for the specified product.
@@ -57,7 +53,7 @@ namespace BattleNetPrefill
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = null;
-            await SpectreStatusSpinner.StartAsync("Getting latest version info...", async ctx =>
+            await _ansiConsole.CreateSpectreStatusSpinner().StartAsync("Getting latest version info...", async ctx =>
             {
                 await cdnRequestManager.InitializeAsync(_product);
                 targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
@@ -71,7 +67,7 @@ namespace BattleNetPrefill
                 return null;
             }
 
-            await SpectreStatusSpinner.StartAsync("Start", async ctx =>
+            await _ansiConsole.CreateSpectreStatusSpinner().StartAsync("Start", async ctx =>
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
@@ -92,13 +88,15 @@ namespace BattleNetPrefill
             });
 
             // Actually start the download of any deferred requests
-            await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
+            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
+            if (downloadSuccess)
+            {
+                SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
+            }
 
             timer.Stop();
             AnsiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
             
-            SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
-
             if (!_debugConfig.CompareAgainstRealRequests)
             {
                 return null;
@@ -130,11 +128,6 @@ namespace BattleNetPrefill
 
         private void SaveDownloadedProductVersion(CdnRequestManager cdn, VersionsEntry latestVersion)
         {
-            if (cdn.ErrorCount != 0)
-            {
-                return;
-            }
-
             var versionFilePath = $"{Config.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
             File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }

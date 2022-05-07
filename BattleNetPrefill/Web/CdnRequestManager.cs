@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Structs.Enums;
+using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
@@ -25,9 +25,13 @@ namespace BattleNetPrefill.Web
 
         private readonly List<string> _cdnList = new List<string> 
         {
-            "level3.blizzard.com",      // Level3
-            "cdn.blizzard.com"          // Official regionless CDN
+            "level3.blizzard.com",  // Level3
+            "cdn.blizzard.com",     // Official region-less CDN
+            "us.cdn.blizzard.com"
         };
+
+        private int _retryCount;
+        private string _currentCdn => _cdnList[_retryCount];
 
         /// <summary>
         /// The root path used to find the product's data on the CDN.  Must be queried from the patch API.
@@ -37,8 +41,6 @@ namespace BattleNetPrefill.Web
         private readonly Uri _battleNetPatchUri;
         
         private readonly List<Request> _queuedRequests = new List<Request>();
-
-        public int ErrorCount { get; private set; }
 
         /// <summary>
         /// When enabled, will skip using any cached files from disk.  The disk cache can speed up repeated runs, however it can use up a non-trivial amount
@@ -62,7 +64,7 @@ namespace BattleNetPrefill.Web
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         #endregion
-
+        
         public CdnRequestManager(Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
@@ -71,8 +73,7 @@ namespace BattleNetPrefill.Web
 
             _client = new HttpClient
             {
-				//TODO is this needed?
-                Timeout = Timeout.InfiniteTimeSpan
+                Timeout = TimeSpan.FromSeconds(15)
             };
         }
 
@@ -81,10 +82,8 @@ namespace BattleNetPrefill.Web
         /// </summary>
         public async Task InitializeAsync(TactProduct currentProduct)
         {
-            // Loading CDNs
+            // Loading current CDNs
             var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(this, currentProduct);
-
-            _productBasePath = cdnsFile.entries[0].path;
 
             // Adds any missing CDN hosts
             foreach (var host in cdnsFile.entries.SelectMany(e => e.hosts))
@@ -94,7 +93,11 @@ namespace BattleNetPrefill.Web
                     _cdnList.Add(host);
                 }
             }
+
+            _productBasePath = cdnsFile.entries[0].path;
         }
+
+        #region Queued Request Handling
 
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
@@ -117,33 +120,80 @@ namespace BattleNetPrefill.Web
             }
             _queuedRequests.Add(request);
         }
-        
-        public async Task DownloadQueuedRequestsAsync(IAnsiConsole ansiConsole)
+
+        /// <summary>
+        /// Attempts to download all queued requests.  If all downloads are successful, will return true.
+        /// In the case of any failed downloads, the failed downloads will be retried up to 3 times.  If the downloads fail 3 times, then
+        /// false will be returned
+        /// </summary>
+        /// <param name="ansiConsole"></param>
+        /// <returns>True if all downloads succeeded.  False if downloads failed 3 times.</returns>
+        public async Task<bool> DownloadQueuedRequestsAsync(IAnsiConsole ansiConsole)
         {
+            // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
-            ByteSize totalSize = ByteSize.FromBytes(coalescedRequests.Sum(e => e.TotalBytes));
+
+            ByteSize totalSize = coalescedRequests.ToByteSize();
             AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
-            // Configuring the progress bar
-            var progressBar = ansiConsole.Progress()
-                       .HideCompleted(false)
-                       .AutoClear(false)
-                       .Columns(new ProgressBarColumn(), new PercentageColumn(), new RemainingTimeColumn(), new DownloadedColumn(), new TransferSpeedColumn());
-            
-            await progressBar.StartAsync(async ctx =>
-            {
-                // Kicking off the download
-                var progressTask = ctx.AddTask("Downloading...", new ProgressTaskSettings { MaxValue = totalSize.Bytes });
-                
-                await coalescedRequests.ParallelForEachAsync(async item =>
-                {
-                    await GetRequestAsBytesAsync(item, progressTask);
-                }, maxDegreeOfParallelism: 8);
+            ConcurrentBag<Request> failedRequests = null;
 
-                // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
-                progressTask.Increment(progressTask.MaxValue);
+            await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
+            {
+                failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
+                while (failedRequests.Any() && _retryCount < 3)
+                {
+                    failedRequests = await AttemptDownloadAsync(ctx, $"Retrying  {_retryCount + 1}..", failedRequests.ToList());
+                    _retryCount++;
+                    await Task.Delay(2000);
+                }
             });
+
+            // Handling final failed requests
+            if (failedRequests.Any())
+            {
+                ansiConsole.MarkupLine(Red($"{failedRequests.Count} failed downloads"));
+                foreach (var request in failedRequests)
+                {
+                    AnsiConsole.MarkupLine(Red($"Error downloading : {request.Uri} {request.LowerByteRange}-{request.UpperByteRange}"));
+                }
+                return false;
+            }
+
+            return true;
         }
+
+        /// <summary>
+        /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="taskTitle"></param>
+        /// <param name="requestsToDownload"></param>
+        /// <returns>A list of failed requests</returns>
+        private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requestsToDownload)
+        {
+            double requestTotalSize = requestsToDownload.ToByteSize().Bytes;
+            var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
+
+            var failedRequests = new ConcurrentBag<Request>();
+            await requestsToDownload.ParallelForEachAsync(async request =>
+            {
+                try
+                {
+                    await GetRequestAsBytesAsync(request, progressTask);
+                }
+                catch (Exception e)
+                {
+                    failedRequests.Add(request);
+                }
+            }, maxDegreeOfParallelism: 8);
+
+            // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
+            progressTask.Increment(progressTask.MaxValue);
+            return failedRequests;
+        }
+
+        #endregion
 
         /// <summary>
         /// Requests data from Blizzard's CDN, and returns the raw response.
@@ -191,8 +241,8 @@ namespace BattleNetPrefill.Web
             {
                 return null;
             }
-
-            var uri = new Uri($"http://{_cdnList[0]}/{request.Uri}");
+            
+            var uri = new Uri($"http://{_currentCdn}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)
@@ -215,10 +265,11 @@ namespace BattleNetPrefill.Web
 
             if (!responseMessage.IsSuccessStatusCode)
             {
-                throw new FileNotFoundException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL http://{uri}");
+                throw new HttpRequestException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL {uri}");
             }
             if(writeToDevNull)
             {
+                var totalBytesRead = 0;
                 try
                 {
                     var buffer = new byte[8192];
@@ -231,15 +282,15 @@ namespace BattleNetPrefill.Web
                             return null;
                         }
                         task.Increment(read);
+                        totalBytesRead += read;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    ErrorCount++;
-                    AnsiConsole.MarkupLine(Red($"Error downloading : {uri} {startBytes}-{endBytes}"));
+                    // Making sure that the current request is marked as "complete" in the progress bar, otherwise the progress bar will never hit 100%
+                    task.Increment(request.TotalBytes - totalBytesRead);
+                    throw;
                 }
-                
-                return null;
             }
 
             await using var memoryStream = new MemoryStream();
