@@ -128,8 +128,7 @@ namespace BattleNetPrefill.Utils
 
     public static class Extensions
     {
-        //TODO implement this throughout the codebase
-        public static ByteSize ToByteSize(this List<Request> requests)
+        public static ByteSize SumTotalBytes(this List<Request> requests)
         {
             return ByteSize.FromBytes(requests.Sum(e => e.TotalBytes));
         }

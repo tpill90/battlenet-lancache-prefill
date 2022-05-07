@@ -133,7 +133,7 @@ namespace BattleNetPrefill.Web
             // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
 
-            ByteSize totalSize = coalescedRequests.ToByteSize();
+            ByteSize totalSize = coalescedRequests.SumTotalBytes();
             AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
             ConcurrentBag<Request> failedRequests = null;
@@ -172,7 +172,7 @@ namespace BattleNetPrefill.Web
         /// <returns>A list of failed requests</returns>
         private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requestsToDownload)
         {
-            double requestTotalSize = requestsToDownload.ToByteSize().Bytes;
+            double requestTotalSize = requestsToDownload.SumTotalBytes().Bytes;
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
 
             var failedRequests = new ConcurrentBag<Request>();
