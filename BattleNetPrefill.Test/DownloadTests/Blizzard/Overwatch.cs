@@ -32,7 +32,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public void MissedBandwidth()
         {
             //TODO improve
-            var expected = ByteSize.FromMegaBytes(3);
+            var expected = ByteSize.FromKiloBytes(5);
 
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
@@ -41,7 +41,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public void WastedBandwidth()
         {
             //TODO improve this
-            var expected = ByteSize.FromMegaBytes(2);
+            var expected = ByteSize.FromKiloBytes(4);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }

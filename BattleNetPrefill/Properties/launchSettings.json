@@ -2,7 +2,11 @@
   "profiles": {
     "BattleNetPrefill": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --activision"
+      "commandLineArgs": "prefill -p s2 --force"
+    },
+    "Prefill All": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill --all --force"
     }
   }
 }
