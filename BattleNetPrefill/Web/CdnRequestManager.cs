@@ -182,7 +182,7 @@ namespace BattleNetPrefill.Web
                 {
                     await GetRequestAsBytesAsync(request, progressTask);
                 }
-                catch (Exception e)
+                catch
                 {
                     failedRequests.Add(request);
                 }
@@ -285,7 +285,7 @@ namespace BattleNetPrefill.Web
                         totalBytesRead += read;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // Making sure that the current request is marked as "complete" in the progress bar, otherwise the progress bar will never hit 100%
                     task.Increment(request.TotalBytes - totalBytesRead);
