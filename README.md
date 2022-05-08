@@ -18,7 +18,11 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 # Installation
 1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/Battlenet-lancache-prefill/releases) page.
 2.  Unzip to a directory of your choice
-
+3.  (Windows Only)  Configure your terminal to use Unicode, for much nicer looking UI output.
+    - Unicode on Windows is not enabled by default, however adding the following to your Powershell `profile.ps1` will enable it.
+    - `[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+`
+    - If you do not already have a Powershell profile created, follow this step-by-step guide https://lazyadmin.nl/powershell/powershell-profile/
 # Basic Usage
 
 A single game can be downloaded by specifying a single product code
