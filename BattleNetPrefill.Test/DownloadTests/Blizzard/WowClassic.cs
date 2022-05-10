@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
 using NUnit.Framework;
@@ -8,6 +9,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
+    [ExcludeFromCodeCoverage, Category("NoCoverage")]
     public class WowClassic
     {
         private ComparisonResult _results;
