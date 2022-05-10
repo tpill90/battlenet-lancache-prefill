@@ -23,7 +23,7 @@ namespace LogFileGenerator
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.CodBOCW, TactProduct.CodWarzone, TactProduct.CodVanguard, TactProduct.Hearthstone
+            TactProduct.CodBOCW, TactProduct.CodWarzone, TactProduct.CodVanguard, TactProduct.Hearthstone, TactProduct.Overwatch
         };
 
         public static void Main()

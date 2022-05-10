@@ -12,11 +12,18 @@ using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Handlers
 {
-    //TODO document
+    /// <summary>
+    /// Handles the "DownloadFile", which is in essence a "download manifest" listing all files that will need to be downloaded, for a complete installation.
+    /// 
+    /// Handles parsing the raw "DownloadFile".  Additionally, handles determining which files that need to be downloaded based on the download manifest.
+    ///
+    /// See also:
+    /// https://wowdev.wiki/TACT#Download_manifest
+    /// https://github.com/d07RiV/blizzget/wiki/Download-file
+    /// </summary>
     public class DownloadFileHandler
     {
         private readonly CdnRequestManager _cdnRequestManager;
-
         private DownloadFile _downloadFile;
 
         public DownloadFileHandler(CdnRequestManager cdnRequestManager)
@@ -24,7 +31,10 @@ namespace BattleNetPrefill.Handlers
             _cdnRequestManager = cdnRequestManager;
         }
 
-        //TODO document
+        /// <summary>
+        /// Downloads the "DownloadFile", and parses the raw data into a useable format.
+        /// Must be called prior to using <see cref="HandleDownloadFileAsync"/>
+        /// </summary>
         public async Task ParseDownloadFileAsync(BuildConfigFile buildConfig)
         {
             _downloadFile = new DownloadFile();
@@ -71,6 +81,7 @@ namespace BattleNetPrefill.Handlers
             }
 
             // Reading the tags
+            // There will be 1 bit per entry, to determine if a file should be downloaded.  Packing these individual bit into a byte
             int numMaskBytes = (int)((_downloadFile.numEntries + 7) / 8);
             for (int i = 0; i < _downloadFile.numTags; i++)
             {
@@ -91,25 +102,14 @@ namespace BattleNetPrefill.Handlers
             }
         }
         
-        //TODO document method
+        /// <summary>
+        /// Determines which files need to be downloaded, and queues them for download.
+        /// </summary>
         public async Task HandleDownloadFileAsync(ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile, TactProduct targetProduct)
         {
             Dictionary<MD5Hash, IndexEntry> unarchivedFileIndex = await IndexParser.ParseIndexAsync(_cdnRequestManager, RootFolder.data, cdnConfigFile.fileIndex);
 
-            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
-            //TODO do a check to make sure that the tags being used are actually valid for the product
-            List<DownloadTag> tagsToUse = _downloadFile.tags.Where(e => e.Name.Contains("enUS") ||
-                                                                                    e.Name.Contains("Windows") ||
-                                                                                    e.Name.Contains("x86") ||
-                                                                                    e.Name.Contains("noigr")).ToList();
-            if (targetProduct.DefaultTags != null)
-            {
-                tagsToUse.Clear();
-                foreach (var tag in targetProduct.DefaultTags)
-                {
-                    tagsToUse.Add(_downloadFile.tags.FirstOrDefault(e => e.Name.Contains(tag)));
-                }
-            }
+            var tagsToUse = DetermineTagsToUse(targetProduct);
 
             var computedMask = BuildDownloadMask(tagsToUse);
             for (var i = 0; i < _downloadFile.entries.Length; i++)
@@ -117,8 +117,7 @@ namespace BattleNetPrefill.Handlers
                 DownloadEntry current = _downloadFile.entries[i];
                 
                 //Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
-                //TODO document how this works
-                if ((computedMask.Mask[i/8]  & (1 << (i % 8))) == 0)
+                if (!computedMask.FileShouldBeDownloaded(i))
                 {
                     continue;
                 }
@@ -153,38 +152,70 @@ namespace BattleNetPrefill.Handlers
             }
         }
 
-        //TODO document how this works + test
-        private static DownloadTag BuildDownloadMask(List<DownloadTag> tagsToUse)
+        /// <summary>
+        /// Based upon the specified product, determines which download tags should be used.
+        /// The download tags determine which features should be downloaded, ex. Single Player, Multi Player, etc,
+        /// as well as languages(enUS), operating system(Windows,linux), cpu architecture(x86/x64)
+        /// These tags can vary greatly between products, and as such should be considered unique per product.
+        /// </summary>
+        private List<DownloadTag> DetermineTagsToUse(TactProduct targetProduct)
         {
-            // Need to first pre-process groups of similar tags.  Must be combined using logical OR to determine all files that might be installed.
-            // Games like Call of Duty use these tags to determine which features to install (Campaign, Multiplayer, Zombies, etc.)
-            var groupedTags = tagsToUse.GroupBy(e => e.Type).Where(e => e.Count() > 1).ToList();
-            foreach (var group in groupedTags)
+            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
+            //TODO do a check to make sure that the tags being used are actually valid for the product
+            // Default tags that work with most products
+            if (targetProduct.DefaultTags == null)
             {
-                var groupedList = group.ToList();
-                var combinedMask = groupedList.First();
-
-                for (int tagIndex = 1; tagIndex < groupedList.Count; tagIndex++)
-                {
-                    var current = groupedList[tagIndex];
-                    for (int i = 0; i < combinedMask.Mask.Length; i++)
-                    {
-                        combinedMask.Mask[i] |= current.Mask[i];
-                    }
-
-                    tagsToUse.Remove(current);
-                }
+                var tags = new List<string> { "enUS", "Windows", "noigr", "x86_64" };
+                return _downloadFile.tags.Where(e => tags.Contains(e.Name)).ToList();
             }
 
-            // Compute the final mask, which will be used to determine which files to download
+            // Override tags that are specific to this product
+            List<DownloadTag> tagsToUse = new List<DownloadTag>();
+            foreach (var tag in targetProduct.DefaultTags)
+            {
+                var foundTags = _downloadFile.tags.Where(e => e.Name.Contains(tag));
+                tagsToUse.AddRange(foundTags);
+            }
+            return tagsToUse;
+        }
+
+        /// <summary>
+        /// Calculates the final download mask, that determines which files should be downloaded for the current product.
+        /// </summary>
+        internal DownloadTag BuildDownloadMask(List<DownloadTag> tagsToUse)
+        {
+            // Need to first pre-process tags that belong to the same "type".
+            // These tags must be combined using logical OR to determine all files that might be installed.
+            // Games like Call of Duty use these tags to determine which features to install (Campaign, Multiplayer, Zombies, etc.)
+            var tagsByCategory = tagsToUse.GroupBy(e => e.Type)
+                                          .Select(e => e.ToList())
+                                          .Where(e => e.Count > 1) // Nothing to combine if there is only a single tag
+                                          .ToList();
+            foreach (var downloadTags in tagsByCategory)
+            {
+                var combinedMask = downloadTags.First();
+                foreach (var currentTag in downloadTags)
+                {
+                    // Iterate through the two masks, combining them with a logical OR
+                    for (int i = 0; i < combinedMask.Mask.Length; i++)
+                    {
+                        combinedMask.Mask[i] |= currentTag.Mask[i];
+                    }
+                    tagsToUse.Remove(currentTag);
+                }
+                tagsToUse.Add(combinedMask);
+            }
+
+            // Compute the final mask, which will be used to determine which files to download.
+            // Files should only be downloaded if ALL tags say to download the file, eg. perform a logical AND across all tags
             var computedMask = tagsToUse.First();
             tagsToUse.RemoveAt(0);
             
-            foreach (var tag in tagsToUse)
+            foreach (var currentTag in tagsToUse)
             {
                 for (int i = 0; i < computedMask.Mask.Length; i++)
                 {
-                    computedMask.Mask[i] &= tag.Mask[i];
+                    computedMask.Mask[i] &= currentTag.Mask[i];
                 }
             }
 
