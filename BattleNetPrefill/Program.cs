@@ -12,6 +12,8 @@ namespace BattleNetPrefill
     // TODO Tech Debt - Upgrade to dotnet 6.  Compare performance increase, if any.  Compare SingleFile disk size versus dotnet 5
     // TODO Tech Debt - Consider getting some actual test coverage on this project.  Exclude the "Download" tests, since they're not techinically "unit tests"
     // TODO Performance - Research buffer pools to see how they might be able to reduce allocations https://www.google.com/search?client=firefox-b-1-d&q=c%23+binaryprimitives
+    // TODO Performance - Analyze allocations with the .NET Object Allocation tool : https://devblogs.microsoft.com/visualstudio/net-object-allocation-tool-performance/
+    // TODO Performance - Make sure all structs are being defined as readonly - https://devblogs.microsoft.com/premier-developer/avoiding-struct-and-readonly-reference-performance-pitfalls-with-errorprone-net/
     public static class Program
     {
         public static async Task<int> Main()
