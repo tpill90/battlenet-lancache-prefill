@@ -63,6 +63,7 @@ namespace BattleNetPrefill.Utils.Debug
 
             foreach (var rawRequest in rawRequests)
             {
+                //TODO should this be removed from here now that the actual log generator takes care of it?
                 // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
                 if (!(rawRequest.Contains("GET") && rawRequest.Contains("[blizzard]")))
                 {
@@ -112,6 +113,11 @@ namespace BattleNetPrefill.Utils.Debug
         public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
+
+            if (!Directory.Exists(logFolder))
+            {
+                Directory.CreateDirectory(logFolder);
+            }
 
             var latestFile = new DirectoryInfo(logFolder)
                 .GetFiles()
