@@ -21,9 +21,8 @@ namespace BattleNetPrefill.Utils.Debug
 
             // Need to re-coalesce, in the case that we made duplicate requests.  Doesn't really matter, since the lancache can serve them again so quickly
             generatedRequests = RequestUtils.CoalesceRequests(generatedRequests, true);
-            //TODO this takes about 200ms on wow_classic
             var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product);
-
+            
             var comparisonResult = new ComparisonResult
             {
                 RequestMadeCount = generatedRequests.Count,
@@ -51,8 +50,7 @@ namespace BattleNetPrefill.Utils.Debug
             AnsiConsole.MarkupLine($"Comparison complete! {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
             return comparisonResult;
         }
-
-        //TODO improve the performance on this.  Extremely slow for Wow
+        
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
             CompareExactMatches(generatedRequests, originalRequests);
@@ -131,7 +129,7 @@ namespace BattleNetPrefill.Utils.Debug
             originalRequests.Clear();
 
             // Bucketing requests by MD5 to speed up comparisons
-            Dictionary<MD5Hash, IGrouping<MD5Hash, Request>> generatedGrouped = generatedRequests.GroupBy(e => e.CdnKey).ToDictionary(e => e.Key, e => e);
+            Dictionary<MD5Hash, List<Request>> generatedGrouped = generatedRequests.GroupBy(e => e.CdnKey).ToDictionary(e => e.Key, e => e.ToList());
             
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
             while (requestsToProcess.Any())
@@ -139,7 +137,8 @@ namespace BattleNetPrefill.Utils.Debug
                 var current = requestsToProcess.First();
 
                 // Checking to see if we have any requests that match on MD5
-                if (!generatedGrouped.TryGetValue(current.CdnKey, out var group))
+                List<Request> group;
+                if (!generatedGrouped.TryGetValue(current.CdnKey, out group))
                 {
                     // No match found, continuing
                     requestsToProcess.RemoveAt(0);
@@ -154,7 +153,7 @@ namespace BattleNetPrefill.Utils.Debug
                     if (indexMatch != null)
                     {
                         requestsToProcess.RemoveAt(0);
-                        generatedRequests.Remove(indexMatch);
+                        group.Remove(indexMatch);
                         continue;
                     }
                 }
@@ -166,7 +165,7 @@ namespace BattleNetPrefill.Utils.Debug
                 if (exactMatch != null)
                 {
                     requestsToProcess.RemoveAt(0);
-                    generatedRequests.Remove(exactMatch);
+                    group.Remove(exactMatch);
                     continue;
                 }
 
@@ -174,6 +173,10 @@ namespace BattleNetPrefill.Utils.Debug
                 requestsToProcess.RemoveAt(0);
                 originalRequests.Add(current);
             }
+
+            // Finally, take the leftover generated requests, and aggregate them back into their original list
+            generatedRequests.Clear(); 
+            generatedRequests.AddRange(generatedGrouped.SelectMany(e => e.Value).ToList());
         }
 
         private void CompareRangeMatches(List<Request> generatedRequests, List<Request> originalRequests)

@@ -11,6 +11,7 @@ namespace BattleNetPrefill
     // TODO Build Pipeline - Add unit tests stage
     // TODO Build Pipeline - Add dotnet format + configuration to this project.  Run it as a build stage
     // TODO Build Pipeline - Look into having a build + publish stage to create a docker image.
+    // TODO Tests - Add test case to Full Download tests, that compares actual download size vs real download size.  Wow Classic seems to be off
     // TODO Tech Debt - Upgrade to dotnet 6.  Compare performance increase, if any.  Compare SingleFile disk size versus dotnet 5
     // TODO Tech Debt - Consider getting some actual test coverage on this project.  Exclude the "Download" tests, since they're not techinically "unit tests"
     // TODO Performance - Research buffer pools to see how they might be able to reduce allocations https://www.google.com/search?client=firefox-b-1-d&q=c%23+binaryprimitives
