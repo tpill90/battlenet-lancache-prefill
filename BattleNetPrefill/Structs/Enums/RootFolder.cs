@@ -1,4 +1,6 @@
-﻿namespace BattleNetPrefill.Structs
+﻿using Utf8Json;
+
+namespace BattleNetPrefill.Structs
 {
     /// <summary>
     /// Files are grouped on Blizzard's CDNs in one of three folders.
@@ -24,8 +26,34 @@
         /// </summary>
         public static readonly RootFolder patch = new RootFolder("patch");
 
-        public RootFolder(string name) : base(name)
+        private RootFolder(string name) : base(name)
         {
+        }
+    }
+
+    /// <summary>
+    /// Used to override the default serialization/deserialization behavior of Utf8Json
+    /// </summary>
+    public sealed class RootFolderFormatter : IJsonFormatter<RootFolder>, IObjectPropertyNameFormatter<RootFolder>
+    {
+        public void Serialize(ref JsonWriter writer, RootFolder value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteString(value.ToString());
+        }
+
+        public RootFolder Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            return RootFolder.Parse(reader.ReadString());
+        }
+
+        public void SerializeToPropertyName(ref JsonWriter writer, RootFolder value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteString(value.ToString());
+        }
+
+        public RootFolder DeserializeFromPropertyName(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            return RootFolder.Parse(reader.ReadString());
         }
     }
 }
