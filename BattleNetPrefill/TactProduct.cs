@@ -20,15 +20,22 @@ namespace BattleNetPrefill
         public static readonly TactProduct Hearthstone = new TactProduct("hsb") { DisplayName = "Hearthstone", DefaultTags = new[] { "Windows", "enUS" }, IsBlizzard = true };
         public static readonly TactProduct HeroesOfTheStorm = new TactProduct("hero") { DisplayName = "Heroes of the Storm", IsBlizzard = true };
 
-        public static readonly TactProduct Starcraft1 = new TactProduct("s1") {DisplayName = "Starcraft Remastered", IsBlizzard = true };
+        public static readonly TactProduct Starcraft1 = new TactProduct("s1") {DisplayName = "Starcraft Remastered", 
+            DefaultTags = new[] { "Windows", "enUS", "x86", "noigr" }, 
+            IsBlizzard = true };
+
         public static readonly TactProduct Starcraft2 = new TactProduct("s2") { DisplayName = "Starcraft 2", 
             DefaultTags = new[] { "Windows", "enUS" }, 
             IsBlizzard = true };
 
-        public static readonly TactProduct Overwatch = new TactProduct("pro") { DisplayName = "Overwatch", IsBlizzard = true };
+        public static readonly TactProduct Overwatch = new TactProduct("pro") { DisplayName = "Overwatch",
+            DefaultTags = new[] { "DevReg", "enUS" },
+            IsBlizzard = true };
 
         public static readonly TactProduct Warcraft3Reforged = new TactProduct("w3") { DisplayName = "Warcraft 3: Reforged", IsBlizzard = true };
-        public static readonly TactProduct WorldOfWarcraft = new TactProduct("wow") { DisplayName = "World Of Warcraft", IsBlizzard = true };
+        public static readonly TactProduct WorldOfWarcraft = new TactProduct("wow") { DisplayName = "World Of Warcraft",
+            DefaultTags = new[] { "Windows", "enUS", "x86" },
+            IsBlizzard = true };
         public static readonly TactProduct WowClassic = new TactProduct("wow_classic") { DisplayName = "WoW Classic", 
             DefaultTags = new[] { "Windows", "enUS", "x86_64", "US" }, 
             IsBlizzard = true };

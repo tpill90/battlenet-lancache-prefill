@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
 using NUnit.Framework;
 using Spectre.Console.Testing;
@@ -7,6 +8,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
+    [ExcludeFromCodeCoverage, Category("NoCoverage")]
     public class HeroesOfTheStorm
     {
         private ComparisonResult _results;

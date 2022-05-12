@@ -62,7 +62,6 @@ namespace BattleNetPrefill
             // Skip prefilling if we've already prefilled the latest version 
             if (!forcePrefill && IsProductUpToDate(targetVersion.Value))
             {
-                //TODO I feel like this is a bit hard to read.  Formatting could be better
                 AnsiConsole.MarkupLine($"   {Green("Up to date! Skipping..")}");
                 return null;
             }

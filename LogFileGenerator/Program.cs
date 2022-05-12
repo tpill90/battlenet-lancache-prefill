@@ -16,14 +16,16 @@ namespace LogFileGenerator
 {
     public static class Program
     {
-        private static string RootInstallDir = @"E:\BattleNet";
-        private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
-
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(Config.BattleNetPatchUri));
+
+        private static string RootInstallDir = @"E:\BattleNet";
+        //private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
+        //TODO Open a pull request to add CoD install tag support, and switch back once this is merged into the actual repo
+        private static readonly string BnetInstallerPath = @"C:\Users\Tim\Dropbox\Programming\ThirdParty Repos\Battle.Net-Installer\BNetInstaller\bin\Release\net6.0\BNetInstaller.exe";
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.CodBOCW, TactProduct.CodWarzone, TactProduct.CodVanguard, TactProduct.Hearthstone, TactProduct.Overwatch
+            TactProduct.Hearthstone, TactProduct.CodBOCW
         };
 
         public static void Main()
@@ -100,14 +102,10 @@ namespace LogFileGenerator
             {
                 Directory.CreateDirectory(installPath);
             }
-            //TODO remove this hardcoded path
-            var info = new ProcessStartInfo($@"C:\Users\Tim\Dropbox\Apps\Gaming\BNetInstaller.exe", @$"--prod {product.ProductCode} --lang enus --dir {installPath}")
-            {
-            };
-            var process = Process.Start(info);
+
+            var process = Process.Start(new ProcessStartInfo(BnetInstallerPath , @$"--prod {product.ProductCode} --lang enus --dir {installPath}"));
             process.WaitForExit();
-
-
+            
             AnsiConsole.MarkupLine($"Installing done!");
         }
 
@@ -119,7 +117,7 @@ namespace LogFileGenerator
 
         private static void CopyLogsToHost(TactProduct product)
         {
-            AnsiConsole.WriteLine($"Copying logs to host...");
+            AnsiConsole.WriteLine("Copying logs to host...");
 
             var logFileFolder = $@"{Config.LogFileBasePath}\{product.DisplayName.Replace(":", "")}";
             // Deleting original logs
@@ -137,23 +135,53 @@ namespace LogFileGenerator
             };
             var process = Process.Start(info);
             process.WaitForExit();
-
-            //TODO cleanup crappy log entries before zipping.  Remove things like Steam logs, or bnt004
+            
+            FilterLogs(logFilePath);
 
             // Creating a zip file
             var zipPath = @$"{logFileFolder}\{cdnVersion.versionsName}.zip";
             using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
-            var entry = archive.CreateEntryFromFile(logFilePath, Path.GetFileName(logFilePath), CompressionLevel.Optimal);
+            archive.CreateEntryFromFile(logFilePath, Path.GetFileName(logFilePath), CompressionLevel.Optimal);
+        }
+
+        /// <summary>
+        /// Filters out junk results from the logs, so that they don't pollute the result set with false negatives
+        /// </summary>
+        /// <param name="logFilePath"></param>
+        private static void FilterLogs(string logFilePath)
+        {
+            var linesToKeep = new List<string>();
+            foreach (var line in File.ReadLines(logFilePath))
+            {
+                // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
+                if (!(line.Contains("GET") && line.Contains("[blizzard]")))
+                {
+                    continue;
+                }
+                // These requests seem to be made by the Battle.net client itself, cause false positives in our log comparison logic
+                if (line.Contains("bnt002") || line.Contains("bnt004"))
+                {
+                    continue;
+                }
+                linesToKeep.Add(line);
+            }
+            File.WriteAllLines(logFilePath, linesToKeep);
         }
 
         private static void DeleteGameFiles()
         {
-            AnsiConsole.WriteLine($"Removing installed game files...");
+            AnsiConsole.WriteLine("Removing installed game files...");
 
             foreach (var dir in Directory.GetDirectories(RootInstallDir))
             {
                 AnsiConsole.Markup($"   Deleting {Yellow(dir)}...\n");
                 Directory.Delete(dir, true);
+            }
+
+            foreach (var file in Directory.GetFiles(RootInstallDir))
+            {
+                AnsiConsole.Markup($"   Deleting {Yellow(file)}...\n");
+                File.Delete(file);
             }
         }
     }
