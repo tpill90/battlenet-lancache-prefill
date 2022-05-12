@@ -189,20 +189,32 @@ namespace BattleNetPrefill.Utils.Debug
             }
             originalRequests.Clear();
 
+            // Bucketing requests by MD5 to speed up comparisons
+            Dictionary<MD5Hash, List<Request>> generatedGrouped = generatedRequests.GroupBy(e => e.CdnKey).ToDictionary(e => e.Key, e => e.ToList());
+
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
             while (requestsToProcess.Any())
             {
                 var current = requestsToProcess.First();
 
-                var rangeMatch = generatedRequests.SingleOrDefault(e => e.CdnKey == current.CdnKey
-                                                                && e.RootFolder == current.RootFolder
-                                                                && current.LowerByteRange >= e.LowerByteRange
-                                                                && current.UpperByteRange <= e.UpperByteRange);
+                // Checking to see if we have any requests that match on MD5
+                List<Request> group;
+                if (!generatedGrouped.TryGetValue(current.CdnKey, out group))
+                {
+                    // No match found, continuing
+                    requestsToProcess.RemoveAt(0);
+                    originalRequests.Add(current);
+                    continue;
+                }
+
+                var rangeMatch = group.SingleOrDefault(e => e.RootFolder == current.RootFolder
+                                                            && current.LowerByteRange >= e.LowerByteRange
+                                                            && current.UpperByteRange <= e.UpperByteRange);
                 if (rangeMatch != null)
                 {
                     // Breaking up the remainder into new slices
-                    generatedRequests.AddRange(SplitRequests(rangeMatch, current));
-                    generatedRequests.Remove(rangeMatch);
+                    group.AddRange(SplitRequests(rangeMatch, current));
+                    group.Remove(rangeMatch);
 
                     requestsToProcess.RemoveAt(0);
                     continue;
@@ -212,6 +224,9 @@ namespace BattleNetPrefill.Utils.Debug
                 requestsToProcess.RemoveAt(0);
                 originalRequests.Add(current);
             }
+            // Finally, take the leftover generated requests, and aggregate them back into their original list
+            generatedRequests.Clear();
+            generatedRequests.AddRange(generatedGrouped.SelectMany(e => e.Value).ToList());
         }
 
         private List<Request> SplitRequests(Request match, Request current)
