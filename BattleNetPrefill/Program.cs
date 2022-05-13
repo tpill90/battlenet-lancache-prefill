@@ -6,8 +6,6 @@ namespace BattleNetPrefill
 {
     // TODO - Bug - Work on reducing the wild fluctuations that can happen when re-prefilling a product.  Ex. zeus will bounce between 100mbs -> 1.1gbs
     // TODO Tech Debt - Add more Roslyn analyzers
-    // TODO Build Pipeline - Look into code analysis pipeliens https://github.com/actions/starter-workflows/tree/main/code-scanning
-    // TODO Build Pipeline - Add dotnet format + configuration to this project.  Run it as a build stage
     // TODO Build Pipeline - Look into having a build + publish stage to create a docker image.
     // TODO Tests - Add test case to Full Download tests, that compares actual download size vs real download size.  Wow Classic seems to be off
     // TODO Tests - Add test case to Full Download tests, that compares tests w\o a size to real requests missing size

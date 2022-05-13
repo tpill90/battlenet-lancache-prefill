@@ -15,11 +15,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.github\workflows\actions.yml = .github\workflows\actions.yml
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{E47D1521-6631-4326-9906-E5794767BB8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogFileGenerator", "LogFileGenerator\LogFileGenerator.csproj", "{EB693B7C-27A1-46FC-8D5E-6516120BDBED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogFileGenerator", "LogFileGenerator\LogFileGenerator.csproj", "{EB693B7C-27A1-46FC-8D5E-6516120BDBED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
