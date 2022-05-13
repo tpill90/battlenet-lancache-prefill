@@ -29,7 +29,7 @@ namespace BattleNetPrefill.Utils.Debug
         public static List<Request> GetSavedRequestLogs(string logBasePath, TactProduct product)
         {
             var timer = Stopwatch.StartNew();
-            var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
+            var logFolder = $@"{logBasePath}/{product.DisplayName.Replace(":", "")}";
 
             var latestFile = new DirectoryInfo(logFolder)
                                     .GetFiles()
@@ -51,7 +51,7 @@ namespace BattleNetPrefill.Utils.Debug
                 List<Request> requestsToReplay = RequestUtils.CoalesceRequests(rawLogs);
 
                 // Save the coalesced results to speed up future runs
-                var coalescedFileName = $"{logFolder}\\{latestFile.Name.Replace(".zip", ".coalesced.log")}";
+                var coalescedFileName = $@"{logFolder}/{latestFile.Name.Replace(".zip", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonSerializer.ToJsonString(requestsToReplay, DefaultUtf8JsonResolver));
                 
                 AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");

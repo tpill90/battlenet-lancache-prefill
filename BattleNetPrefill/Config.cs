@@ -26,7 +26,7 @@ namespace BattleNetPrefill
             CompareAgainstRealRequests = false
         };
 
-        public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetRepoRoot()}\Logs";
+        public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
     }
 
     public class DebugConfig
