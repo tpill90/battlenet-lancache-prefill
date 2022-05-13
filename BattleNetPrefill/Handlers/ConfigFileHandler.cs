@@ -27,7 +27,7 @@ namespace BattleNetPrefill.Handlers
             var content = Encoding.UTF8.GetString(await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.config, targetVersion.cdnConfig));
             var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            for (var i = 0; i < cdnConfigLines.Count(); i++)
+            for (var i = 0; i < cdnConfigLines.Length; i++)
             {
                 if (cdnConfigLines[i].StartsWith("#") || cdnConfigLines[i].Length == 0) { continue; }
                 var cols = cdnConfigLines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
@@ -99,15 +99,15 @@ namespace BattleNetPrefill.Handlers
         
         public async Task<VersionsEntry> GetLatestVersionEntryAsync(TactProduct tactProduct)
         {
-            string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
             var versions = new VersionsFile();
-
-            content = content.Replace("\0", "");
-            var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
+            
+            var lines = content.Replace("\0", "")
+                               .Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             var lineList = new List<string>();
 
-            for (var i = 0; i < lines.Count(); i++)
+            for (var i = 0; i < lines.Length; i++)
             {
                 if (lines[i][0] != '#')
                 {
@@ -119,15 +119,15 @@ namespace BattleNetPrefill.Handlers
 
             if (lines.Any())
             {
-                versions.entries = new VersionsEntry[lines.Count() - 1];
+                versions.entries = new VersionsEntry[lines.Length - 1];
 
                 var cols = lines[0].Split('|');
 
-                for (var c = 0; c < cols.Count(); c++)
+                for (var c = 0; c < cols.Length; c++)
                 {
                     var friendlyName = cols[c].Split('!').ElementAt(0);
 
-                    for (var i = 1; i < lines.Count(); i++)
+                    for (var i = 1; i < lines.Length; i++)
                     {
                         var row = lines[i].Split('|');
 

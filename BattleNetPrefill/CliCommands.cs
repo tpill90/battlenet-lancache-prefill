@@ -87,7 +87,7 @@ namespace BattleNetPrefill
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
 
-                var ansiConsole = console.CreateAnsiConsole(); ;
+                var ansiConsole = console.CreateAnsiConsole();
                 ansiConsole.MarkupLine($"Prefilling {Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
