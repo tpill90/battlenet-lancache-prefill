@@ -123,7 +123,7 @@ namespace BattleNetPrefill.Handlers
                     continue;
                 }
 
-                IndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(current.hash);
+                ArchiveIndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(current.hash);
                 // If a file is not found in the archive index, then there is a possibility that it is an "unarchived" file.
                 if (archiveIndex == null)
                 {
@@ -144,7 +144,7 @@ namespace BattleNetPrefill.Handlers
                     continue;
                 }
 
-                IndexEntry e = archiveIndex.Value;
+                ArchiveIndexEntry e = archiveIndex.Value;
 
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 var startBytes = e.offset;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,27 +13,37 @@ using Spectre.Console;
 
 namespace BattleNetPrefill.Utils
 {
+    //TODO write some tests for these
     public static class BinaryReaderExtensions
     {
         public static short ReadInt16BigEndian(this BinaryReader reader)
         {
-            byte[] val = reader.ReadBytes(2);
-            return (short)(val[1] | val[0] << 8);
+            //TODO refactor this so that it doesn't need .ReadBytes(), but instead just gets a span
+            return BinaryPrimitives.ReadInt16BigEndian(reader.ReadBytes(2));
         }
 
         public static Int32 ReadInt32BigEndian(this BinaryReader reader)
         {
-            return BitConverter.ToInt32(reader.ReadInvertedBytes(4), 0);
+            //TODO refactor this so that it doesn't need .ReadBytes(), but instead just gets a span
+            return BinaryPrimitives.ReadInt32BigEndian(reader.ReadBytes(4));
         }
 
         public static UInt16 ReadUInt16BigEndian(this BinaryReader reader)
         {
-            return BitConverter.ToUInt16(reader.ReadInvertedBytes(2), 0);
+            //TODO refactor this so that it doesn't need .ReadBytes(), but instead just gets a span
+            return BinaryPrimitives.ReadUInt16BigEndian(reader.ReadBytes(2));
         }
 
         public static UInt32 ReadUInt32BigEndian(this BinaryReader reader)
         {
-            return BitConverter.ToUInt32(reader.ReadInvertedBytes(4), 0);
+            //TODO refactor this so that it doesn't need .ReadBytes(), but instead just gets a span
+            return BinaryPrimitives.ReadUInt32BigEndian(reader.ReadBytes(4));
+        }
+
+        public static UInt32 ReadUInt32BigEndian(this BinaryReader reader, byte[] buffer)
+        {
+            reader.Read(buffer, 0, buffer.Length);
+            return BinaryPrimitives.ReadUInt32BigEndian(buffer);
         }
 
         public static UInt64 ReadUInt40BigEndian(this BinaryReader reader)
@@ -46,12 +57,17 @@ namespace BattleNetPrefill.Utils
             return (ulong)(b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5);
         }
 
-        private static byte[] ReadInvertedBytes(this BinaryReader reader, int byteCount)
+        //TODO replace everything with this
+        public static MD5Hash ReadMD5Hash(this BinaryReader reader, byte[] buffer)
         {
-            byte[] byteArray = reader.ReadBytes(byteCount);
-            Array.Reverse(byteArray);
+            reader.Read(buffer, 0, buffer.Length);
+            return Unsafe.ReadUnaligned<MD5Hash>(ref buffer[0]);
+        }
 
-            return byteArray;
+        //TODO Comment
+        public static byte[] GetBuffer<T>() where T : unmanaged
+        {
+            return new byte[Unsafe.SizeOf<T>()];
         }
 
         public static T Read<T>(this BinaryReader reader) where T : unmanaged

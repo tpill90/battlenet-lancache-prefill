@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
+using Spectre.Console;
 
 namespace BattleNetPrefill.Handlers
 {
@@ -20,7 +22,7 @@ namespace BattleNetPrefill.Handlers
 
         // Archives are built out using multiple dictionaries, since in some cases the large number of entries (possibly 3 million) causes performance issues
         // with C#'s Dictionary class.  Building them out in parallel, then doing multiple lookups ends up being faster than having a single Dictionary.
-        private readonly List<Dictionary<MD5Hash, IndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, IndexEntry>>();
+        private readonly List<Dictionary<MD5Hash, ArchiveIndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, ArchiveIndexEntry>>();
 
         public ArchiveIndexHandler(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
@@ -36,11 +38,11 @@ namespace BattleNetPrefill.Handlers
         /// </summary>
         /// <param name="eKey">The MD5 hash of the file to lookup.  An EKey is the hash of the file itself. </param>
         /// <returns>An IndexEntry if the file exists in an archive.  Null if it is not an archived file.</returns>
-        public IndexEntry? ArchivesContainKey(in MD5Hash eKey)
+        public ArchiveIndexEntry? ArchivesContainKey(in MD5Hash eKey)
         {
             foreach (var dict in _indexDictionaries)
             {
-                if (dict.TryGetValue(eKey, out IndexEntry returnValue))
+                if (dict.TryGetValue(eKey, out ArchiveIndexEntry returnValue))
                 {
                     return returnValue;
                 }
@@ -62,7 +64,8 @@ namespace BattleNetPrefill.Handlers
             }
             
             // Building the archive index dictionaries in parallel.  Slicing up the work across multiple tasks.
-            var tasks = new List<Task<Dictionary<MD5Hash, IndexEntry>>>();
+            var tasks = new List<Task<Dictionary<MD5Hash, ArchiveIndexEntry>>>();
+
             int sliceAmount = (int)Math.Ceiling((double)cdnConfig.archives.Length / maxTasks);
             
             for (int i = 0; i < maxTasks; i++)
@@ -85,88 +88,89 @@ namespace BattleNetPrefill.Handlers
             }
         }
         
-        private async Task<Dictionary<MD5Hash, IndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, int start, int finish)
+        private async Task<Dictionary<MD5Hash, ArchiveIndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, int start, int finish)
         {
-            var indexDictionary = new Dictionary<MD5Hash, IndexEntry>(Md5HashEqualityComparer.Instance);
+            int initialDictionarySize = ComputeInitialDictionarySize();
+            var indexDictionary = new Dictionary<MD5Hash, ArchiveIndexEntry>(initialDictionarySize, Md5HashEqualityComparer.Instance);
+
+            byte[] md5Buffer = BinaryReaderExtensions.GetBuffer<MD5Hash>();
+            byte[] uint32Buffer = BinaryReaderExtensions.GetBuffer<UInt32>();
 
             for (int i = start; i <= finish; i++)
             {
                 byte[] indexContent = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, cdnConfig.archives[i].hashIdMd5, isIndex: true);
 
-                using (var stream = new MemoryStream(indexContent))
-                using (BinaryReader br = new BinaryReader(stream))
+                using var stream = new MemoryStream(indexContent);
+                using BinaryReader br = new BinaryReader(stream);
+
+                var footer = ValidateArchiveIndexFooter(stream, br);
+                for (int j = 0; j < footer.numElements; j++)
                 {
-                    var numElements = ValidateArchiveIndexFooter(stream, br);
+                    MD5Hash key = br.ReadMD5Hash(md5Buffer);
+                    var indexEntry = new ArchiveIndexEntry((short)i, 
+                                                            br.ReadUInt32BigEndian(uint32Buffer), 
+                                                            br.ReadUInt32BigEndian(uint32Buffer));
 
-                    for (int j = 0; j < numElements; j++)
+                    indexDictionary.Add(key, indexEntry);
+
+                    // each chunk is 4096 bytes, and zero padding at the end
+                    long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);
+
+                    // skip padding
+                    if (remaining < 16 + 4 + 4)
                     {
-                        MD5Hash key = br.Read<MD5Hash>();
-
-                        var entry = new IndexEntry
-                        {
-                            index = (short)i,
-                            size = br.ReadUInt32BigEndian(),
-                            offset = br.ReadUInt32BigEndian()
-                        };
-                        indexDictionary.Add(key, entry);
-
-                        // each chunk is 4096 bytes, and zero padding at the end
-                        long remaining = CHUNK_SIZE - (stream.Position % CHUNK_SIZE);
-
-                        // skip padding
-                        if (remaining < 16 + 4 + 4)
-                        {
-                            stream.Position += remaining;
-                        }
+                        stream.Position += remaining;
                     }
                 }
             }
+
             return indexDictionary;
         }
 
-        private int ValidateArchiveIndexFooter(MemoryStream stream, BinaryReader br)
+        //TODO try to find a way to estimate this per product
+        //TODO comment why this is necessary
+        private int ComputeInitialDictionarySize()
+        {
+            int initialDictionarySize = 1;
+            if (_targetProduct == TactProduct.Overwatch)
+            {
+                initialDictionarySize = 2_000_000;
+            }
+            if (_targetProduct == TactProduct.WorldOfWarcraft || _targetProduct == TactProduct.WowClassic)
+            {
+                initialDictionarySize = 1_200_000;
+            }
+
+            return initialDictionarySize;
+        }
+
+        private ArchiveIndexFooter ValidateArchiveIndexFooter(MemoryStream stream, BinaryReader br)
         {
             // Footer should always be the last 20 bytes of the file
             stream.Seek(-20, SeekOrigin.End);
 
-            if (br.ReadByte() != 1)
-            {
+            var footer = br.Read<ArchiveIndexFooter>();
+            if (footer.version != 1)
                 throw new InvalidDataException("ParseIndex -> version");
-            }
-            if (br.ReadByte() != 0)
-            {
+            if (footer.unk1 != 0)
                 throw new InvalidDataException("ParseIndex -> unk1");
-            }
-            if (br.ReadByte() != 0)
-            {
+            if (footer.unk2 != 0)
                 throw new InvalidDataException("ParseIndex -> unk2");
-            }
-            if (br.ReadByte() != 4)
-            {
+            if (footer.blockSizeKb != 4)
                 throw new InvalidDataException("ParseIndex -> blockSizeKb");
-            }
-
-            byte offsetBytes = br.ReadByte();
-            if (offsetBytes != 4)
+            if (footer.offsetBytes != 4)
                 throw new InvalidDataException("ParseIndex -> offsetBytes");
-
-            byte sizeBytes = br.ReadByte();
-            if (sizeBytes != 4)
+            if (footer.sizeBytes != 4)
                 throw new InvalidDataException("ParseIndex -> sizeBytes");
-
-            byte keySizeBytes = br.ReadByte();
-            if (keySizeBytes != 16)
+            if (footer.keySizeBytes != 16)
                 throw new InvalidDataException("ParseIndex -> keySizeBytes");
-
-            if (br.ReadByte() != 8)
+            if (footer.checksumSize != 8)
                 throw new InvalidDataException("ParseIndex -> checksumSize");
-
-            int numElements = br.ReadInt32();
-            if (numElements * (keySizeBytes + sizeBytes + offsetBytes) > stream.Length)
+            if (footer.numElements * (footer.keySizeBytes + footer.sizeBytes + footer.offsetBytes) > stream.Length)
                 throw new Exception("ParseIndex failed");
 
             stream.Seek(0, SeekOrigin.Begin);
-            return numElements;
+            return footer;
         }
     }
 }

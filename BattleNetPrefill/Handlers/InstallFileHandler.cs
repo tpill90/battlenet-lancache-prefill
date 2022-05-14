@@ -63,13 +63,13 @@ namespace BattleNetPrefill.Handlers
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                 MD5Hash upperHash = encodingTable.ReversedEncodingDictionary[file.contentHash];
 
-                IndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(upperHash);
+                ArchiveIndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(upperHash);
                 if (archiveIndex == null)
                 {
                     continue;
                 }
 
-                IndexEntry e = archiveIndex.Value;
+                ArchiveIndexEntry e = archiveIndex.Value;
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);
