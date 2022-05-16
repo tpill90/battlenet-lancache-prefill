@@ -84,7 +84,8 @@ namespace BattleNetPrefill.Handlers
             var endBytes = Math.Max(4095, buildConfig.installSize[1] - 1);
             byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.install[1], startBytes: 0, endBytes: endBytes);
 
-            using BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content)));
+            using var memoryStream = BLTE.Parse(content);
+            using BinaryReader bin = new BinaryReader(memoryStream);
             if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN")
             {
                 throw new Exception("Error while parsing install file. Did BLTE header size change?"); 

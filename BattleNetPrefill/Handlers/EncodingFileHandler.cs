@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.EncryptDecrypt;
@@ -49,7 +48,8 @@ namespace BattleNetPrefill.Handlers
                 }
             }
 
-            using (BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content))))
+            using var memoryStream = BLTE.Parse(content);
+            using (BinaryReader bin = new BinaryReader(memoryStream))
             {
                 if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "EN")
                 {

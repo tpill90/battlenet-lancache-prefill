@@ -42,7 +42,7 @@ namespace BattleNetPrefill.Handlers
 
             var content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]);
 
-            using var memoryStream = new MemoryStream(BLTE.Parse(content));
+            using var memoryStream = BLTE.Parse(content);
             using BinaryReader bin = new BinaryReader(memoryStream);
             
             // Reading header
