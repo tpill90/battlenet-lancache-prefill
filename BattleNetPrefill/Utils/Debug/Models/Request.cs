@@ -9,26 +9,28 @@ namespace BattleNetPrefill.Utils.Debug.Models
     /// </summary>
     public class Request
     {
-        /// <summary>
-        /// Request path, without a host name.  Agnostic towards host name, since we will combine with it later if needed to make a real request.
-        /// Example :
-        ///     tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708
-        /// </summary>
-        private string _uri;
-        public string Uri
+        public Request()
         {
-            get
+
+        }
+
+        public Request(string productRootUri, RootFolder rootFolder, MD5Hash cdnKey, long? startBytes = null, long? endBytes = null, 
+                        bool writeToDevNull = false, bool isIndex = false)
+        {
+            ProductRootUri = productRootUri;
+            RootFolder = rootFolder;
+            CdnKey = cdnKey;
+            IsIndex = isIndex;
+            WriteToDevNull = writeToDevNull;
+
+            if (startBytes != null && endBytes != null)
             {
-                if (_uri == null)
-                {
-                    var hashId = CdnKey.ToStringLower();
-                    _uri = $"{ProductRootUri}/{RootFolder.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
-                    if (IsIndex)
-                    {
-                        _uri = $"{_uri}.index";
-                    }
-                }
-                return _uri;
+                LowerByteRange = startBytes.Value;
+                UpperByteRange = endBytes.Value;
+            }
+            else
+            {
+                DownloadWholeFile = true;
             }
         }
 
@@ -53,6 +55,29 @@ namespace BattleNetPrefill.Utils.Debug.Models
 
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
         public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
+
+        /// <summary>
+        /// Request path, without a host name.  Agnostic towards host name, since we will combine with it later if needed to make a real request.
+        /// Example :
+        ///     tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708
+        /// </summary>
+        private string _uri;
+        public string Uri
+        {
+            get
+            {
+                if (_uri == null)
+                {
+                    var hashId = CdnKey.ToStringLower();
+                    _uri = $"{ProductRootUri}/{RootFolder.Name}/{hashId.Substring(0, 2)}/{hashId.Substring(2, 2)}/{hashId}";
+                    if (IsIndex)
+                    {
+                        _uri = $"{_uri}.index";
+                    }
+                }
+                return _uri;
+            }
+        }
 
         public override string ToString()
         {
@@ -93,21 +118,10 @@ namespace BattleNetPrefill.Utils.Debug.Models
             return request2.UpperByteRange >= LowerByteRange;
         }
          
-        public Request MergeWith(Request request2)
+        public void MergeWith(Request request2)
         {
-            return new Request
-            {
-                ProductRootUri = ProductRootUri,
-                RootFolder = RootFolder,
-                CdnKey = CdnKey,
-                IsIndex = IsIndex,
-
-                LowerByteRange = Math.Min(LowerByteRange, request2.LowerByteRange),
-                UpperByteRange = Math.Max(UpperByteRange, request2.UpperByteRange),
-
-                WriteToDevNull = WriteToDevNull,
-                DownloadWholeFile = DownloadWholeFile
-            };
+            LowerByteRange = Math.Min(LowerByteRange, request2.LowerByteRange);
+            UpperByteRange = Math.Max(UpperByteRange, request2.UpperByteRange);
         }
     }
 }
