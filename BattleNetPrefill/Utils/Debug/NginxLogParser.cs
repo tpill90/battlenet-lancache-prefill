@@ -78,6 +78,10 @@ namespace BattleNetPrefill.Utils.Debug
                 {
                     continue;
                 }
+                if (rawRequest.Contains("tpr/catalogs"))
+                {
+                    continue;
+                }
 
                 // Find all matches between double quotes.  This will be the only info that we care about in the request logs.
                 // Uri example : /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708.
