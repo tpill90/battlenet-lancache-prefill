@@ -63,13 +63,11 @@ namespace BattleNetPrefill.Utils
 
         public static MD5Hash ToMD5(this string str)
         {
-            var array = Convert.FromHexString(str);
-            
-            if (array.Length != 16)
+            if (str.Length != 32)
             {
-                throw new ArgumentException("array size != 16", nameof(array));
+                throw new ArgumentException("input string length != 32", nameof(str));
             }
-
+            var array = Convert.FromHexString(str);
             return Unsafe.As<byte, MD5Hash>(ref array[0]);
         }
 

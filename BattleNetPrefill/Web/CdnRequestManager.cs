@@ -136,8 +136,7 @@ namespace BattleNetPrefill.Web
             ByteSize totalSize = coalescedRequests.SumTotalBytes();
             AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
 
-            ConcurrentBag<Request> failedRequests = null;
-
+            var failedRequests = new ConcurrentBag<Request>();
             await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
             {
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
@@ -203,7 +202,7 @@ namespace BattleNetPrefill.Web
         ///                              This can be used with "non-required" requests, to speed up processing since we only care about reading the data once to prefill.
         /// </param>
         /// <returns></returns>
-        public async Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
+        public Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
             bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             Request request = new Request
@@ -225,7 +224,7 @@ namespace BattleNetPrefill.Web
             {
                 request.DownloadWholeFile = true;
             }
-            return await GetRequestAsBytesAsync(request);
+            return GetRequestAsBytesAsync(request);
         }
 
         public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)

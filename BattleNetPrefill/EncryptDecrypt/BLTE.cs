@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 
@@ -62,7 +61,7 @@ namespace BattleNetPrefill.EncryptDecrypt
                 }
             }
 
-            for (var index = 0; index < chunkInfos.Count(); index++)
+            for (var index = 0; index < chunkInfos.Length; index++)
             {
                 var chunk = chunkInfos[index];
 

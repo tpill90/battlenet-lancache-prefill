@@ -1,6 +1,8 @@
 
 # Battlenet-lancache-prefill
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=tpill90_Battlenet-lancache-prefill&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=tpill90_Battlenet-lancache-prefill)
+
 Automatically fills a [lancache](https://lancache.net/) with games from Battlenet, so that subsequent downloads for the same content will be served from the lancache, improving speeds and reducing load on your internet connection.
 
 Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.

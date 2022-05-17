@@ -26,7 +26,7 @@ namespace BattleNetPrefill.Handlers
         public async Task<EncodingFile> GetEncodingAsync(BuildConfigFile buildConfig, bool parseTableB = false, bool checkStuff = false)
         {
             int encodingSize;
-            if (buildConfig.encodingSize == null || buildConfig.encodingSize.Count() < 2)
+            if (buildConfig.encodingSize == null || buildConfig.encodingSize.Length < 2)
             {
                 encodingSize = 0;
             }

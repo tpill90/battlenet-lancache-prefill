@@ -79,7 +79,7 @@ namespace BattleNetPrefill
 
                 // Start processing to determine which files need to be downloaded
                 ctx.Status("Determining files to download...");
-                await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig, _product);
+                await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig);
                 await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
 
                 var patchLoader = new PatchLoader(cdnRequestManager, cdnConfig);

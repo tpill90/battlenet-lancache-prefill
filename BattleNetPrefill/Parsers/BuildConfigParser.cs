@@ -24,7 +24,7 @@ namespace BattleNetPrefill.Parsers
             }
 
             var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            for (var i = 0; i < lines.Count(); i++)
+            for (var i = 0; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("#") || lines[i].Length == 0)
                 {
