@@ -41,7 +41,6 @@
 
   <ItemGroup>
     <!-- External -->
-    <PackageReference Include="AsyncEnumerator" Version="4.0.2" />
     <PackageReference Include="ByteSize" Version="2.0.0" />
 	  <PackageReference Include="CliFx" Version="2.0.6" />
 	  <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />

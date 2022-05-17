@@ -13,7 +13,6 @@ using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
-using Dasync.Collections;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
 
@@ -175,7 +174,7 @@ namespace BattleNetPrefill.Web
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
 
             var failedRequests = new ConcurrentBag<Request>();
-            await requestsToDownload.ParallelForEachAsync(async request =>
+            await Parallel2.ForEachAsync(requestsToDownload, new ParallelOptions2() { MaxDegreeOfParallelism = 8 }, async (request, token) =>
             {
                 try
                 {
@@ -185,7 +184,7 @@ namespace BattleNetPrefill.Web
                 {
                     failedRequests.Add(request);
                 }
-            }, maxDegreeOfParallelism: 8);
+            });
 
             // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
             progressTask.Increment(progressTask.MaxValue);
