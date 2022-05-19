@@ -54,7 +54,7 @@ namespace BattleNetPrefill.Handlers
             byte[] md5Buffer = new byte[Unsafe.SizeOf<MD5Hash>()];
             for (int i = 0; i < _downloadFile.numEntries; i++)
             {
-                _downloadFile.entries[i].hash = bin.ReadMD5Hash(md5Buffer);
+                _downloadFile.entries[i].hash = bin.ReadMd5Hash(md5Buffer);
                 // Skips data that we are not interested in reading, to get to the next entry
                 bin.BaseStream.Position += unusedBytesToSkip;
             }

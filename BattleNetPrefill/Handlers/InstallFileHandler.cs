@@ -118,10 +118,12 @@ namespace BattleNetPrefill.Handlers
 
             install.entries = new InstallFileEntry[install.numEntries];
 
+            byte[] md5HashBuffer = BinaryReaderExtensions.AllocateBuffer<MD5Hash>();
+
             for (var i = 0; i < install.numEntries; i++)
             {
                 install.entries[i].name = bin.ReadCString();
-                install.entries[i].contentHash = bin.Read<MD5Hash>();
+                install.entries[i].contentHash = bin.ReadMd5Hash(md5HashBuffer);
                 install.entries[i].size = bin.ReadUInt32BigEndian();
                 install.entries[i].tags = new List<string>();
                 for (var j = 0; j < install.numTags; j++)

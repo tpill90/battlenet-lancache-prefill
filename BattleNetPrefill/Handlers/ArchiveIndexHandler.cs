@@ -93,8 +93,8 @@ namespace BattleNetPrefill.Handlers
             int initialDictionarySize = ComputeInitialDictionarySize();
             var indexDictionary = new Dictionary<MD5Hash, ArchiveIndexEntry>(initialDictionarySize, Md5HashEqualityComparer.Instance);
 
-            byte[] md5Buffer = BinaryReaderExtensions.GetBuffer<MD5Hash>();
-            byte[] uint32Buffer = BinaryReaderExtensions.GetBuffer<UInt32>();
+            byte[] md5Buffer = BinaryReaderExtensions.AllocateBuffer<MD5Hash>();
+            byte[] uint32Buffer = BinaryReaderExtensions.AllocateBuffer<UInt32>();
 
             for (int i = start; i <= finish; i++)
             {
@@ -106,7 +106,7 @@ namespace BattleNetPrefill.Handlers
                 var footer = ValidateArchiveIndexFooter(stream, br);
                 for (int j = 0; j < footer.numElements; j++)
                 {
-                    MD5Hash key = br.ReadMD5Hash(md5Buffer);
+                    MD5Hash key = br.ReadMd5Hash(md5Buffer);
                     var indexEntry = new ArchiveIndexEntry((short)i, 
                                                             br.ReadUInt32BigEndian(uint32Buffer), 
                                                             br.ReadUInt32BigEndian(uint32Buffer));
@@ -127,10 +127,12 @@ namespace BattleNetPrefill.Handlers
             return indexDictionary;
         }
 
-        //TODO try to find a way to estimate this per product
-        //TODO comment why this is necessary
+        /// <summary>
+        /// Determines an appropriate initial size for the archive dictionaries.  In certain cases, can dramatically reduce the number of allocations required to be made.
+        /// </summary>
         private int ComputeInitialDictionarySize()
         {
+            //TODO See if there is any way to estimate this per product, rather than having to have this hardcoded value
             int initialDictionarySize = 1;
             if (_targetProduct == TactProduct.Overwatch)
             {
