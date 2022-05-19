@@ -50,6 +50,8 @@ namespace BattleNetPrefill.Parsers
             var recordsPerBlock = indexBlockSize / recordSize;
             var blockPadding = indexBlockSize - (recordsPerBlock * recordSize);
 
+            byte[] md5HashBuffer = BinaryReaderExtensions.AllocateBuffer<MD5Hash>();
+
             for (var b = 0; b < indexEntries; b++)
             {
                 for (var bi = 0; bi < recordsPerBlock; bi++)
@@ -59,7 +61,7 @@ namespace BattleNetPrefill.Parsers
                         throw new Exception("Index Header must be 16 bytes!!!");
                     }
 
-                    MD5Hash headerHash = bin.Read<MD5Hash>();
+                    MD5Hash headerHash = bin.ReadMd5Hash(md5HashBuffer);
                     var indexEntry = new IndexEntry();
 
                     if (footer.sizeBytes == 4)

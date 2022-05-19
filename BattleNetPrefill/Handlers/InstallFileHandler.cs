@@ -63,13 +63,13 @@ namespace BattleNetPrefill.Handlers
                 // If we found a match for the archive content, look into the archive index to see where the file can be downloaded from
                 MD5Hash upperHash = encodingTable.ReversedEncodingDictionary[file.contentHash];
 
-                IndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(upperHash);
+                ArchiveIndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(upperHash);
                 if (archiveIndex == null)
                 {
                     continue;
                 }
 
-                IndexEntry e = archiveIndex.Value;
+                ArchiveIndexEntry e = archiveIndex.Value;
 
                 // Need to subtract 1, since the byte range is "inclusive"
                 var upperByteRange = ((int)e.offset + (int)e.size - 1);
@@ -84,7 +84,8 @@ namespace BattleNetPrefill.Handlers
             var endBytes = Math.Max(4095, buildConfig.installSize[1] - 1);
             byte[] content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.install[1], startBytes: 0, endBytes: endBytes);
 
-            using BinaryReader bin = new BinaryReader(new MemoryStream(BLTE.Parse(content)));
+            using var memoryStream = BLTE.Parse(content);
+            using BinaryReader bin = new BinaryReader(memoryStream);
             if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN")
             {
                 throw new Exception("Error while parsing install file. Did BLTE header size change?"); 
@@ -117,10 +118,12 @@ namespace BattleNetPrefill.Handlers
 
             install.entries = new InstallFileEntry[install.numEntries];
 
+            byte[] md5HashBuffer = BinaryReaderExtensions.AllocateBuffer<MD5Hash>();
+
             for (var i = 0; i < install.numEntries; i++)
             {
                 install.entries[i].name = bin.ReadCString();
-                install.entries[i].contentHash = bin.Read<MD5Hash>();
+                install.entries[i].contentHash = bin.ReadMd5Hash(md5HashBuffer);
                 install.entries[i].size = bin.ReadUInt32BigEndian();
                 install.entries[i].tags = new List<string>();
                 for (var j = 0; j < install.numTags; j++)

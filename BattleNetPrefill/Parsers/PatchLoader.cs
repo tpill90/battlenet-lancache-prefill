@@ -12,15 +12,13 @@ namespace BattleNetPrefill.Parsers
     public class PatchLoader
     {
         private readonly CdnRequestManager _cdnRequestManager;
-        private readonly CDNConfigFile _cdnConfig;
 
-        public PatchLoader(CdnRequestManager cdnRequestManager, CDNConfigFile cdnConfig)
+        public PatchLoader(CdnRequestManager cdnRequestManager)
         {
             _cdnRequestManager = cdnRequestManager;
-            _cdnConfig = cdnConfig;
         }
 
-        public async Task HandlePatchesAsync(BuildConfigFile buildConfig, TactProduct targetProduct)
+        public async Task HandlePatchesAsync(BuildConfigFile buildConfig, TactProduct targetProduct, CDNConfigFile _cdnConfig)
         {
             // For whatever reason, these products do not actually make this request
             var patchConfigExclusions = new List<TactProduct>

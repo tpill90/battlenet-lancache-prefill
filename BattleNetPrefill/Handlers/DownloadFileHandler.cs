@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.EncryptDecrypt;
@@ -42,54 +43,32 @@ namespace BattleNetPrefill.Handlers
 
             var content = await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.data, buildConfig.download[1]);
 
-            using var memoryStream = new MemoryStream(BLTE.Parse(content));
+            using var memoryStream = BLTE.Parse(content);
             using BinaryReader bin = new BinaryReader(memoryStream);
             
-            // Reading header
-            if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
-            {
-                throw new Exception("Error while parsing download file. Did BLTE header size change?");
-            }
-            byte version = bin.ReadByte();
-            byte hash_size_ekey = bin.ReadByte();
-            byte hasChecksumInEntry = bin.ReadByte();
-            _downloadFile.numEntries = bin.ReadUInt32BigEndian();
-            _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
-
-            _downloadFile.numTags = bin.ReadUInt16BigEndian();
-            _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
-
-            int entryExtra = 6;
-            if (hasChecksumInEntry > 0)
-            {
-                entryExtra += 4;
-            }
-            if (version >= 2)
-            {
-                entryExtra += bin.ReadByte();
-                if (version >= 3)
-                {
-                    bin.BaseStream.Seek(16, SeekOrigin.Begin);
-                }
-            }
+            
+            var unusedBytesToSkip = ReadHeader(bin);
 
             // Reading the DownloadFile entries
+            _downloadFile.entries = new DownloadEntry[_downloadFile.numEntries];
+            byte[] md5Buffer = new byte[Unsafe.SizeOf<MD5Hash>()];
             for (int i = 0; i < _downloadFile.numEntries; i++)
             {
-                _downloadFile.entries[i].hash = bin.Read<MD5Hash>();
+                _downloadFile.entries[i].hash = bin.ReadMd5Hash(md5Buffer);
                 // Skips data that we are not interested in reading, to get to the next entry
-                bin.BaseStream.Position += entryExtra;
+                bin.BaseStream.Position += unusedBytesToSkip;
             }
 
-            // Reading the tags
-            // There will be 1 bit per entry, to determine if a file should be downloaded.  Packing these individual bit into a byte
+            // Reading the tags. There will be 1 bit per entry, to determine if a file should be downloaded.  Packing these individual bit into a byte
             int numMaskBytes = (int)((_downloadFile.numEntries + 7) / 8);
+
+            _downloadFile.tags = new DownloadTag[_downloadFile.numTags];
             for (int i = 0; i < _downloadFile.numTags; i++)
             {
                 DownloadTag tag = new DownloadTag();
                 tag.Name = bin.ReadCString();
                 tag.Type = bin.ReadInt16BigEndian();
-
+                
                 tag.Mask = bin.ReadBytes(numMaskBytes);
 
                 for (int j = 0; j < numMaskBytes; j++)
@@ -102,7 +81,38 @@ namespace BattleNetPrefill.Handlers
                 _downloadFile.tags[i] = tag;
             }
         }
-        
+
+        private int ReadHeader(BinaryReader bin)
+        {
+            if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "DL")
+            {
+                throw new Exception("Error while parsing download file. Did BLTE header size change?");
+            }
+
+            byte version = bin.ReadByte();
+            byte hash_size_ekey = bin.ReadByte();
+            byte hasChecksumInEntry = bin.ReadByte();
+            _downloadFile.numEntries = bin.ReadUInt32BigEndian();
+            _downloadFile.numTags = bin.ReadUInt16BigEndian();
+
+            int entryExtra = 6;
+            if (hasChecksumInEntry > 0)
+            {
+                entryExtra += 4;
+            }
+
+            if (version >= 2)
+            {
+                entryExtra += bin.ReadByte();
+                if (version >= 3)
+                {
+                    bin.BaseStream.Seek(16, SeekOrigin.Begin);
+                }
+            }
+
+            return entryExtra;
+        }
+
         /// <summary>
         /// Determines which files need to be downloaded, and queues them for download.
         /// </summary>
@@ -123,7 +133,7 @@ namespace BattleNetPrefill.Handlers
                     continue;
                 }
 
-                IndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(current.hash);
+                ArchiveIndexEntry? archiveIndex = archiveIndexHandler.ArchivesContainKey(current.hash);
                 // If a file is not found in the archive index, then there is a possibility that it is an "unarchived" file.
                 if (archiveIndex == null)
                 {
@@ -144,7 +154,7 @@ namespace BattleNetPrefill.Handlers
                     continue;
                 }
 
-                IndexEntry e = archiveIndex.Value;
+                ArchiveIndexEntry e = archiveIndex.Value;
 
                 MD5Hash archiveIndexKey = cdnConfigFile.archives[e.index].hashIdMd5;
                 var startBytes = e.offset;

@@ -6,7 +6,7 @@ namespace Benchmarks
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run(typeof(Program).Assembly);
+            var summary = BenchmarkRunner.Run<BuildConfigParserBenchmarks>();
         }
     }
 }

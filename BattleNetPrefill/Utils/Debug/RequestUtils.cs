@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
 
 namespace BattleNetPrefill.Utils.Debug
@@ -27,6 +28,20 @@ namespace BattleNetPrefill.Utils.Debug
 
                 coalesced.AddRange(merged);
             }
+            
+            return coalesced;
+        }
+
+        public static List<Request> CoalesceRequests(Dictionary<MD5Hash, List<Request>> initialRequests, bool isBattleNetClient = false)
+        {
+            var coalesced = new List<Request>();
+
+            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
+            foreach (var grouping in initialRequests.Values)
+            {
+                grouping.Sort((x, y) => x.LowerByteRange.CompareTo(y.LowerByteRange));
+                coalesced.AddRange(grouping.MergeOverlapping(isBattleNetClient));
+            }
 
             return coalesced;
         }
@@ -51,7 +66,7 @@ namespace BattleNetPrefill.Utils.Debug
                     }
                     else
                     {
-                        previousInterval = previousInterval.MergeWith(nextInterval);
+                        previousInterval.MergeWith(nextInterval);
                     }
                 }
                 yield return previousInterval;

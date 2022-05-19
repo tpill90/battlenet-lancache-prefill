@@ -42,7 +42,7 @@ namespace BattleNetPrefill
         public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
         {
             var timer = Stopwatch.StartNew();
-            AnsiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
+            _ansiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
             CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
@@ -50,6 +50,7 @@ namespace BattleNetPrefill
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
             var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, _product);
+            var patchLoader = new PatchLoader(cdnRequestManager);
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = null;
@@ -62,7 +63,7 @@ namespace BattleNetPrefill
             // Skip prefilling if we've already prefilled the latest version 
             if (!forcePrefill && IsProductUpToDate(targetVersion.Value))
             {
-                AnsiConsole.MarkupLine($"   {Green("Up to date! Skipping..")}");
+                _ansiConsole.MarkupLine($"   {Green("Up to date! Skipping..")}");
                 return null;
             }
 
@@ -74,16 +75,14 @@ namespace BattleNetPrefill
                 CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");
-                await archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig);
-                await downloadFileHandler.ParseDownloadFileAsync(buildConfig);
+                await Task.WhenAll(archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig),
+                                    downloadFileHandler.ParseDownloadFileAsync(buildConfig));
 
                 // Start processing to determine which files need to be downloaded
                 ctx.Status("Determining files to download...");
                 await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig);
                 await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
-
-                var patchLoader = new PatchLoader(cdnRequestManager, cdnConfig);
-                await patchLoader.HandlePatchesAsync(buildConfig, _product);
+                await patchLoader.HandlePatchesAsync(buildConfig, _product, cdnConfig);
             });
 
             // Actually start the download of any deferred requests
@@ -94,7 +93,7 @@ namespace BattleNetPrefill
             }
 
             timer.Stop();
-            AnsiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
+            _ansiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
             
             if (!_debugConfig.CompareAgainstRealRequests)
             {

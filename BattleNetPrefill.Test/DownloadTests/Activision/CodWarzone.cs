@@ -28,7 +28,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         {
             //TODO improve
             var expected = 6;
-            Assert.AreEqual(_results.MissCount, expected);
+            Assert.LessOrEqual(_results.MissCount, expected);
         }
 
         [Test]

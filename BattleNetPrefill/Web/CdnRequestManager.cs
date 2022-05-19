@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -13,7 +14,6 @@ using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
-using Dasync.Collections;
 using Spectre.Console;
 using static BattleNetPrefill.Utils.SpectreColors;
 
@@ -39,8 +39,8 @@ namespace BattleNetPrefill.Web
         private string _productBasePath;
 
         private readonly Uri _battleNetPatchUri;
-        
-        private readonly List<Request> _queuedRequests = new List<Request>();
+
+        private readonly Dictionary<MD5Hash, List<Request>> _queuedRequests = new Dictionary<MD5Hash, List<Request>>();
 
         /// <summary>
         /// When enabled, will skip using any cached files from disk.  The disk cache can speed up repeated runs, however it can use up a non-trivial amount
@@ -101,24 +101,17 @@ namespace BattleNetPrefill.Web
 
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
-            Request request = new Request
+            Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
+         
+            List<Request> requests;
+            _queuedRequests.TryGetValue(hash, out requests);
+            if (requests == null)
             {
-                ProductRootUri = _productBasePath,
-                RootFolder = rootPath,
-                CdnKey = hash,
-                IsIndex = isIndex,
-                WriteToDevNull = true
-            };
-            if (startBytes != null && endBytes != null)
-            {
-                request.LowerByteRange = startBytes.Value;
-                request.UpperByteRange = endBytes.Value;
+                requests = new List<Request>();
+                _queuedRequests.Add(hash, requests);
             }
-            else
-            {
-                request.DownloadWholeFile = true;
-            }
-            _queuedRequests.Add(request);
+
+            requests.Add(request);
         }
 
         /// <summary>
@@ -144,7 +137,7 @@ namespace BattleNetPrefill.Web
                 {
                     failedRequests = await AttemptDownloadAsync(ctx, $"Retrying  {_retryCount + 1}..", failedRequests.ToList());
                     _retryCount++;
-                    await Task.Delay(2000);
+                    await Task.Delay(2000 * _retryCount);
                 }
             });
 
@@ -175,7 +168,7 @@ namespace BattleNetPrefill.Web
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
 
             var failedRequests = new ConcurrentBag<Request>();
-            await requestsToDownload.ParallelForEachAsync(async request =>
+            await Parallel2.ForEachAsync(requestsToDownload, new ParallelOptions2 { MaxDegreeOfParallelism = 8}, async (request, token) =>
             {
                 try
                 {
@@ -185,7 +178,7 @@ namespace BattleNetPrefill.Web
                 {
                     failedRequests.Add(request);
                 }
-            }, maxDegreeOfParallelism: 8);
+            });
 
             // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
             progressTask.Increment(progressTask.MaxValue);
@@ -205,25 +198,7 @@ namespace BattleNetPrefill.Web
         public Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
             bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
-            Request request = new Request
-            {
-                ProductRootUri = _productBasePath,
-                RootFolder = rootPath,
-                CdnKey = hash,
-                IsIndex = isIndex,
-
-                WriteToDevNull = writeToDevNull
-            };
-
-            if (startBytes != null && endBytes != null)
-            {
-                request.LowerByteRange = startBytes.Value;
-                request.UpperByteRange = endBytes.Value;
-            }
-            else
-            {
-                request.DownloadWholeFile = true;
-            }
+            Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull, isIndex);
             return GetRequestAsBytesAsync(request);
         }
 

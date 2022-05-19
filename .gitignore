@@ -10,3 +10,4 @@ lockfile
 
 /BattleNetPrefill.sln.DotSettings.user
 /BattleNetPrefill/cache/
+/Benchmarks/BenchmarkDotNet.Artifacts/results
