@@ -1,8 +1,24 @@
 {
   "profiles": {
-    "BattleNetPrefill": {
+    "Default": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p s2 --force"
+    },
+    "Prefill BOCW": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p zeus --force"
+    },
+    "Prefill MW2": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p lazr --force"
+    },
+    "Prefill Overwatch": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p pro --force"
+    },
+    "Prefill WOW": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p wow --force"
     },
     "Prefill All": {
       "commandName": "Project",
