@@ -168,7 +168,7 @@ namespace BattleNetPrefill.Web
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
 
             var failedRequests = new ConcurrentBag<Request>();
-            await Parallel2.ForEachAsync(requestsToDownload, new ParallelOptions2 { MaxDegreeOfParallelism = 8}, async (request, token) =>
+            await Parallel.ForEachAsync(requestsToDownload, new ParallelOptions { MaxDegreeOfParallelism = 8}, async (request, token) =>
             {
                 try
                 {

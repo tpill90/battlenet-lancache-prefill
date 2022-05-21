@@ -4,17 +4,17 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
-    // TODO - Bug - Work on reducing the wild fluctuations that can happen when re-prefilling a product.  Ex. zeus will bounce between 100mbs -> 1.1gbs
     // TODO - Bug - MW2 seems to hang for some reason, without failing, or timing out
     // TODO Tests - Add test case to Full Download tests, that compares actual download size vs real download size.  Wow Classic seems to be off
     // TODO Tests - Add test case to Full Download tests, that compares tests w\o a size to real requests missing size
-    // TODO Tech Debt - Upgrade to dotnet 6.  Compare performance increase, if any.  Compare SingleFile disk size versus dotnet 5.  See if AOT improvements help performance
+    // TODO Tech Debt - Compare SingleFile disk size versus dotnet 5.  See if AOT improvements help performance
     // TODO Tech Debt - Consider getting some actual test coverage on this project.  Exclude the "Download" tests, since they're not techinically "unit tests"
     // TODO Performance - Research buffer pools to see how they might be able to reduce allocations https://www.google.com/search?client=firefox-b-1-d&q=c%23+binaryprimitives
     // TODO Performance - Analyze allocations with the .NET Object Allocation tool : https://devblogs.microsoft.com/visualstudio/net-object-allocation-tool-performance/
     // TODO Performance - Make sure all structs are being defined as readonly - https://devblogs.microsoft.com/premier-developer/avoiding-struct-and-readonly-reference-performance-pitfalls-with-errorprone-net/
     // TODO Build Pipeline - Look into having a build + publish stage to create a docker image.
     // TODO Tech Debt - Cleanup all Warnings + Messages
+    // TODO - Bug - Work on reducing the wild fluctuations that can happen when re-prefilling a product.  Ex. zeus will bounce between 100mbs -> 1.1gbs
     public static class Program
     {
         public static async Task<int> Main()
