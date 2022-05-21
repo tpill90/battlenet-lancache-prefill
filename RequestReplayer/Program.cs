@@ -7,6 +7,7 @@ using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace RequestReplayer
 {
+    //TODO delete this project
     public static class Program
     {
         private static readonly string BlizzardCdnBaseUri = "http://level3.blizzard.com";
