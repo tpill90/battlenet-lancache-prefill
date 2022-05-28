@@ -20,7 +20,8 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 # Installation
 1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/Battlenet-lancache-prefill/releases) page.
 2.  Unzip to a directory of your choice
-3.  (Windows Only)  Configure your terminal to use Unicode, for much nicer looking UI output.
+3.  (**Linux / OSX Only**)  Give the downloaded executable permissions to be run with `chmod +x .\BattleNetPrefill`
+4.  (**Windows Only**)  Configure your terminal to use Unicode, for much nicer looking UI output.
     - Unicode on Windows is not enabled by default, however adding the following to your Powershell `profile.ps1` will enable it.
     - `[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 `
