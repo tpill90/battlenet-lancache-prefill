@@ -15,6 +15,7 @@ namespace BattleNetPrefill.Test.Parsers
         /// Also it should hopefully catch any new fields introduced in the future.
         /// </summary>
         [Test]
+        [TestCase("anbs")]
         [TestCase("d3")]
         [TestCase("fore")]
         [TestCase("hero")]

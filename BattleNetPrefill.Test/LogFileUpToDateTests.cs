@@ -10,6 +10,7 @@ namespace BattleNetPrefill.Test
     public class LogFileUpToDateTests
     {
         [Test]
+        [TestCase("anbs")]
         [TestCase("d3")]
         [TestCase("fore")]
         [TestCase("hero")]

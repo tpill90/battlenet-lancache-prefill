@@ -14,6 +14,7 @@ namespace BattleNetPrefill
         
         public static readonly TactProduct BlizzardArcadeCollection = new TactProduct("rtro") { DisplayName = "Blizzard Arcade Collection", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
 
+        public static readonly TactProduct DiabloImmortal = new TactProduct("anbs") { DisplayName = "Diablo: Immortal", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
         public static readonly TactProduct Diablo2Resurrected = new TactProduct("osi") { DisplayName = "Diablo 2: Resurrected", IsBlizzard = true };
         public static readonly TactProduct Diablo3 = new TactProduct("d3") { DisplayName = "Diablo 3", IsBlizzard = true };
 

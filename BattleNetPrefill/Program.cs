@@ -6,8 +6,6 @@ namespace BattleNetPrefill
 {
     // TODO Tests - Add test case to Full Download tests, that compares actual download size vs real download size.  Wow Classic seems to be off
     // TODO Tests - Add test case to Full Download tests, that compares tests w\o a size to real requests missing size
-    // TODO Performance - Make sure all structs are being defined as readonly - https://devblogs.microsoft.com/premier-developer/avoiding-struct-and-readonly-reference-performance-pitfalls-with-errorprone-net/
-    // TODO Build Pipeline - Look into having a build + publish stage to create a docker image.
     // TODO Tech Debt - Cleanup all Warnings + Messages
     // TODO Tech Debt - Dotnet 7 - See if AOT improvements help performance
     // TODO Open up a ticket with Spectre.Net, to switch the units from 1024^3 to 1000^3, since this is how most network traffic is measured
