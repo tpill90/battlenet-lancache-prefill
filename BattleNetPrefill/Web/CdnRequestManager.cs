@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -26,7 +25,7 @@ namespace BattleNetPrefill.Web
         private readonly List<string> _cdnList = new List<string> 
         {
             "level3.blizzard.com",  // Level3
-            "cdn.blizzard.com",     // Official region-less CDN
+            "cdn.blizzard.com",     // Official region-less CDN - Slow downloads
             "us.cdn.blizzard.com"
         };
 
@@ -125,6 +124,7 @@ namespace BattleNetPrefill.Web
         {
             // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
+            _queuedRequests.Clear();
 
             ByteSize totalSize = coalescedRequests.SumTotalBytes();
             AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GB")}");
@@ -132,12 +132,15 @@ namespace BattleNetPrefill.Web
             var failedRequests = new ConcurrentBag<Request>();
             await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
             {
+                // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
+
+                // Handle any failed requests
                 while (failedRequests.Any() && _retryCount < 3)
                 {
-                    failedRequests = await AttemptDownloadAsync(ctx, $"Retrying  {_retryCount + 1}..", failedRequests.ToList());
                     _retryCount++;
-                    await Task.Delay(2000 * _retryCount);
+                    failedRequests = await AttemptDownloadAsync(ctx, $"Retrying  {_retryCount}..", failedRequests.ToList());
+                    await Task.Delay(2000 * _retryCount).ConfigureAwait(false);
                 }
             });
 
@@ -168,7 +171,7 @@ namespace BattleNetPrefill.Web
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
 
             var failedRequests = new ConcurrentBag<Request>();
-            await Parallel.ForEachAsync(requestsToDownload, new ParallelOptions { MaxDegreeOfParallelism = 8}, async (request, token) =>
+            await Parallel.ForEachAsync(requestsToDownload, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async (request, token) =>
             {
                 try
                 {
@@ -237,16 +240,13 @@ namespace BattleNetPrefill.Web
             using var responseMessage = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
             await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
 
-            if (!responseMessage.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"Error retrieving file: HTTP status code {responseMessage.StatusCode} on URL {uri}");
-            }
+            responseMessage.EnsureSuccessStatusCode();
             if(writeToDevNull)
             {
                 var totalBytesRead = 0;
                 try
                 {
-                    var buffer = new byte[8192];
+                    var buffer = new byte[16384];
                     while (true)
                     {
                         // Dump the received data, so we don't have to waste time writing it to disk.
