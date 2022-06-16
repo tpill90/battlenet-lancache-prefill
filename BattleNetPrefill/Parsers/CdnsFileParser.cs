@@ -63,7 +63,7 @@ namespace BattleNetPrefill.Parsers
                 }
             }
             
-            if (cdns.entries == null || !cdns.entries.Any())
+            if (!cdns.entries.Any())
             {
                 throw new Exception($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");
             }

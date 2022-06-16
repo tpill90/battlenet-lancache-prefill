@@ -33,7 +33,7 @@ namespace BattleNetPrefill.Utils.Debug
             };
 
             // Populating the response size for any "whole file" requests
-            var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
+            using var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
             await fileSizeProvider.PopulateRequestSizesAsync(generatedRequests);
             await fileSizeProvider.PopulateRequestSizesAsync(realRequests);
             fileSizeProvider.Save();
@@ -42,8 +42,8 @@ namespace BattleNetPrefill.Utils.Debug
             comparisonResult.RealRequestsTotalSize = realRequests.SumTotalBytes();
 
             CompareRequests(generatedRequests, realRequests);
-            comparisonResult.Misses = realRequests;
-            comparisonResult.UnnecessaryRequests = generatedRequests;
+            comparisonResult.Misses.AddRange(realRequests);
+            comparisonResult.UnnecessaryRequests.AddRange(generatedRequests);
 
             comparisonResult.PrintOutput();
 

@@ -45,7 +45,7 @@ namespace BattleNetPrefill
             _ansiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);

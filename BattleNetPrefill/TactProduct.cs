@@ -68,7 +68,7 @@ namespace BattleNetPrefill
         public string ProductCode => Name;
 
         //TODO convert this to a better type
-        public string[] DefaultTags { get; private init; }
+        internal string[] DefaultTags { get; private init; }
 
         public bool IsActivision { get; private init; }
         public bool IsBlizzard { get; private init; }

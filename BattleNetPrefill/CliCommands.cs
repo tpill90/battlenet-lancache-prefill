@@ -15,7 +15,7 @@ using static BattleNetPrefill.Utils.SpectreColors;
 namespace BattleNetPrefill
 {
     [UsedImplicitly]
-    public class CliCommands
+    public sealed class CliCommands
     {
         [UsedImplicitly]
         [Command("list-products", Description = "Lists all available products that can be pre-filled")]

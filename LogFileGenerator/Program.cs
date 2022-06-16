@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 using BattleNetPrefill;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Structs;
@@ -86,10 +87,10 @@ namespace LogFileGenerator
 
             if (!File.Exists(BnetInstallerPath))
             {
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(downloadUrl, BnetInstallerPath);
-                }
+                var httpClient = new HttpClient();
+                var responseStream = httpClient.GetStreamAsync(downloadUrl).Result;
+                using var fileStream = new FileStream(BnetInstallerPath, FileMode.Create);
+                responseStream.CopyTo(fileStream);
             }
         }
 

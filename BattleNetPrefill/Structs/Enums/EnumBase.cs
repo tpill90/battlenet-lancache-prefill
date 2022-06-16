@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -11,6 +12,7 @@ namespace BattleNetPrefill.Structs
     /// are usually constrained to only a few values, making them ideal for enums.
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Static members are required for class' implementation")]
     public abstract class EnumBase<T> where T : EnumBase<T>
     {
         private static readonly List<T> _allEnumValues = new List<T>();
@@ -19,6 +21,8 @@ namespace BattleNetPrefill.Structs
         private static bool _invoked; //NOSONAR - See above message
 
         private static object _lockObject = new object();
+
+        
         public static List<T> AllEnumValues
         {
             get

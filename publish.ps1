@@ -16,11 +16,15 @@ foreach($runtime in @("win-x64"))
     /p:PublishReadyToRun=true `
     /p:PublishTrimmed=true
 
+    Compress-Archive -path publish/BattleNetPrefill-$runtime publish/$runtime.zip
+
     $folderSize = "{0:N2} MB" -f((Get-ChildItem publish/BattleNetPrefill-$runtime | Measure-Object -Property Length -sum).sum / 1Mb)
     Write-Host "Published file size : " -NoNewline
     Write-Host -ForegroundColor Cyan $folderSize
 
-    Compress-Archive -path publish/BattleNetPrefill-$runtime publish/$runtime.zip
+    $zipSize = "{0:N2} MB" -f((Get-ChildItem publish/$runtime.zip | Measure-Object -Property Length -sum).sum / 1Mb)
+    Write-Host "Published zip size : " -NoNewline
+    Write-Host -ForegroundColor Cyan $zipSize
 }
 
 # Doing linux and osx separatly, they don't support ReadyToRun
