@@ -77,6 +77,11 @@ By default, **BattleNetPrefill** will keep track of the most recently prefilled 
 
 Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the specified product.  This flag may be useful for diagnostics, or benchmarking network performance.
 
+# Need Help?
+If you are running into any issues, feel free to open up a Github issue on this repository.
+
+You can also find us on the **LanCache.NET** Discord (https://discord.com/invite/BKnBS4u), in the `#battlenet-prefill` channel.
+
 # Other Docs
 * [Development Configuration](/docs/Development.md)
 

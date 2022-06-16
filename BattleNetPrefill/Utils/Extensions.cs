@@ -134,7 +134,6 @@ namespace BattleNetPrefill.Utils
                                                      Prefix = FileSizePrefix.Decimal,
                                                      DisplayBits = true
                                                  });
-            spectreProgress.RefreshRate = TimeSpan.FromMilliseconds(150);
             return spectreProgress;
         }
 
