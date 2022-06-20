@@ -129,7 +129,12 @@ namespace BattleNetPrefill.Utils
                                                  new PercentageColumn(), 
                                                  new RemainingTimeColumn(), 
                                                  new DownloadedColumn(), 
-                                                 new TransferSpeedColumn());
+                                                 new TransferSpeedColumn
+                                                 {
+                                                     Prefix = FileSizePrefix.Decimal,
+                                                     DisplayBits = true
+                                                 });
+            spectreProgress.RefreshRate = TimeSpan.FromMilliseconds(150);
             return spectreProgress;
         }
 
