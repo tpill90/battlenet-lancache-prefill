@@ -16,11 +16,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Spectre.Console" Version="0.44.0" />
-    <PackageReference Include="Spectre.Console.Testing" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\spectre.console\src\Spectre.Console.Testing\Spectre.Console.Testing.csproj" />
+    <ProjectReference Include="..\..\spectre.console\src\Spectre.Console\Spectre.Console.csproj" />
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
   </ItemGroup>
 
