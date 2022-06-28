@@ -16,6 +16,7 @@ namespace BattleNetPrefill
     // TODO - Documentation - Update documentation to show why you should be using UTF16.  Include an image showing before/after.  Also possibly do a check on startup?
     // TODO - Metrics - Setup and configure Github historical statistics (Downloads, page views, etc).  This will be useful for seeing project usage.
     // TODO - General - Promote this app on r/lanparty and discord
+    // TODO - Document in readme where users can find help with this project
     public static class Program
     {
         public static async Task<int> Main()

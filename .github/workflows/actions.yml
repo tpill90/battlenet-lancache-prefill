@@ -9,16 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore -c Release
     - name: Test
-      run: dotnet test --no-restore -c Release --filter "FullyQualifiedName!=BattleNetPrefill.Test.LogFileUpToDateTests&FullyQualifiedName!=BattleNetPrefill.Test.DownloadTests.Blizzard.WorldOfWarcraft&FullyQualifiedName!=BattleNetPrefill.Test.DownloadTests.Blizzard.WowClassic"
+      run: >
+        cd BattleNetPrefill.Test;
+        dotnet test --no-restore -c Release --filter "FullyQualifiedName!=BattleNetPrefill.Test.LogFileUpToDateTests&FullyQualifiedName!=BattleNetPrefill.Test.DownloadTests"
       
   Sonar-Analysis:
     runs-on: ubuntu-latest
