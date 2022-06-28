@@ -10,7 +10,6 @@ namespace BattleNetPrefill
     // TODO - Resolve issues on Github issues
     // TODO - Allocations - https://github.com/bretcope/PerformanceTypes
     // TODO - Allocations - https://mgravell.github.io/PooledAwait/
-    // TODO - Delete request replayer
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
     // TODO - Spectre - Documentation on website needs to be updated to include changes
     // TODO - General - Write check to see if a newer version is available, and display a message to the user if there is

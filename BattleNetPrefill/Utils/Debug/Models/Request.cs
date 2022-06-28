@@ -46,8 +46,7 @@ namespace BattleNetPrefill.Utils.Debug.Models
         public bool IsIndex { get; set; }
 
         public bool DownloadWholeFile { get; set; }
-
-        //TODO should this be nullable?
+        
         public long LowerByteRange { get; set; }
         public long UpperByteRange { get; set; }
 

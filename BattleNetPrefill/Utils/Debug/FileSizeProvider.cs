@@ -15,10 +15,10 @@ namespace BattleNetPrefill.Utils.Debug
     /// The purpose of this class, is that it will figure out the response size of these "whole file" requests, and cache them for future use.
     /// This greatly helps with debugging, as we will be able to compare range requests against range requests, without having to implement "whole file" comparison logic.
     /// </summary>
-    public class FileSizeProvider
+    public sealed class FileSizeProvider : IDisposable
     {
         private readonly TactProduct _targetProduct;
-        private readonly string _blizzardCdnBaseUri;
+        private readonly string _blizzardCdnBaseUrl;
 
         private readonly HttpClient _client = new HttpClient();
 
@@ -29,10 +29,10 @@ namespace BattleNetPrefill.Utils.Debug
         private string CachedFileName => $"{_cacheDir}/{_targetProduct.ProductCode}.json";
         private object _cacheFileLock = new object();
 
-        public FileSizeProvider(TactProduct targetProduct, string baseCdnUri)
+        public FileSizeProvider(TactProduct targetProduct, string baseCdnUrl)
         {
             _targetProduct = targetProduct;
-            _blizzardCdnBaseUri = baseCdnUri;
+            _blizzardCdnBaseUrl = baseCdnUrl;
             if(!Directory.Exists(_cacheDir))
             {
                 Directory.CreateDirectory(_cacheDir);
@@ -58,11 +58,6 @@ namespace BattleNetPrefill.Utils.Debug
             }
         }
 
-        public bool HasBeenCached(Request request)
-        {
-            return _cachedContentLengths.ContainsKey(request.Uri);
-        }
-
         public async Task<long> GetContentLengthAsync(Request request)
         {
             if (_cachedContentLengths.ContainsKey(request.Uri))
@@ -70,7 +65,8 @@ namespace BattleNetPrefill.Utils.Debug
                 return _cachedContentLengths[request.Uri];
             }
 
-            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUri}/{request.Uri}")));
+            using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Head, new Uri($"{_blizzardCdnBaseUrl}/{request.Uri}"));
+            var response = await _client.SendAsync(httpRequestMessage);
             var contentLength = response.Content.Headers.ContentLength.Value;
 
             _cachedContentLengths.TryAdd(request.Uri, contentLength);
@@ -99,6 +95,11 @@ namespace BattleNetPrefill.Utils.Debug
                 var contentLength = await GetContentLengthAsync(request);
                 request.UpperByteRange = contentLength - 1;
             }
+        }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
         }
     }
 }

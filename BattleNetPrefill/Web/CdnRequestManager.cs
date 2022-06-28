@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -18,7 +19,7 @@ using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Web
 {
-    public class CdnRequestManager
+    public sealed class CdnRequestManager : IDisposable
     {
         private readonly HttpClient _client;
 
@@ -158,6 +159,7 @@ namespace BattleNetPrefill.Web
             return true;
         }
 
+
         /// <summary>
         /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
         /// </summary>
@@ -165,6 +167,8 @@ namespace BattleNetPrefill.Web
         /// <param name="taskTitle"></param>
         /// <param name="requestsToDownload"></param>
         /// <returns>A list of failed requests</returns>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Want to catch all exceptions, regardless of type")]
+        [SuppressMessage("CodeSmell", "ERP022:Unobserved exception in generic exception handler", Justification = "Want to catch all exceptions, regardless of type")]
         private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requestsToDownload)
         {
             double requestTotalSize = requestsToDownload.SumTotalBytes().Bytes;
@@ -316,6 +320,11 @@ namespace BattleNetPrefill.Web
             // Writes results to disk, to be used as cache later
             await File.WriteAllTextAsync(cacheFile, content);
             return content;
+        }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
         }
     }
 }

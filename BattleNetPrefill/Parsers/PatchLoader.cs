@@ -18,7 +18,7 @@ namespace BattleNetPrefill.Parsers
             _cdnRequestManager = cdnRequestManager;
         }
 
-        public async Task HandlePatchesAsync(BuildConfigFile buildConfig, TactProduct targetProduct, CDNConfigFile _cdnConfig)
+        public async Task HandlePatchesAsync(BuildConfigFile buildConfig, TactProduct targetProduct, CDNConfigFile cdnConfig)
         {
             // For whatever reason, these products do not actually make this request
             var patchConfigExclusions = new List<TactProduct>
@@ -37,9 +37,9 @@ namespace BattleNetPrefill.Parsers
             }
 
             // Unused by Hearthstone
-            if (_cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection)
+            if (cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection)
             {
-                _cdnRequestManager.QueueRequest(RootFolder.patch, _cdnConfig.patchFileIndex.Value,  0, _cdnConfig.patchFileIndexSize - 1, isIndex: true);
+                _cdnRequestManager.QueueRequest(RootFolder.patch, cdnConfig.patchFileIndex.Value,  0, cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
             
             if (buildConfig.patchIndex != null)
@@ -49,13 +49,13 @@ namespace BattleNetPrefill.Parsers
             }
 
             // Unused by Hearthstone
-            if (_cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection
+            if (cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection
                 && targetProduct != TactProduct.Overwatch)
             {
-                for (var i = 0; i < _cdnConfig.patchArchives.Length; i++)
+                for (var i = 0; i < cdnConfig.patchArchives.Length; i++)
                 {
-                    var patchIndex = _cdnConfig.patchArchives[i];
-                    _cdnRequestManager.QueueRequest(RootFolder.patch, patchIndex, 0, _cdnConfig.patchArchivesIndexSize[i] - 1, isIndex: true);
+                    var patchIndex = cdnConfig.patchArchives[i];
+                    _cdnRequestManager.QueueRequest(RootFolder.patch, patchIndex, 0, cdnConfig.patchArchivesIndexSize[i] - 1, isIndex: true);
                 }
             }
         }
