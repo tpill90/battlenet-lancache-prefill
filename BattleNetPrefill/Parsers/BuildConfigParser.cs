@@ -173,12 +173,9 @@ namespace BattleNetPrefill.Parsers
                 }
             }
             
-            if (targetProduct != TactProduct.Diablo3)
-            {
-                // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
-                cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
-            }
-            
+            // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
+            cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
+           
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.
             // Requesting it anyway since almost every product will download it in the real Battle.net client.
             cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);

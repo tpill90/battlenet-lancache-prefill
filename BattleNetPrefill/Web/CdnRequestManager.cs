@@ -140,7 +140,7 @@ namespace BattleNetPrefill.Web
                 {
                     _retryCount++;
                     failedRequests = await AttemptDownloadAsync(ctx, $"Retrying  {_retryCount}..", failedRequests.ToList());
-                    await Task.Delay(2000 * _retryCount).ConfigureAwait(false);
+                    await Task.Delay(2000 * _retryCount);
                 }
             });
 
