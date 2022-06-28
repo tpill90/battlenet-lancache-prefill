@@ -7,6 +7,11 @@
             return $"[blue]{inputObj}[/]";
         }
 
+        public static string LightBlue(object inputObj)
+        {
+            return $"[deepskyblue3]{inputObj}[/]";
+        }
+
         public static string Cyan(object inputObj)
         {
             return $"[cyan]{inputObj}[/]";
@@ -20,6 +25,11 @@
         public static string Magenta(object inputObj)
         {
             return $"[fuchsia]{inputObj}[/]";
+        }
+
+        public static string Olive(object inputObj)
+        {
+            return $"[yellow4_1]{inputObj}[/]";
         }
 
         public static string Red(object inputObj)
