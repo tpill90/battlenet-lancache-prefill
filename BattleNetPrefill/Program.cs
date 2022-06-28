@@ -17,20 +17,20 @@ namespace BattleNetPrefill
     // TODO - Metrics - Setup and configure Github historical statistics (Downloads, page views, etc).  This will be useful for seeing project usage.
     // TODO - General - Promote this app on r/lanparty and discord
     // TODO - Document in readme where users can find help with this project
+    // TODO - Update lancache documentation, and add battle.net slow download speeds to the list of known issues
     public static class Program
     {
         public static async Task<int> Main()
         {
-            var cliBuilder = new CliApplicationBuilder()
-                         .AddCommandsFromThisAssembly()
-                         .SetTitle("BattleNetPrefill")
-                         .SetExecutableName("BattleNetPrefill");
+            var executableName = "BattleNetPrefill";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                cliBuilder.SetExecutableName("BattleNetPrefill.exe");
+                executableName = "BattleNetPrefill.exe";
             }
-
-            return await cliBuilder
+            return await new CliApplicationBuilder()
+                         .AddCommandsFromThisAssembly()
+                         .SetTitle("BattleNetPrefill")
+                         .SetExecutableName(executableName)
                          .Build()
                          .RunAsync();
         }

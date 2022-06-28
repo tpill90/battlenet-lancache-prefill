@@ -79,6 +79,8 @@ namespace BattleNetPrefill
 
             public async ValueTask ExecuteAsync(IConsole console)
             {
+                await UpdateChecker.CheckForUpdatesAsync();
+
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
 
                 if (productsToProcess.Count == 0)
