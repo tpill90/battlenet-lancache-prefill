@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
@@ -159,23 +161,18 @@ namespace BattleNetPrefill.Web
             return true;
         }
 
-
         /// <summary>
         /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
         /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="taskTitle"></param>
-        /// <param name="requestsToDownload"></param>
         /// <returns>A list of failed requests</returns>
         [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Want to catch all exceptions, regardless of type")]
         [SuppressMessage("CodeSmell", "ERP022:Unobserved exception in generic exception handler", Justification = "Want to catch all exceptions, regardless of type")]
-        private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requestsToDownload)
+        private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requests)
         {
-            double requestTotalSize = requestsToDownload.SumTotalBytes().Bytes;
-            var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requestTotalSize });
+            var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requests.SumTotalBytes().Bytes });
 
             var failedRequests = new ConcurrentBag<Request>();
-            await Parallel.ForEachAsync(requestsToDownload, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async (request, token) =>
+            var downloadRequest = async (Request request, CancellationToken _) =>
             {
                 try
                 {
@@ -185,10 +182,20 @@ namespace BattleNetPrefill.Web
                 {
                     failedRequests.Add(request);
                 }
-            });
+            };
+
+            // Splitting up small/large requests into two batches.  Splitting into two batches with different # of parallel requests will prevent the small
+            // requests from choking out overall throughput.
+            var byteThreshold = (long)ByteSize.FromMegaBytes(1).Bytes;
+            var smallRequests = requests.Where(e => e.TotalBytes < byteThreshold).ToList();
+            var smallDownloadTask = Parallel.ForEachAsync(smallRequests, new ParallelOptions { MaxDegreeOfParallelism = 10 }, async (request, _) => await downloadRequest(request, _));
+
+            var largeRequests = requests.Where(e => e.TotalBytes >= byteThreshold).ToList();
+            var largeDownloadTask = Parallel.ForEachAsync(largeRequests, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (request, _) => await downloadRequest(request, _));
+
+            await Task.WhenAll(smallDownloadTask, largeDownloadTask);
 
             // Making sure the progress bar is always set to its max value, some files don't have a size, so the progress bar will appear as unfinished.
-            progressTask.Increment(progressTask.MaxValue);
             return failedRequests;
         }
 
@@ -247,16 +254,17 @@ namespace BattleNetPrefill.Web
             responseMessage.EnsureSuccessStatusCode();
             if(writeToDevNull)
             {
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(524_288);
                 var totalBytesRead = 0;
                 try
                 {
-                    var buffer = new byte[16384];
                     while (true)
                     {
                         // Dump the received data, so we don't have to waste time writing it to disk.
                         var read = await responseStream.ReadAsync(buffer, 0, buffer.Length);
                         if (read == 0)
                         {
+                            ArrayPool<byte>.Shared.Return(buffer);
                             return null;
                         }
                         task.Increment(read);
@@ -265,6 +273,7 @@ namespace BattleNetPrefill.Web
                 }
                 catch (Exception)
                 {
+                    ArrayPool<byte>.Shared.Return(buffer);
                     // Making sure that the current request is marked as "complete" in the progress bar, otherwise the progress bar will never hit 100%
                     task.Increment(request.TotalBytes - totalBytesRead);
                     throw;

@@ -12,6 +12,10 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p lazr --force"
     },
+    "Prefill Hearthstone": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p hsb --force"
+    },
     "Prefill Overwatch": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p pro --force"
@@ -19,6 +23,10 @@
     "Prefill WOW": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow --force"
+    },
+    "Prefill WOW Classic": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p wow_classic --force"
     },
     "Prefill All": {
       "commandName": "Project",
