@@ -16,8 +16,11 @@ namespace BattleNetPrefill.Utils
         private static readonly Uri _githubReleasesUri = new Uri("https://api.github.com/repos/tpill90/Battlenet-lancache-prefill/releases");
         private static readonly string _lastUpdateCheckFile = $"{Config.CacheDir}/lastUpdateCheck.txt";
 
-        //TODO document
-        //TODO wrap in a try catch
+        /// <summary>
+        /// Compares the current application version against the newest version available on Github Releases.  If there is a newer version, displays a message
+        /// to the user.
+        /// </summary>
+        /// <returns></returns>
         public static async Task CheckForUpdatesAsync()
         {
             try
