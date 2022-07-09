@@ -132,7 +132,6 @@ namespace BattleNetPrefill.Handlers
         /// </summary>
         private int ComputeInitialDictionarySize()
         {
-            //TODO See if there is any way to estimate this per product, rather than having to have this hardcoded value
             int initialDictionarySize = 1;
             if (_targetProduct == TactProduct.Overwatch)
             {

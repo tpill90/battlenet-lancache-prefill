@@ -171,8 +171,7 @@ namespace BattleNetPrefill.Handlers
         /// </summary>
         private List<DownloadTag> DetermineTagsToUse(TactProduct targetProduct)
         {
-            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.
-            //TODO do a check to make sure that the tags being used are actually valid for the product
+            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.  Tags being passed in should be validated per project
             // Default tags that work with most products
             if (targetProduct.DefaultTags == null)
             {

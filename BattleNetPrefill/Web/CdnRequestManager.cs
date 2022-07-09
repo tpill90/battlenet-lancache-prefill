@@ -188,10 +188,10 @@ namespace BattleNetPrefill.Web
             // requests from choking out overall throughput.
             var byteThreshold = (long)ByteSize.FromMegaBytes(1).Bytes;
             var smallRequests = requests.Where(e => e.TotalBytes < byteThreshold).ToList();
-            var smallDownloadTask = Parallel.ForEachAsync(smallRequests, new ParallelOptions { MaxDegreeOfParallelism = 10 }, async (request, _) => await downloadRequest(request, _));
+            var smallDownloadTask = Parallel.ForEachAsync(smallRequests, new ParallelOptions { MaxDegreeOfParallelism = 15 }, async (request, _) => await downloadRequest(request, _));
 
             var largeRequests = requests.Where(e => e.TotalBytes >= byteThreshold).ToList();
-            var largeDownloadTask = Parallel.ForEachAsync(largeRequests, new ParallelOptions { MaxDegreeOfParallelism = 5 }, async (request, _) => await downloadRequest(request, _));
+            var largeDownloadTask = Parallel.ForEachAsync(largeRequests, new ParallelOptions { MaxDegreeOfParallelism = 10 }, async (request, _) => await downloadRequest(request, _));
 
             await Task.WhenAll(smallDownloadTask, largeDownloadTask);
 

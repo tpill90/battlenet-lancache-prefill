@@ -23,37 +23,38 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 3.  (**Linux / OSX Only**)  Give the downloaded executable permissions to be run with `chmod +x .\BattleNetPrefill`
 4.  (**Windows Only**)  Configure your terminal to use Unicode, for much nicer looking UI output.
     - Unicode on Windows is not enabled by default, however adding the following to your Powershell `profile.ps1` will enable it.
-    - `[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
-`
+    - `[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()`
     - If you do not already have a Powershell profile created, follow this step-by-step guide https://lazyadmin.nl/powershell/powershell-profile/
 # Basic Usage
 
 A single game can be downloaded by specifying a single product code
-```
+```powershell
 .\BattleNetPrefill.exe prefill --products s1
 ```
 
 Multiple games can be downloaded by specifying as many product codes as desired
-```
+```powershell
 .\BattleNetPrefill.exe prefill --products s1 d3 zeus
 ```
 
 Optional flags can be used to bulk preload products, without having to specify each product code individually
-```
+```powershell
 .\BattleNetPrefill.exe prefill --all
 .\BattleNetPrefill.exe prefill --blizzard 
 .\BattleNetPrefill.exe prefill --activision 
 ```
 
 The list of currently supported products to download can be displayed using the following
-```
+```powershell
 .\BattleNetPrefill.exe list-products
 ```
 
 # Detailed Usage
 
 ## list-products
-Displays a table of all currently supported Activision and Blizzard games.  Only currently supports retail products, and does not include any PTR or beta products.
+Displays a table of all currently supported Activision and Blizzard games.  Only currently supports retail products, and does not include any PTR or beta products. 
+
+These product IDs can then be used with the `prefill` command to specify which games to be prefilled.
 
 ## prefill
 Fills a Lancache by downloading the exact same files from Blizzard's CDN as the official Battle.Net client.  Expected initial download speeds should be the speed of your internet connection.
@@ -67,7 +68,7 @@ If a list of products is supplied, only these products will be downloaded.  This
 Downloads multiple products, useful for prefilling a completely empty cache.  Can be combined with `--products`.
 
 ### --nocache
-By default, **BattleNetPrefill** will cache copies of certain files on disk, in order to dramatically speed up future runs (in some cases 3X faster).  
+By default, **BattleNetPrefill** will cache copies of certain files on disk, in order to dramatically speed up future runs (in some cases 3X faster).  These cache files will be stored in the `/cache` directory in the same directory as **BattleNetPrefill**.
 However, in some scenarios this disk cache can potentially take up a non-trivial amount of storage (~1gb), which may not be ideal for all use cases.
 
 By running with the additional flag `--nocache`, **BattleNetPrefill** will no longer cache any files locally, at the expense of slower runtime.
