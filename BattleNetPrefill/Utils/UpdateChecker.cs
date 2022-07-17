@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Spectre.Console;
 using Utf8Json;
@@ -13,14 +14,13 @@ namespace BattleNetPrefill.Utils
 {
     public static class UpdateChecker
     {
-        private static readonly Uri _githubReleasesUri = new Uri("https://api.github.com/repos/tpill90/Battlenet-lancache-prefill/releases");
+        private static readonly string _repoName = "tpill90/Battlenet-lancache-prefill";
         private static readonly string _lastUpdateCheckFile = $"{Config.CacheDir}/lastUpdateCheck.txt";
 
         /// <summary>
         /// Compares the current application version against the newest version available on Github Releases.  If there is a newer version, displays a message
         /// to the user.
         /// </summary>
-        /// <returns></returns>
         public static async Task CheckForUpdatesAsync()
         {
             try
@@ -34,23 +34,23 @@ namespace BattleNetPrefill.Utils
                 httpClient.Timeout = TimeSpan.FromSeconds(5);
                 httpClient.DefaultRequestHeaders.Accept.Clear();
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "BattleNetPrefill");
+                httpClient.DefaultRequestHeaders.Add("User-Agent", _repoName);
 
                 // Query Github for a list of all available releases
-                var response = await httpClient.GetStringAsync(_githubReleasesUri);
+                var response = await httpClient.GetStringAsync(new Uri($"https://api.github.com/repos/{_repoName}/releases"));
                 GithubRelease latestRelease = JsonSerializer.Deserialize<List<GithubRelease>>(response)
-                                                      .OrderByDescending(e => e.published_at)
-                                                      .First();
+                                                            .OrderByDescending(e => e.PublishedAt)
+                                                            .First();
 
                 // Compare the available releases against our known releases
-                var latestVersion = latestRelease.tag_name.Replace("v", "");
+                var latestVersion = latestRelease.TagName.Replace("v", "");
                 var assemblyVersion = typeof(Program).Assembly.GetName().Version.ToString(3);
                 if (latestVersion != assemblyVersion)
                 {
                     WriteUpdateMessage(assemblyVersion, latestVersion);
                 }
 
-                await File.WriteAllTextAsync(_lastUpdateCheckFile, DateTime.Now.ToLongTimeString());
+                await File.WriteAllTextAsync(_lastUpdateCheckFile, DateTime.Now.ToString());
             }
             catch
             {
@@ -64,7 +64,7 @@ namespace BattleNetPrefill.Utils
         private static bool UpdatesHaveBeenRecentlyChecked()
         {
             var fileInfo = new FileInfo(_lastUpdateCheckFile);
-            return fileInfo.Exists && fileInfo.CreationTime.AddDays(7) > DateTime.UtcNow;
+            return fileInfo.Exists && fileInfo.LastWriteTimeUtc.AddDays(3) > DateTime.UtcNow;
         }
 
         private static void WriteUpdateMessage(string currentVersion, string updateVersion)
@@ -82,7 +82,7 @@ namespace BattleNetPrefill.Utils
             table.AddRow($"A newer version is available {currentVersion} → {Olive(updateVersion)}");
             table.AddRow("");
             table.AddRow($"Download at :  ");
-            table.AddRow(LightBlue("https://github.com/tpill90/Battlenet-lancache-prefill/releases"));
+            table.AddRow(LightBlue($"https://api.github.com/repos/{_repoName}/releases"));
             table.AddRow("");
 
             // Render the table to the console
@@ -93,11 +93,10 @@ namespace BattleNetPrefill.Utils
     
     public class GithubRelease
     {
-        public string tag_name { get; set; }
-        public string name { get; set; }
-        public bool draft { get; set; }
-        public bool prerelease { get; set; }
-        public DateTime created_at { get; set; }
-        public DateTime published_at { get; set; }
+        [DataMember(Name = "tag_name")]
+        public string TagName { get; set; }
+
+        [DataMember(Name = "published_at")]
+        public DateTime PublishedAt { get; set; }
     }
 }

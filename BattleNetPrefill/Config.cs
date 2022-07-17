@@ -8,10 +8,7 @@ namespace BattleNetPrefill
     {
         static Config()
         {
-            if (!Directory.Exists(CacheDir))
-            {
-                Directory.CreateDirectory(CacheDir);
-            }
+            Directory.CreateDirectory(CacheDir);
         }
 
         /// <summary>
