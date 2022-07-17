@@ -26,12 +26,12 @@ dotnet build
 
 Typically, for development you will want to run the project in `Debug` mode.  This mode will run dramatically slower than `Release`, however it will leave useful debugging information in the compiled assembly.  Running the following will detect and changes, and both `build` and `run` the project :
 ```powershell
-dotnet run --project .\BuildBackup\BuildBackup.csproj
+dotnet run --project .\BattleNetPrefill\BattleNetPrefill.csproj
 ```
 
 Alternatively, to run the project at full speed with all compilation optimizations enabled, add the additional `--configuration Release` flag:
 ```powershell
-dotnet run --project .\BuildBackup\BuildBackup.csproj --configuration Release
+dotnet run --project .\BattleNetPrefill\BattleNetPrefill.csproj --configuration Release
 ```
 
 # Executing Unit Tests
