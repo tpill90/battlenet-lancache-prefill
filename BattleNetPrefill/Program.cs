@@ -3,23 +3,20 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
-    // TODO - Feature - Possibly add a clear cache command
+
     // TODO - Documentation - Document process for updating app
     // TODO - readme - Update readme to match style of steam prefill readme
-    // TODO - Implement a feature that checks to make sure that your dns is pointing to a lancache.  Similar to how it is impleemented in SteamPrefill
     // TODO - Remove personal machine build path from being displayed in exceptions when they are thrown
     // TODO - change the publish zip files to be the format {app}-{version}-{os}
-    // TODO implement https://github.com/tpill90/steam-lancache-prefill/issues/30 
-    // TODO - https://github.com/tpill90/steam-lancache-prefill/issues/45
+    // TODO - interface - Remove "Default : false" output from CliFx help text
     // TODO - Feature - Consider implementing a multi-select command for interactively choosing which products to prefill.  Similar to steamPrefill.
     // TODO - Tech Debt - Cleanup trim/single file warnings
-    // TODO - Tech Debt - Dotnet 7 - See if AOT improvements help performance
     // TODO - Resolve issues on Github issues
+    // TODO - Feature - Possibly add a clear cache command
     // TODO - General - Promote this app on r/lanparty
-    // TODO - Test out https://github.com/microsoft/infersharpaction
+
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
     // TODO - Spectre - Documentation on website needs to be updated to include changes
-    // TODO - interface - Remove "Default : false" output from CliFx help text
     // TODO - I wish there was a way to color the help text output from CliFx.  Everything is so flat, and cant draw attention to important parts
     public static class Program
     {
