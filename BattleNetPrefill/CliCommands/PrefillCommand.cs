@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BattleNetPrefill.Utils;
@@ -42,22 +43,29 @@ namespace BattleNetPrefill.CliCommands
 
         public async ValueTask ExecuteAsync(IConsole console)
         {
-            await UpdateChecker.CheckForUpdatesAsync();
-
-            List<TactProduct> productsToProcess = BuildProductListFromArgs();
-
-            if (productsToProcess.Count == 0)
-            {
-                throw new CommandException("At least one product is required!  Use '--products' to specify which products to load, " +
-                                           "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
-            }
-
             var ansiConsole = console.CreateAnsiConsole();
-            ansiConsole.MarkupLine($"Prefilling {SpectreColors.Yellow(productsToProcess.Count)} products");
-            foreach (var code in productsToProcess.Distinct().ToList())
+            try
             {
-                var tactProductHandler = new TactProductHandler(code, ansiConsole, Config.DebugConfig);
-                await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+                await UpdateChecker.CheckForUpdatesAsync();
+
+                List<TactProduct> productsToProcess = BuildProductListFromArgs();
+
+                if (productsToProcess.Count == 0)
+                {
+                    throw new CommandException("At least one product is required!  Use '--products' to specify which products to load, " +
+                                               "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
+                }
+                
+                ansiConsole.MarkupLine($"Prefilling {SpectreColors.Yellow(productsToProcess.Count)} products");
+                foreach (var code in productsToProcess.Distinct().ToList())
+                {
+                    var tactProductHandler = new TactProductHandler(code, ansiConsole, Config.DebugConfig);
+                    await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+                }
+            }
+            catch (Exception e)
+            {
+                ansiConsole.WriteException(e, ExceptionFormats.ShortenPaths);
             }
         }
 

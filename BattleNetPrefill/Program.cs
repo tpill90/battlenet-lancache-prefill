@@ -3,13 +3,10 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
-
     // TODO - Documentation - Document process for updating app
     // TODO - readme - Update readme to match style of steam prefill readme
-    // TODO - Remove personal machine build path from being displayed in exceptions when they are thrown
     // TODO - Feature - Consider implementing a multi-select command for interactively choosing which products to prefill.  Similar to steamPrefill.
     // TODO - Tech Debt - Cleanup trim/single file warnings
-    // TODO - Feature - Possibly add a clear cache command
     // TODO - General - Promote this app on r/lanparty
 
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
