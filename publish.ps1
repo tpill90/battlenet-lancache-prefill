@@ -1,47 +1,81 @@
+$scriptBlock = {
+    function PublishRuntime([string] $runtime, [string] $version)
+    {
+        # All double quotes need to be escaped (""") in this block in order to work correctly with Start-Process
+        $publishDir = """publish/BattleNetPrefill-$version-$runtime"""
+        
+        Write-Host "Publishing $runtime" -ForegroundColor Cyan
+        dotnet publish .\BattleNetPrefill\BattleNetPrefill.csproj `
+        --no-restore `
+        --no-build `
+        -o $publishDir `
+        -c Release `
+        --runtime $runtime `
+        --self-contained true `
+        /p:PublishSingleFile=true `
+        /p:PublishReadyToRun=true `
+        /p:PublishTrimmed=true `
+        --nologo
+
+        if($LASTEXITCODE -ne 0)
+        {
+            Read-Host
+        }
+
+        Compress-Archive -path $publishDir """$publishDir.zip"""
+    }
+}
+
+Clear-Host
 Set-Location $PSScriptRoot
 $ErrorActionPreference = "Stop"
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-Remove-Item publish -Recurse -Force -ErrorAction SilentlyContinue
+$csprojXml = [xml](gc BattleNetPrefill\BattleNetPrefill.csproj)
 
-# Windows publish
-foreach($runtime in @("win-x64"))
+# The current version of the app
+$version = "$($csprojXml.ChildNodes.PropertyGroup.Version)".Trim()
+# The list of runtimes that will be targeted by the publish
+$targetRuntimes = $csprojXml.ChildNodes.PropertyGroup.RuntimeIdentifiers[0].Split(';')
+
+# Empty out the \obj folder, will guarantee a new build will be published each time
+Remove-Item .\BattleNetPrefill\obj -Recurse -Force -ErrorAction SilentlyContinue
+Get-ChildItem publish -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+# Running dotnet build for each runtime, otherwise the publish step will fail when ran in parallel
+Write-Host "Starting dotnet build.." -ForegroundColor Yellow
+foreach($runtime in $targetRuntimes)
 {
-    Write-Host "Publishing $runtime" -ForegroundColor Cyan
-    dotnet publish .\BattleNetPrefill\BattleNetPrefill.csproj `
-    -o publish/BattleNetPrefill-$runtime `
-    -c Release `
-    --runtime $runtime `
-    --self-contained true `
-    /p:PublishSingleFile=true `
-    /p:PublishReadyToRun=true `
-    /p:PublishTrimmed=true
+    Write-Host ""
+    Write-Host "Building " -NoNewline; Write-Host $runtime -ForegroundColor Cyan
+    dotnet build .\BattleNetPrefill\BattleNetPrefill.csproj `
+        -c Release `
+        --runtime $runtime `
+        --self-contained true `
+        /p:PublishSingleFile=true `
+        -v quiet `
+        --nologo
 
-    Compress-Archive -path publish/BattleNetPrefill-$runtime publish/$runtime.zip
-
-    $folderSize = "{0:N2} MB" -f((Get-ChildItem publish/BattleNetPrefill-$runtime | Measure-Object -Property Length -sum).sum / 1Mb)
-    Write-Host "Published file size : " -NoNewline
-    Write-Host -ForegroundColor Cyan $folderSize
-
-    $zipSize = "{0:N2} MB" -f((Get-ChildItem publish/$runtime.zip | Measure-Object -Property Length -sum).sum / 1Mb)
-    Write-Host "Published zip size : " -NoNewline
-    Write-Host -ForegroundColor Cyan $zipSize
+    # Making sure that the compliation is successful before mmoving on to the publishing step
+    if($LASTEXITCODE -ne 0)
+    {
+        Write-Host "\nBuild failed.  Skipping publish step until errors are resolved.." -ForegroundColor Red
+        return
+    }
 }
 
-# Doing linux and osx separatly, they don't support ReadyToRun
-foreach($runtime in @("linux-x64", "osx-x64"))
+$processes = @()
+foreach($runtime in $targetRuntimes)
 {
-    Write-Host "\n\nPublishing $runtime" -ForegroundColor Cyan
-    dotnet publish .\BattleNetPrefill\BattleNetPrefill.csproj `
-    -o publish/BattleNetPrefill-$runtime `
-    -c Release `
-    --runtime $runtime `
-    --self-contained true `
-    /p:PublishSingleFile=true `
-    /p:PublishTrimmed=true
-
-    $folderSize = "{0:N2} MB" -f((Get-ChildItem publish/BattleNetPrefill-$runtime | Measure-Object -Property Length -sum).sum / 1Mb)
-    Write-Host "Published file size : " -NoNewline
-    Write-Host -ForegroundColor Cyan $folderSize
-
-    Compress-Archive -path publish/BattleNetPrefill-$runtime publish/$runtime.zip
+    $processes += Start-Process powershell.exe `
+                            -ArgumentList "-command", "& {$scriptBlock PublishRuntime '$runtime' '$version'}" `
+                            -PassThru
 }
+
+Write-Host "Waiting on publish to complete" -ForegroundColor Yellow
+$processes | Wait-Process
+
+
+$stopwatch.Stop()
+Write-Host "Build took: " -NoNewline
+Write-Host $stopwatch.Elapsed.ToString() -ForegroundColor Yellow
