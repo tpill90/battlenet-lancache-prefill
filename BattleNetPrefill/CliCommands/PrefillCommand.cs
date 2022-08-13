@@ -56,7 +56,7 @@ namespace BattleNetPrefill.CliCommands
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
                 
-                ansiConsole.MarkupLine($"Prefilling {SpectreColors.Yellow(productsToProcess.Count)} products");
+                ansiConsole.MarkupLine($"Prefilling {SpectreColors.LightYellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
                     var tactProductHandler = new TactProductHandler(code, ansiConsole, AppConfig.DebugConfig);

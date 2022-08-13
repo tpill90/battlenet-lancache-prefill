@@ -3,6 +3,10 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
+    //TODO cleanup todos
+    //TODO rework the colors in this app to more closely match the colors used in SteamPrefill
+
+
     // TODO - General - Promote this app on r/lanparty
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
     // TODO - Spectre - Documentation on website needs to be updated to include changes

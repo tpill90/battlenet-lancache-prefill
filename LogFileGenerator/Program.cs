@@ -41,7 +41,7 @@ namespace LogFileGenerator
                     AnsiConsole.MarkupLine($"{Green(product.DisplayName)} already up to date!  Skipping..");
                     continue;
                 }
-                AnsiConsole.MarkupLine($"{Yellow(product.DisplayName)} logs are out of date!  Generating latest logs..");
+                AnsiConsole.MarkupLine($"{LightYellow(product.DisplayName)} logs are out of date!  Generating latest logs..");
 
                 ClearLancacheLogs();
 
@@ -96,7 +96,7 @@ namespace LogFileGenerator
 
         private static void InstallProduct(TactProduct product)
         {
-            AnsiConsole.MarkupLine($"Installing {Yellow(product.DisplayName)}....");
+            AnsiConsole.MarkupLine($"Installing {LightYellow(product.DisplayName)}....");
 
             var installPath = $@"{RootInstallDir}\{product.ProductCode}";
             if (!Directory.Exists(installPath))
@@ -107,12 +107,12 @@ namespace LogFileGenerator
             var process = Process.Start(new ProcessStartInfo(BnetInstallerPath , @$"--prod {product.ProductCode} --lang enus --dir {installPath}"));
             process.WaitForExit();
             
-            AnsiConsole.MarkupLine($"Installing done!");
+            AnsiConsole.MarkupLine("Installing done!");
         }
 
         private static void ManuallyInstallProduct(TactProduct product)
         {
-            AnsiConsole.MarkupLine($"{Yellow(product.DisplayName)} requires a manual install.  Install then press Enter when finished to continue....");
+            AnsiConsole.MarkupLine($"{LightYellow(product.DisplayName)} requires a manual install.  Install then press Enter when finished to continue....");
             Console.ReadLine();
         }
 
@@ -175,13 +175,13 @@ namespace LogFileGenerator
 
             foreach (var dir in Directory.GetDirectories(RootInstallDir))
             {
-                AnsiConsole.Markup($"   Deleting {Yellow(dir)}...\n");
+                AnsiConsole.Markup($"   Deleting {LightYellow(dir)}...\n");
                 Directory.Delete(dir, true);
             }
 
             foreach (var file in Directory.GetFiles(RootInstallDir))
             {
-                AnsiConsole.Markup($"   Deleting {Yellow(file)}...\n");
+                AnsiConsole.Markup($"   Deleting {LightYellow(file)}...\n");
                 File.Delete(file);
             }
         }

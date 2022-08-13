@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,6 +15,7 @@ using Spectre.Console;
 
 namespace BattleNetPrefill.Utils
 {
+    //TODO break up these extension classes
     public static class BinaryReaderExtensions
     {
         public static short ReadInt16BigEndian(this BinaryReader reader)
@@ -137,6 +139,10 @@ namespace BattleNetPrefill.Utils
             return spectreProgress;
         }
 
+        public static void MarkupLineTimer(this IAnsiConsole console, string message, Stopwatch stopwatch)
+        {
+            console.MarkupLine($"{message} " + SpectreColors.LightYellow(stopwatch.Elapsed.ToString(@"ss\.FFFF")));
+        }
     }
 
     public static class Extensions

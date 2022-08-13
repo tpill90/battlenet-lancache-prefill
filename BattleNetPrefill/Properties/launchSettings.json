@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Default": {
+    "Prefill Starcraft 2": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p s2 --force"
     },

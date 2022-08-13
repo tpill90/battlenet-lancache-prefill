@@ -47,7 +47,7 @@ namespace BattleNetPrefill.Utils.Debug
 
             comparisonResult.PrintOutput();
 
-            AnsiConsole.MarkupLine($"Comparison complete! {Yellow(timer.Elapsed.ToString(@"mm\:ss\.FFFF"))}");
+            AnsiConsole.Console.MarkupLineTimer("Comparison complete!", timer);
             return comparisonResult;
         }
         

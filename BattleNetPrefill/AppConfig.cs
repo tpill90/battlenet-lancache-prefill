@@ -17,8 +17,7 @@ namespace BattleNetPrefill
         /// </summary>
         public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
 
-        //TODO anywhere this is used, I need to make sure that the path is being combined relative to the executable.  In the case that you call the exe from a different dir
-        public static string CacheDir => "cache";
+        public static readonly string CacheDir = Path.Combine(AppContext.BaseDirectory, "Cache");
 
         public static readonly DebugConfig DebugConfig = new DebugConfig
         {

@@ -86,14 +86,15 @@ namespace BattleNetPrefill
             });
 
             // Actually start the download of any deferred requests
-            //var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
-            //if (downloadSuccess)
-            //{
+            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
+            if (downloadSuccess)
+            {
                 SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
-            //}
+            }
 
             timer.Stop();
-            _ansiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
+            //TODO add a average transfer speed, similar to how SteamPrefill does it
+            _ansiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {LightYellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
             
             if (!_debugConfig.CompareAgainstRealRequests)
             {

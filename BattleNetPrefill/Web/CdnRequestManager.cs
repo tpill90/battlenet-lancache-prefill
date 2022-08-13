@@ -130,7 +130,7 @@ namespace BattleNetPrefill.Web
             _queuedRequests.Clear();
 
             ByteSize totalSize = coalescedRequests.SumTotalBytes();
-            AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {Yellow(totalSize.GibiBytes.ToString("N2") + " GiB")}");
+            AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {LightYellow(totalSize.GibiBytes.ToString("N2") + " GiB")}");
 
             var failedRequests = new ConcurrentBag<Request>();
             await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>

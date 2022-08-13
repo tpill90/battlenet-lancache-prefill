@@ -54,7 +54,7 @@ namespace BattleNetPrefill.Utils.Debug
                 var coalescedFileName = $@"{logFolder}/{latestFile.Name.Replace(".zip", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonSerializer.ToJsonString(requestsToReplay, DefaultUtf8JsonResolver));
                 
-                AnsiConsole.MarkupLine($"Parsed request logs in {Yellow(timer.Elapsed.ToString(@"ss\.FFFF"))}");
+                AnsiConsole.Console.MarkupLineTimer("Parsed request logs", timer);
                 return requestsToReplay;
             }
 

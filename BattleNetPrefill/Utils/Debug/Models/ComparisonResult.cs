@@ -68,13 +68,13 @@ namespace BattleNetPrefill.Utils.Debug.Models
 
             table.AddRow("Requests made", RequestMadeCount.ToString(), RealRequestCount.ToString());
             table.AddRow("Bandwidth required", GeneratedRequestTotalSize.ToString(), RealRequestsTotalSize.ToString());
-            table.AddRow("Requests missing size", Yellow(RequestsWithoutSize.ToString()), RealRequestsWithoutSize.ToString());
+            table.AddRow("Requests missing size", LightYellow(RequestsWithoutSize.ToString()), RealRequestsWithoutSize.ToString());
 
             table.AddRow("Misses", Red(MissCount), "");
             table.AddRow("Misses Bandwidth", Red(MissedBandwidth), "");
 
-            table.AddRow("Unnecessary Requests", Yellow(UnnecessaryRequestCount), "");
-            table.AddRow("Wasted Bandwidth", Yellow(WastedBandwidth), "");
+            table.AddRow("Unnecessary Requests", LightYellow(UnnecessaryRequestCount), "");
+            table.AddRow("Wasted Bandwidth", LightYellow(WastedBandwidth), "");
             AnsiConsole.Write(table);
 
             if (MissCount > 0)
@@ -88,7 +88,7 @@ namespace BattleNetPrefill.Utils.Debug.Models
 
             if (UnnecessaryRequestCount > 0)
             {
-                AnsiConsole.MarkupLine(Yellow("Unnecessary Requests :"));
+                AnsiConsole.MarkupLine(LightYellow("Unnecessary Requests :"));
                 foreach (var req in UnnecessaryRequests.Take(10))
                 {
                     AnsiConsole.WriteLine($"{req}");
