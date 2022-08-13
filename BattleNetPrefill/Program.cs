@@ -7,11 +7,8 @@ namespace BattleNetPrefill
     // TODO - Documentation - Document process for updating app
     // TODO - readme - Update readme to match style of steam prefill readme
     // TODO - Remove personal machine build path from being displayed in exceptions when they are thrown
-    // TODO - change the publish zip files to be the format {app}-{version}-{os}
-    // TODO - interface - Remove "Default : false" output from CliFx help text
     // TODO - Feature - Consider implementing a multi-select command for interactively choosing which products to prefill.  Similar to steamPrefill.
     // TODO - Tech Debt - Cleanup trim/single file warnings
-    // TODO - Resolve issues on Github issues
     // TODO - Feature - Possibly add a clear cache command
     // TODO - General - Promote this app on r/lanparty
 
