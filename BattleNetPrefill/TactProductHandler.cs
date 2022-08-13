@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using BattleNetPrefill.Web;
@@ -54,7 +54,7 @@ namespace BattleNetPrefill
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = null;
-            await _ansiConsole.CreateSpectreStatusSpinner().StartAsync("Getting latest version info...", async ctx =>
+            await _ansiConsole.StatusSpinner().StartAsync("Getting latest version info...", async ctx =>
             {
                 await cdnRequestManager.InitializeAsync(_product);
                 targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
@@ -67,7 +67,7 @@ namespace BattleNetPrefill
                 return null;
             }
 
-            await _ansiConsole.CreateSpectreStatusSpinner().StartAsync("Start", async ctx =>
+            await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");

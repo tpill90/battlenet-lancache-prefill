@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using BattleNetPrefill.Utils;
+using BattleNetPrefill.Extensions;
 using CliFx;
 using CliFx.Attributes;
 using CliFx.Infrastructure;

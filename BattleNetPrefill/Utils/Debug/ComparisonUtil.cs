@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
 using Spectre.Console;

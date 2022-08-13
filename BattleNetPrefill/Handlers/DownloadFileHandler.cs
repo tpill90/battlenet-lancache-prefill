@@ -7,9 +7,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.EncryptDecrypt;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;
 
 namespace BattleNetPrefill.Handlers

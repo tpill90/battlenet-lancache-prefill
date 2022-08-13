@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
 
 namespace BattleNetPrefill.EncryptDecrypt
 {
@@ -10,7 +10,7 @@ namespace BattleNetPrefill.EncryptDecrypt
     {
         public static MemoryStream Parse(byte[] content)
         {
-            var resultStream = Extensions.MemoryStreamManager.GetStream();
+            var resultStream = MemoryStreamExtensions.MemoryStreamManager.GetStream();
             using var inputStream = content.GetAsMemoryStream();
             using var bin = new BinaryReader(inputStream);
 

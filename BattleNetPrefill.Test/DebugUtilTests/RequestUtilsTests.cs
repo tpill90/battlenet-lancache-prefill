@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using NUnit.Framework;

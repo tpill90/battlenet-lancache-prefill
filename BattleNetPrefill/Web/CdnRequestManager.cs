@@ -9,10 +9,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Structs.Enums;
-using BattleNetPrefill.Utils;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Utils.Debug.Models;
 using ByteSizeLib;
@@ -130,6 +130,7 @@ namespace BattleNetPrefill.Web
             _queuedRequests.Clear();
 
             ByteSize totalSize = coalescedRequests.SumTotalBytes();
+            //TODO only display request count when debugging
             AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {LightYellow(totalSize.GibiBytes.ToString("N2") + " GiB")}");
 
             var failedRequests = new ConcurrentBag<Request>();

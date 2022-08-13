@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using BattleNetPrefill.EncryptDecrypt;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils;
 using BattleNetPrefill.Web;

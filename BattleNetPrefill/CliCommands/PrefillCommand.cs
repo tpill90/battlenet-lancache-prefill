@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Utils;
 using CliFx;
 using CliFx.Attributes;

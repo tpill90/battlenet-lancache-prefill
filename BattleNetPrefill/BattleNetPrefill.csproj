@@ -85,4 +85,8 @@
     <ProjectReference Include="..\SpectreConsole\src\Spectre.Console\Spectre.Console.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
 </Project>

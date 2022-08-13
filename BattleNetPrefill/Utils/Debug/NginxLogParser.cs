@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+using BattleNetPrefill.Extensions;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
 using Spectre.Console;

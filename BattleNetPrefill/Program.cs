@@ -3,7 +3,6 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
-    //TODO cleanup todos
     //TODO rework the colors in this app to more closely match the colors used in SteamPrefill
 
     // TODO - General - Promote this app on r/lanparty
