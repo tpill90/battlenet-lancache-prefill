@@ -53,7 +53,9 @@ namespace BattleNetPrefill
         public static readonly TactProduct CodMW2 = new TactProduct("lazr") { DisplayName = "Call of Duty: Modern Warfare 2", IsActivision = true };
         public static readonly TactProduct CodVanguard = new TactProduct("fore") { DisplayName = "Call of Duty: Vanguard", IsActivision = true };
 
-        public static readonly TactProduct CrashBandicoot4 = new TactProduct("wlby") { DisplayName = "Crash Bandicoot 4: It's About Time", DefaultTags = new[] { "dummy" }, IsActivision = true };
+        public static readonly TactProduct CrashBandicoot4 = new TactProduct("wlby") { DisplayName = "Crash Bandicoot 4: It's About Time", 
+                                                                                       DefaultTags = new[] { "dummy" }, 
+                                                                                       IsActivision = true };
 
         #endregion
 
@@ -66,8 +68,7 @@ namespace BattleNetPrefill
         /// TACT Product code.  Used to find content on Blizzard CDNs.
         /// </summary>
         public string ProductCode => Name;
-
-        //TODO convert this to a better type
+        
         internal string[] DefaultTags { get; private init; }
 
         public bool IsActivision { get; private init; }

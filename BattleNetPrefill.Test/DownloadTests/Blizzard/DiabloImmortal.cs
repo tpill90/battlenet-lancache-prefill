@@ -35,11 +35,9 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
             Assert.AreEqual(0, _results.MissedBandwidth.Bytes);
         }
 
-        //TODO improve
         [Test]
         public void WastedBandwidth()
         {
-            //TODO improve this
             var expected = ByteSize.FromKiloBytes(30);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);

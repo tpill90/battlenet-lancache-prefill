@@ -38,7 +38,6 @@ namespace BattleNetPrefill.Handlers
         {
             InstallFile installFile = await ParseInstallFileAsync(buildConfig);
             
-            //TODO make this more flexible/multi region.  Should probably be passed in/ validated per product.  Tags being passed in should be validated per project
             List<InstallFileEntry> filtered = installFile.entries
                     .Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows"))
                     .ToList();

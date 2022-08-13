@@ -38,7 +38,6 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         [Test]
         public void WastedBandwidth()
         {
-            //TODO improve this
             Assert.Less(_results.WastedBandwidth.Bytes, ByteSize.FromMegaBytes(1).Bytes);
         }
     }

@@ -61,14 +61,12 @@ namespace BattleNetPrefill.Utils.Debug
             throw new FileNotFoundException($"Unable to find replay logs for {product.DisplayName}");
         }
 
-        //TODO comment + test
         private static List<Request> ParseRequestLogs(string[] rawRequests)
         {
             var parsedRequests = new List<Request>();
 
             foreach (var rawRequest in rawRequests)
             {
-                //TODO should this be removed from here now that the actual log generator takes care of it?
                 // Only interested in GET requests from Battle.Net.  Filtering out any other requests from other clients like Steam
                 if (!(rawRequest.Contains("GET") && rawRequest.Contains("[blizzard]")))
                 {
@@ -117,8 +115,7 @@ namespace BattleNetPrefill.Utils.Debug
 
             return parsedRequests;
         }
-
-        //TODO comment + test
+        
         public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";

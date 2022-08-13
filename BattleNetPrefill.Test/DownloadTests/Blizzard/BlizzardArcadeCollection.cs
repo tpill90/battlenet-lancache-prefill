@@ -26,14 +26,12 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         [Test]
         public void Misses()
         {
-            //TODO Improve
             Assert.AreEqual(1, _results.MissCount);
         }
 
         [Test]
         public void MissedBandwidth()
         {
-            //TODO Improve
             var expected = ByteSize.FromMegaBytes(2);
             
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
@@ -42,7 +40,6 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         [Test]
         public void WastedBandwidth()
         {
-            //TODO Improve
             var expected = ByteSize.FromMegaBytes(2);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);

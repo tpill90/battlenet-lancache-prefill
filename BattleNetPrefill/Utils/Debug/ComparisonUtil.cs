@@ -5,13 +5,11 @@ using System.Threading.Tasks;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug.Models;
 using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Utils.Debug
 {
     public class ComparisonUtil
     {
-        //TODO extract url to settings
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
       
         public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)

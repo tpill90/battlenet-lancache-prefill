@@ -9,8 +9,7 @@ namespace BattleNetPrefill.CliCommands
             return TactProduct.Parse(rawValue);
         }
     }
-
-    //TODO possibly consider implementing something similar in CliFx, so that boolean flags don't show 'Default: "False"'
+    
     public class NullableBoolConverter : BindingConverter<bool?>
     {
         // Required in order to prevent CliFx from showing the unnecessary 'Default: "False"' text for boolean flags

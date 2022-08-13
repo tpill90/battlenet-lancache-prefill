@@ -20,8 +20,6 @@ namespace LogFileGenerator
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri));
 
         private static string RootInstallDir = @"E:\BattleNet";
-        //private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
-        //TODO Open a pull request to add CoD install tag support, and switch back once this is merged into the actual repo
         private static readonly string BnetInstallerPath = @"C:\Users\Tim\Dropbox\Programming\ThirdParty Repos\Battle.Net-Installer\BNetInstaller\bin\Release\net6.0\BNetInstaller.exe";
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
