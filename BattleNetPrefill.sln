@@ -30,8 +30,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spectre.Console.Testing", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spectre.Console.Cli", "SpectreConsole\src\Spectre.Console.Cli\Spectre.Console.Cli.csproj", "{AFEDF40F-54BD-46A3-BB2F-8840B01FB504}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spectre.Console.Tests", "SpectreConsole\test\Spectre.Console.Tests\Spectre.Console.Tests.csproj", "{922DF87C-A660-4450-AF84-A2B13DE99FA1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,10 +64,6 @@ Global
 		{AFEDF40F-54BD-46A3-BB2F-8840B01FB504}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFEDF40F-54BD-46A3-BB2F-8840B01FB504}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFEDF40F-54BD-46A3-BB2F-8840B01FB504}.Release|Any CPU.Build.0 = Release|Any CPU
-		{922DF87C-A660-4450-AF84-A2B13DE99FA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{922DF87C-A660-4450-AF84-A2B13DE99FA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{922DF87C-A660-4450-AF84-A2B13DE99FA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{922DF87C-A660-4450-AF84-A2B13DE99FA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,7 +75,6 @@ Global
 		{C9DBD2FA-40B7-49C1-8806-77503E249082} = {4BB0EA93-464D-450A-8EEE-5D4CE57756AA}
 		{A0F299AB-FEC8-4EC7-855D-2BA6CA8EB8F2} = {4BB0EA93-464D-450A-8EEE-5D4CE57756AA}
 		{AFEDF40F-54BD-46A3-BB2F-8840B01FB504} = {4BB0EA93-464D-450A-8EEE-5D4CE57756AA}
-		{922DF87C-A660-4450-AF84-A2B13DE99FA1} = {4BB0EA93-464D-450A-8EEE-5D4CE57756AA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {13DEC178-59CD-4396-B1A1-7FB89D08D0F4}

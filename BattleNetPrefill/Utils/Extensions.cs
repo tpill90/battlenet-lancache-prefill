@@ -133,7 +133,7 @@ namespace BattleNetPrefill.Utils
                                                  new DownloadedColumn(), 
                                                  new TransferSpeedColumn
                                                  {
-                                                     Prefix = FileSizePrefix.Decimal,
+                                                     Base = FileSizeBase.Decimal,
                                                      DisplayBits = true
                                                  });
             return spectreProgress;
