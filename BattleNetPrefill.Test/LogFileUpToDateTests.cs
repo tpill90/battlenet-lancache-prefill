@@ -34,7 +34,7 @@ namespace BattleNetPrefill.Test
             var targetProduct = TactProduct.Parse(productCode);
 
             VersionsEntry latestVersion = GetLatestCdnVersion(targetProduct);
-            var currentLogFileVersion = NginxLogParser.GetLatestLogVersionForProduct(Config.LogFileBasePath, targetProduct);
+            var currentLogFileVersion = NginxLogParser.GetLatestLogVersionForProduct(AppConfig.LogFileBasePath, targetProduct);
 
             Assert.AreEqual(latestVersion.versionsName, currentLogFileVersion);
         }
@@ -42,7 +42,7 @@ namespace BattleNetPrefill.Test
         private static VersionsEntry GetLatestCdnVersion(TactProduct product)
         {
             // Finding the latest version of the game
-            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CdnRequestManager(Config.BattleNetPatchUri));
+            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri));
             VersionsEntry cdnVersion = configFileHandler.GetLatestVersionEntryAsync(product).Result;
             return cdnVersion;
         }

@@ -38,7 +38,7 @@ namespace BattleNetPrefill.Test.Parsers
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
 
             // Parsing the CDN file
             var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(cdnRequestManager, tactProduct);

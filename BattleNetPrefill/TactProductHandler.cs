@@ -45,7 +45,7 @@ namespace BattleNetPrefill
             _ansiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
@@ -86,11 +86,11 @@ namespace BattleNetPrefill
             });
 
             // Actually start the download of any deferred requests
-            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
-            if (downloadSuccess)
-            {
+            //var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
+            //if (downloadSuccess)
+            //{
                 SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
-            }
+            //}
 
             timer.Stop();
             _ansiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {Yellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
@@ -113,7 +113,7 @@ namespace BattleNetPrefill
         private bool IsProductUpToDate(VersionsEntry latestVersion)
         {
             // Checking to see if a file has been previously prefilled
-            var versionFilePath = $"{Config.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
             if (!File.Exists(versionFilePath))
             {
                 return false;
@@ -126,7 +126,7 @@ namespace BattleNetPrefill
 
         private void SaveDownloadedProductVersion(CdnRequestManager cdn, VersionsEntry latestVersion)
         {
-            var versionFilePath = $"{Config.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
             File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }
     }

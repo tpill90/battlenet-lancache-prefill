@@ -17,7 +17,7 @@ namespace LogFileGenerator
 {
     public static class Program
     {
-        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(Config.BattleNetPatchUri));
+        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri));
 
         private static string RootInstallDir = @"E:\BattleNet";
         //private static readonly string BnetInstallerPath = $"{Path.GetTempPath()}BnetInstaller.exe";
@@ -62,7 +62,7 @@ namespace LogFileGenerator
 
         private static bool IsLogFileUpToDate(TactProduct product)
         {
-            var currentLogVersion = NginxLogParser.GetLatestLogVersionForProduct(Config.LogFileBasePath, product);
+            var currentLogVersion = NginxLogParser.GetLatestLogVersionForProduct(AppConfig.LogFileBasePath, product);
 
             // Finding the latest version of the game according to blizzard
             VersionsEntry cdnVersion = ConfigFileHandler.GetLatestVersionEntryAsync(product).Result;
@@ -120,7 +120,7 @@ namespace LogFileGenerator
         {
             AnsiConsole.WriteLine("Copying logs to host...");
 
-            var logFileFolder = $@"{Config.LogFileBasePath}\{product.DisplayName.Replace(":", "")}";
+            var logFileFolder = $@"{AppConfig.LogFileBasePath}\{product.DisplayName.Replace(":", "")}";
             // Deleting original logs
             foreach (var file in Directory.GetFiles(logFileFolder))
             {

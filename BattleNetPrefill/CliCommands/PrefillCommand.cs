@@ -59,7 +59,7 @@ namespace BattleNetPrefill.CliCommands
                 ansiConsole.MarkupLine($"Prefilling {SpectreColors.Yellow(productsToProcess.Count)} products");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    var tactProductHandler = new TactProductHandler(code, ansiConsole, Config.DebugConfig);
+                    var tactProductHandler = new TactProductHandler(code, ansiConsole, AppConfig.DebugConfig);
                     await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
                 }
             }

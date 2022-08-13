@@ -21,7 +21,7 @@ namespace BattleNetPrefill.Utils.Debug
 
             // Need to re-coalesce, in the case that we made duplicate requests.  Doesn't really matter, since the lancache can serve them again so quickly
             generatedRequests = RequestUtils.CoalesceRequests(generatedRequests, true);
-            var realRequests = NginxLogParser.GetSavedRequestLogs(Config.LogFileBasePath, product);
+            var realRequests = NginxLogParser.GetSavedRequestLogs(AppConfig.LogFileBasePath, product);
             
             var comparisonResult = new ComparisonResult
             {

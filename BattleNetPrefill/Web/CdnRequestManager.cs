@@ -235,7 +235,7 @@ namespace BattleNetPrefill.Web
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)
             {
-                string outputFilePath = Path.Combine(Config.CacheDir + uri.AbsolutePath);
+                string outputFilePath = Path.Combine(AppConfig.CacheDir + uri.AbsolutePath);
                 if (File.Exists(outputFilePath))
                 {
                     return await File.ReadAllBytesAsync(outputFilePath);
@@ -290,7 +290,7 @@ namespace BattleNetPrefill.Web
             }
                 
             // Cache to disk
-            FileInfo file = new FileInfo(Path.Combine(Config.CacheDir + uri.AbsolutePath));
+            FileInfo file = new FileInfo(Path.Combine(AppConfig.CacheDir + uri.AbsolutePath));
             file.Directory.Create();
             await File.WriteAllBytesAsync(file.FullName, byteArray);
 
@@ -305,7 +305,7 @@ namespace BattleNetPrefill.Web
         /// <returns></returns>
         public async Task<string> MakePatchRequestAsync(TactProduct tactProduct, PatchRequest endpoint)
         {
-            var cacheFile = $"{Config.CacheDir}/{endpoint.Name}-{tactProduct.ProductCode}.txt";
+            var cacheFile = $"{AppConfig.CacheDir}/{endpoint.Name}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 30 minutes so that updated versions don't get accidentally ignored
             if (!SkipDiskCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddMinutes(30))

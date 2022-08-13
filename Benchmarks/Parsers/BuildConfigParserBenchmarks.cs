@@ -21,7 +21,7 @@ namespace Benchmarks
             public BuildConfigParserBenchmarks()
             {
                 // Initialize the CdnRequestManager once.  We don't want to benchmark this initialization
-                _cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
+                _cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
                 _cdnRequestManager.InitializeAsync(_targetProduct).Wait();
 
                 // Load the latest version info once, don't want to repeatedly run this code either

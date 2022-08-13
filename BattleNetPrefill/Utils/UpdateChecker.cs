@@ -15,7 +15,7 @@ namespace BattleNetPrefill.Utils
     public static class UpdateChecker
     {
         private static readonly string _repoName = "tpill90/Battlenet-lancache-prefill";
-        private static readonly string _lastUpdateCheckFile = $"{Config.CacheDir}/lastUpdateCheck.txt";
+        private static readonly string _lastUpdateCheckFile = $"{AppConfig.CacheDir}/lastUpdateCheck.txt";
 
         /// <summary>
         /// Compares the current application version against the newest version available on Github Releases.  If there is a newer version, displays a message

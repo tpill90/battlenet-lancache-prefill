@@ -18,7 +18,7 @@ namespace Benchmarks
             [Benchmark(Baseline = true)]
             public void QueueRequests_List()
             {
-                var cdnRequestManager = new CdnRequestManager(Config.BattleNetPatchUri, useDebugMode: true);
+                var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
 
                 for (int i = 0; i < iterations; i++)
                 {
