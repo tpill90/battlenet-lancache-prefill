@@ -1,53 +1,90 @@
 
-# Battlenet-lancache-prefill
+# battlenet-lancache-prefill
 
+[![](https://dcbadge.vercel.app/api/server/BKnBS4u?style=flat-square)](https://discord.com/invite/BKnBS4u)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=tpill90_Battlenet-lancache-prefill&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=tpill90_Battlenet-lancache-prefill)
 
-Automatically fills a [lancache](https://lancache.net/) with games from Battlenet, so that subsequent downloads for the same content will be served from the lancache, improving speeds and reducing load on your internet connection.
+Automatically fills a [Lancache](https://lancache.net/) with games from Battle.net, so that subsequent downloads for the same content will be served from the Lancache, improving speeds and reducing load on your internet connection.
+
+![Prefilling game](docs/img/HeaderImage.png)
 
 Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.
 
-# Features
+---
+
+## Features
 * Downloads specific games by product ID
-* Incredibly fast, can easily saturate a 10gbe line!
-* Game install writes no data to disk,  no unnecessary wear-and-tear to SSDs!
-* Multi-platform support (Windows, Linux, MacOS)
-* Self-contained application, no installation required!
+* High-performance!  Downloads are significantly faster than using Battle.net, and can easily reach 10gbit/s or more!
+* Game install writes no data to disk, so there is no need to have enough free space available.  This also means no unnecessary wear-and-tear to SSDs!
+* Multi-platform support (Windows, Linux, MacOS, Arm64)
+* No installation required! A completely self-contained, portable application.
 
-# Screenshots
-![Prefilling game](docs/screenshot1-prefill.png)
+---
 
-# Installation
-1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/Battlenet-lancache-prefill/releases) page.
+## Initial Setup
+1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/battlenet-lancache-prefill/releases) page.
 2.  Unzip to a directory of your choice
 3.  (**Linux / OSX Only**)  Give the downloaded executable permissions to be run with `chmod +x .\BattleNetPrefill`
-4.  (**Windows Only**)  Configure your terminal to use Unicode, for much nicer looking UI output.
-    - Unicode on Windows is not enabled by default, however adding the following to your Powershell `profile.ps1` will enable it.
-    - `[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()`
-    - If you do not already have a Powershell profile created, follow this step-by-step guide https://lazyadmin.nl/powershell/powershell-profile/
-# Basic Usage
+4.  (**Windows Only - Optional**)  Configure your terminal to use Unicode, for much nicer looking UI output.
+    - <img src="docs/img/ConsoleWithUtf8.png" width="730" alt="Initial Prefill">
+    - As the default console in Windows does not support UTF8, Windows Terminal should be installed from the [App Store](https://apps.microsoft.com/store/detail/windows-terminal/9N0DX20HK701), or [Chocolatey](https://community.chocolatey.org/packages/microsoft-windows-terminal).
+    - Unicode on Windows is not enabled by default, however running the following will enable it if it hasn't already been enabled.
+    - `if(!(Test-Path $profile) -or !(gc $profile).Contains("OutputEncoding")) { ac $profile "[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()";  & $profile; }`
 
-A single game can be downloaded by specifying a single product code
+---
+
+## Getting Started
+
+### Selecting what to prefill
+
+Prior to prefilling for the first time, you will have to decide which games should be prefilled.  
+A table of all currently downloadable games can be listed with the following command
 ```powershell
-.\BattleNetPrefill.exe prefill --products s1
+.\BattleNetPrefill.exe list-products
 ```
+<img src="docs/img/ListProducts.png" width="630" alt="List Products">
 
-Multiple games can be downloaded by specifying as many product codes as desired
+This table will show a list of available games, and their corresponding **product code**.  
+These product codes will be used in subsequent commands, in order to specify which games to prefill.
+
+### Initial prefill
+
+Now that we've decided on some games that we'd like to prefill, we can move onto running the prefill.
+
+One or more games can be downloaded by specifying as many product codes as desired, in this example we will be prefilling 3 total games
 ```powershell
 .\BattleNetPrefill.exe prefill --products s1 d3 zeus
 ```
 
-Optional flags can be used to bulk preload products, without having to specify each product code individually
+Alternatively, optional flags can be used to bulk preload products, without having to specify each product code individually.  This can be useful when you are interested
+in installing most of the available games, as specifiying the individual product codes is not required.
 ```powershell
 .\BattleNetPrefill.exe prefill --all
 .\BattleNetPrefill.exe prefill --blizzard 
 .\BattleNetPrefill.exe prefill --activision 
 ```
 
-The list of currently supported products to download can be displayed using the following
-```powershell
-.\BattleNetPrefill.exe list-products
-```
+During this initial run, it is likely that the Lancache is empty, 
+so download speeds should be expected to be around your internet line speed (in the below example, a 300megabit connection was used).  
+Once the prefill has completed, the Lancache should be fully ready to serve clients cached data.
+
+<img src="docs/img/Initial-Prefill.png" width="730" alt="Initial Prefill">
+
+### Updating previously prefilled games
+
+Updating any previously prefilled games can be done by simply re-running the `prefill` command, with the same games specified as before.
+
+**BattleNetPrefill** keeps track of which version of each game was previously prefilled, and will only re-download if there is a newer version of the game available.  
+Any games that are currently up to date, will simply be skipped.
+
+<img src="docs/img/Prefill-UpToDate.png" width="630" alt="Prefilled game up to date">
+
+
+However, if there is a newer version of a game that is available, then **BattleNetPrefill** will re-download the game.  
+Due to how Lancache works, this subsequent run should complete much faster than the initial prefill (example below used a 10gbit connection).
+Any data that was previously downloaded, will be retrieved from the Lancache, while any new data from the update will be retrieved from the internet.
+
+<img src="docs/img/Prefill-NewVersionAvailable.png" width="730" alt="Prefill run when game has an update">
 
 # Detailed Usage
 
@@ -81,9 +118,9 @@ Running with the flag `--force` will override this behavior, and instead will al
 # Need Help?
 If you are running into any issues, feel free to open up a Github issue on this repository.
 
-You can also find us on the **LanCache.NET** Discord (https://discord.com/invite/BKnBS4u), in the `#battlenet-prefill` channel.
+You can also find us at the [**LanCache.NET** Discord](https://discord.com/invite/BKnBS4u), in the `#battlenet-prefill` channel.
 
-# Other Docs
+# Additional Documentation
 * [Development Configuration](/docs/Development.md)
 
 # External Docs
