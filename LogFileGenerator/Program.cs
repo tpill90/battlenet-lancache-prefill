@@ -17,7 +17,7 @@ namespace LogFileGenerator
 {
     public static class Program
     {
-        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri));
+        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console));
 
         private static string RootInstallDir = @"E:\BattleNet";
         private static readonly string BnetInstallerPath = @"C:\Users\Tim\Dropbox\Programming\ThirdParty Repos\Battle.Net-Installer\BNetInstaller\bin\Release\net6.0\BNetInstaller.exe";

@@ -23,7 +23,7 @@ jobs:
     - name: Test
       run: >
         cd BattleNetPrefill.Test;
-        dotnet test --no-restore -c Release --filter "FullyQualifiedName!=BattleNetPrefill.Test.LogFileUpToDateTests&FullyQualifiedName!=BattleNetPrefill.Test.DownloadTests"
+        dotnet test --no-restore -c Release --filter "FullyQualifiedName!=BattleNetPrefill.Test.LogFileUpToDateTests&FullyQualifiedName!=BattleNetPrefill.Test.DownloadTests&FullyQualifiedName!=BattleNetPrefill.Test.Parsers.BuildConfigParserTests"
   infersharp:
     runs-on: ubuntu-latest
     steps:

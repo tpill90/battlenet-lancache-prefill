@@ -3,6 +3,7 @@ using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Web;
 using NUnit.Framework;
+using Spectre.Console.Testing;
 
 namespace BattleNetPrefill.Test
 {
@@ -42,7 +43,7 @@ namespace BattleNetPrefill.Test
         private static VersionsEntry GetLatestCdnVersion(TactProduct product)
         {
             // Finding the latest version of the game
-            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri));
+            ConfigFileHandler configFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole()));
             VersionsEntry cdnVersion = configFileHandler.GetLatestVersionEntryAsync(product).Result;
             return cdnVersion;
         }

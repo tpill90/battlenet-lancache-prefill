@@ -44,7 +44,7 @@ namespace BattleNetPrefill
             var metadataTimer = Stopwatch.StartNew();
             
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
@@ -87,7 +87,7 @@ namespace BattleNetPrefill
 #endif
 
             // Actually start the download of any deferred requests
-            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
+            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync();
             if (downloadSuccess)
             {
                 SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
