@@ -9,4 +9,13 @@
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Spectre.Console">
+      <HintPath>..\lib\Spectre.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="Spectre.Console.Cli">
+      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
