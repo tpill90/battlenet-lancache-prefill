@@ -122,7 +122,8 @@ If a list of products is supplied, only these products will be downloaded.  This
 Downloads multiple products, useful for prefilling a completely empty cache.  Can be combined with `--products`.
 
 ### --nocache
-By default, **BattleNetPrefill** will cache copies of certain files on disk, in order to dramatically speed up future runs (in some cases 3X faster).  These cache files will be stored in the `/cache` directory in the same directory as **BattleNetPrefill**.
+By default, **BattleNetPrefill** will cache copies of certain files on disk, in order to dramatically speed up future runs (in some cases 3X faster).  
+These cache files will be stored in the `/Cache` directory in the same directory as **BattleNetPrefill**.
 However, in some scenarios this disk cache can potentially take up a non-trivial amount of storage (~1gb), which may not be ideal for all use cases.
 
 By running with the additional flag `--nocache`, **BattleNetPrefill** will no longer cache any files locally, at the expense of slower runtime.
@@ -131,6 +132,21 @@ By running with the additional flag `--nocache`, **BattleNetPrefill** will no lo
 By default, **BattleNetPrefill** will keep track of the most recently prefilled product, and will only attempt to prefill if there it determines there a newer version available for download.  This default behavior will work best for most use cases, as no time will be wasted re-downloading files that have been previously prefilled.
 
 Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the specified product.  This flag may be useful for diagnostics, or benchmarking network performance.
+
+## clear-cache
+Deletes temporary cache files stored in the `/Cache` directory.  
+These files are cached in order to dramatically speed up future `prefill` runs (in some cases 3X faster),
+however in some cases this disk cache can potentially take up a non-trivial amount of storage (~1gb).  
+
+<img src="docs/img/Clear-Cache.png" width="630" alt="Clear cache command">
+
+These cache files will also build up over time, as newer versions of games are released, leaving unused cache data behind that will never be used again.
+
+In the case that you would like to save disk space without having to constantly clear the cache, 
+running `prefill` with the `--nocache` flag specified will prevent the cache files from being written in the first place.
+
+### -y|--y
+Skips the prompt asking to clear the cache, and immediately begins clearing the cache.
 
 # Need Help?
 If you are running into any issues, feel free to open up a Github issue on this repository.
