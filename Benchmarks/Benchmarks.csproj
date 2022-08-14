@@ -7,12 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="Spectre.Console.Testing" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
-    <ProjectReference Include="..\SpectreConsole\src\Spectre.Console.Testing\Spectre.Console.Testing.csproj" />
-    <ProjectReference Include="..\SpectreConsole\src\Spectre.Console\Spectre.Console.csproj" />
   </ItemGroup>
 
 </Project>

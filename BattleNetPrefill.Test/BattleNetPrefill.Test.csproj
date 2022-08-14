@@ -1,27 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Library</OutputType>
 
     <IsPackable>false</IsPackable>
-
-    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="coverlet.collector" Version="3.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="Spectre.Console.Testing" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
-    <ProjectReference Include="..\SpectreConsole\src\Spectre.Console.Testing\Spectre.Console.Testing.csproj" />
-    <ProjectReference Include="..\SpectreConsole\src\Spectre.Console\Spectre.Console.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Spectre.Console">
+      <HintPath>..\lib\Spectre.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="Spectre.Console.Cli">
+      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

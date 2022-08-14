@@ -78,15 +78,19 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Spectre.Console.Analyzer" Version="0.44.0" />
+    <PackageReference Include="Spectre.Console.Analyzer" Version="0.44.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-
+	 
   <ItemGroup>
-    <ProjectReference Include="..\SpectreConsole\src\Spectre.Console\Spectre.Console.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
+    <Reference Include="Spectre.Console">
+      <HintPath>..\lib\Spectre.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="Spectre.Console.Cli">
+      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
