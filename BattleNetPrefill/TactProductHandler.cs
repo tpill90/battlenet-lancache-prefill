@@ -41,8 +41,8 @@ namespace BattleNetPrefill
         ///                             Setting this to true will force a prefill regardless of previous runs.</param>
         public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
         {
-            var timer = Stopwatch.StartNew();
-            _ansiConsole.MarkupLine($"Starting processing of : {Blue(_product.DisplayName)}");
+            var metadataTimer = Stopwatch.StartNew();
+            _ansiConsole.LogMarkup($"Starting {Cyan(_product.DisplayName)}");
 
             // Initializing classes, now that we have our CDN info loaded
             using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
@@ -52,20 +52,18 @@ namespace BattleNetPrefill
             var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, _product);
             var patchLoader = new PatchLoader(cdnRequestManager);
 
+            await cdnRequestManager.InitializeAsync(_product);
+
             // Finding the latest version of the game
-            VersionsEntry? targetVersion = null;
-            await _ansiConsole.StatusSpinner().StartAsync("Getting latest version info...", async ctx =>
-            {
-                await cdnRequestManager.InitializeAsync(_product);
-                targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
-            });
+            VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
 
             // Skip prefilling if we've already prefilled the latest version 
             if (!forcePrefill && IsProductUpToDate(targetVersion.Value))
             {
-                _ansiConsole.MarkupLine($"   {Green("Up to date! Skipping..")}");
+                _ansiConsole.MarkupLine($"   {Green("Up to date!")}");
                 return null;
             }
+            _ansiConsole.Write("\n");
 
             await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
@@ -84,6 +82,9 @@ namespace BattleNetPrefill
                 await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
                 await patchLoader.HandlePatchesAsync(buildConfig, _product, cdnConfig);
             });
+#if DEBUG
+            _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
+#endif
 
             // Actually start the download of any deferred requests
             var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync(_ansiConsole);
@@ -91,10 +92,7 @@ namespace BattleNetPrefill
             {
                 SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
             }
-
-            timer.Stop();
-            //TODO add a average transfer speed, similar to how SteamPrefill does it
-            _ansiConsole.MarkupLine($"{Blue(_product.DisplayName)} pre-loaded in {LightYellow(timer.Elapsed.ToString(@"hh\:mm\:ss\.FFFF"))}\n\n");
+            
             
             if (!_debugConfig.CompareAgainstRealRequests)
             {
@@ -102,10 +100,7 @@ namespace BattleNetPrefill
             }
 
             var comparisonUtil = new ComparisonUtil();
-            var result = await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), _product);
-            result.ElapsedTime = timer.Elapsed;
-
-            return result;
+            return await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), _product);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using BattleNetPrefill.Extensions;
@@ -10,6 +11,7 @@ using CliFx.Exceptions;
 using CliFx.Infrastructure;
 using JetBrains.Annotations;
 using Spectre.Console;
+using static BattleNetPrefill.Utils.SpectreColors;
 
 // ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
 namespace BattleNetPrefill.CliCommands
@@ -47,6 +49,8 @@ namespace BattleNetPrefill.CliCommands
             var ansiConsole = console.CreateAnsiConsole();
             try
             {
+                var timer = Stopwatch.StartNew();
+
                 await UpdateChecker.CheckForUpdatesAsync();
 
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
@@ -57,12 +61,14 @@ namespace BattleNetPrefill.CliCommands
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
                 
-                ansiConsole.MarkupLine($"Prefilling {SpectreColors.LightYellow(productsToProcess.Count)} products");
+                ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
                     var tactProductHandler = new TactProductHandler(code, ansiConsole, AppConfig.DebugConfig);
                     await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
                 }
+
+                ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps in {LightYellow(timer.FormatElapsedString())}");
             }
             catch (Exception e)
             {

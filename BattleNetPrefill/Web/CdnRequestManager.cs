@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -127,12 +128,16 @@ namespace BattleNetPrefill.Web
         {
             // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
+            ByteSize totalDownloadSize = coalescedRequests.SumTotalBytes();
             _queuedRequests.Clear();
 
-            ByteSize totalSize = coalescedRequests.SumTotalBytes();
-            //TODO only display request count when debugging
-            AnsiConsole.MarkupLine($"Downloading {Blue(coalescedRequests.Count)} total queued requests {LightYellow(totalSize.GibiBytes.ToString("N2") + " GiB")}");
+            ansiConsole.LogMarkup($"Downloading {Magenta(totalDownloadSize.ToDecimalString())}");
+#if DEBUG
+            ansiConsole.Markup($" from {LightYellow(coalescedRequests.Count)} queued requests");
+#endif
+            ansiConsole.MarkupLine("");
 
+            var downloadTimer = Stopwatch.StartNew();
             var failedRequests = new ConcurrentBag<Request>();
             await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
             {
@@ -158,6 +163,10 @@ namespace BattleNetPrefill.Web
                 }
                 return false;
             }
+
+            // Logging some metrics about the download
+            ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.ToAverageString(downloadTimer))}");
+            ansiConsole.WriteLine();
 
             return true;
         }

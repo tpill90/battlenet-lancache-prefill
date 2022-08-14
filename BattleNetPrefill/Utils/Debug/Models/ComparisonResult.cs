@@ -11,11 +11,6 @@ namespace BattleNetPrefill.Utils.Debug.Models
     public class ComparisonResult
     {
         /// <summary>
-        /// The total amount of time taken for the prefill process to run.  Excludes time taken to run comparison logic.
-        /// </summary>
-        public TimeSpan ElapsedTime { get; set; }
-
-        /// <summary>
         /// Total number of requests made by our application
         /// </summary>
         public int RequestMadeCount { get; init; }

@@ -1,5 +1,9 @@
 {
   "profiles": {
+    "Prefill Starcraft 1": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p s1 --force"
+    },
     "Prefill Starcraft 2": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p s2 --force"
