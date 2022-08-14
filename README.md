@@ -10,18 +10,22 @@ Automatically fills a [Lancache](https://lancache.net/) with games from Battle.n
 
 Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.
 
----
-
-## Features
+# Features
 * Downloads specific games by product ID
 * High-performance!  Downloads are significantly faster than using Battle.net, and can easily reach 10gbit/s or more!
 * Game install writes no data to disk, so there is no need to have enough free space available.  This also means no unnecessary wear-and-tear to SSDs!
 * Multi-platform support (Windows, Linux, MacOS, Arm64)
 * No installation required! A completely self-contained, portable application.
 
----
+# Table of contents
+- [Initial Setup](#initial-setup)
+- [Getting Started](#getting-started)
+- [Frequently Asked Questions](#frequently-asked-questions)
+- [Detailed Command Usage](#detailed-command-usage)
+- [Updating](#updating)
+- [Need Help?](#need-help)
 
-## Initial Setup
+# Initial Setup
 1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/battlenet-lancache-prefill/releases) page.
 2.  Unzip to a directory of your choice
 3.  (**Linux / OSX Only**)  Give the downloaded executable permissions to be run with `chmod +x .\BattleNetPrefill`
@@ -31,11 +35,10 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
     - Unicode on Windows is not enabled by default, however running the following will enable it if it hasn't already been enabled.
     - `if(!(Test-Path $profile) -or !(gc $profile).Contains("OutputEncoding")) { ac $profile "[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()";  & $profile; }`
 
----
 
-## Getting Started
+# Getting Started
 
-### Selecting what to prefill
+## Selecting what to prefill
 
 Prior to prefilling for the first time, you will have to decide which games should be prefilled.  
 A table of all currently downloadable games can be listed with the following command
@@ -47,7 +50,7 @@ A table of all currently downloadable games can be listed with the following com
 This table will show a list of available games, and their corresponding **product code**.  
 These product codes will be used in subsequent commands, in order to specify which games to prefill.
 
-### Initial prefill
+## Initial prefill
 
 Now that we've decided on some games that we'd like to prefill, we can move onto running the prefill.
 
@@ -70,7 +73,7 @@ Once the prefill has completed, the Lancache should be fully ready to serve clie
 
 <img src="docs/img/Initial-Prefill.png" width="730" alt="Initial Prefill">
 
-### Updating previously prefilled games
+## Updating previously prefilled games
 
 Updating any previously prefilled games can be done by simply re-running the `prefill` command, with the same games specified as before.
 
@@ -86,7 +89,7 @@ Any data that was previously downloaded, will be retrieved from the Lancache, wh
 
 <img src="docs/img/Prefill-NewVersionAvailable.png" width="730" alt="Prefill run when game has an update">
 
-## Frequently Asked Questions
+# Frequently Asked Questions
 
 ### Can I run BattleNetPrefill on the Lancache server?
 
@@ -103,7 +106,7 @@ Since there is no network transfer happening, the `prefill` should only be limit
 For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force` on previously cached game yields the following performance 
 <img src="docs/img/AutoDns-ServerPerf.png" width="830" alt="Prefill running on Lancache Server in Docker">
 
-# Detailed Usage
+# Detailed Command Usage
 
 ## list-products
 Displays a table of all currently supported Activision and Blizzard games.  Only currently supports retail products, and does not include any PTR or beta products. 
@@ -148,13 +151,23 @@ running `prefill` with the `--nocache` flag specified will prevent the cache fil
 ### -y|--y
 Skips the prompt asking to clear the cache, and immediately begins clearing the cache.
 
+# Updating
+**BattleNetPrefill** will automatically check for updates, and notify you when an update is available :
+
+<img src="docs/img/UpdateAvailable.png" width="675" alt="Update available message">
+
+To update:
+1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/battlenet-lancache-prefill/releases) page.
+2.  Unzip to the directory where **BattleNetPrefill** is currently installed, overwriting the previous executable.
+3.  Thats it!  You're all up to date!
+
 # Need Help?
 If you are running into any issues, feel free to open up a Github issue on this repository.
 
 You can also find us at the [**LanCache.NET** Discord](https://discord.com/invite/BKnBS4u), in the `#battlenet-prefill` channel.
 
 # Additional Documentation
-* [Development Configuration](/docs/Development.md)
+* [Developer's guide](/docs/Development.md)
 
 # External Docs
 * https://wowdev.wiki/TACT
