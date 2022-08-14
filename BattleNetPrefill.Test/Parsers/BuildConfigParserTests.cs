@@ -4,6 +4,7 @@ using BattleNetPrefill.Parsers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Web;
 using NUnit.Framework;
+using Spectre.Console.Testing;
 
 namespace BattleNetPrefill.Test.Parsers
 {
@@ -36,9 +37,9 @@ namespace BattleNetPrefill.Test.Parsers
         public async Task BuildConfig_ShouldHaveNoUnknownKeyPairs(string productCode)
         {
             var tactProduct = TactProduct.Parse(productCode);
-
+            
             // Setting up required classes
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
             await cdnRequestManager.InitializeAsync(tactProduct);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);

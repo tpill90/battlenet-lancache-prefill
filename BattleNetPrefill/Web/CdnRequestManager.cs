@@ -37,6 +37,11 @@ namespace BattleNetPrefill.Web
         private string _currentCdn => _cdnList[_retryCount];
 
         /// <summary>
+        /// The URL/IP Address where the Lancache has been detected.
+        /// </summary>
+        private string _lancacheAddress;
+
+        /// <summary>
         /// The root path used to find the product's data on the CDN.  Must be queried from the patch API.
         /// </summary>
         private string _productBasePath;
@@ -50,6 +55,8 @@ namespace BattleNetPrefill.Web
         /// of storage in some cases (Wow uses several hundred mb of index files).
         /// </summary>
         private bool SkipDiskCache;
+
+        private readonly IAnsiConsole _ansiConsole;
 
         #region Debugging
 
@@ -68,10 +75,11 @@ namespace BattleNetPrefill.Web
 
         #endregion
         
-        public CdnRequestManager(Uri battleNetPatchUri, bool useDebugMode = false, bool skipDiskCache = false)
+        public CdnRequestManager(Uri battleNetPatchUri, IAnsiConsole ansiConsole, bool useDebugMode = false, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
+            _ansiConsole = ansiConsole;
             DebugMode = useDebugMode;
 
             _client = new HttpClient
@@ -98,6 +106,7 @@ namespace BattleNetPrefill.Web
             }
 
             _productBasePath = cdnsFile.entries[0].path;
+            _lancacheAddress = await LancacheIpResolver.ResolveLancacheIpAsync(_ansiConsole, _currentCdn);
         }
 
         #region Queued Request Handling
@@ -124,22 +133,22 @@ namespace BattleNetPrefill.Web
         /// </summary>
         /// <param name="ansiConsole"></param>
         /// <returns>True if all downloads succeeded.  False if downloads failed 3 times.</returns>
-        public async Task<bool> DownloadQueuedRequestsAsync(IAnsiConsole ansiConsole)
+        public async Task<bool> DownloadQueuedRequestsAsync()
         {
             // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
             ByteSize totalDownloadSize = coalescedRequests.SumTotalBytes();
             _queuedRequests.Clear();
 
-            ansiConsole.LogMarkup($"Downloading {Magenta(totalDownloadSize.ToDecimalString())}");
+            _ansiConsole.LogMarkup($"Downloading {Magenta(totalDownloadSize.ToDecimalString())}");
 #if DEBUG
-            ansiConsole.Markup($" from {LightYellow(coalescedRequests.Count)} queued requests");
+            _ansiConsole.Markup($" from {LightYellow(coalescedRequests.Count)} queued requests");
 #endif
-            ansiConsole.MarkupLine("");
+            _ansiConsole.MarkupLine("");
 
             var downloadTimer = Stopwatch.StartNew();
             var failedRequests = new ConcurrentBag<Request>();
-            await ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
+            await _ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
             {
                 // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
@@ -156,17 +165,17 @@ namespace BattleNetPrefill.Web
             // Handling final failed requests
             if (failedRequests.Any())
             {
-                ansiConsole.MarkupLine(Red($"{failedRequests.Count} failed downloads"));
+                _ansiConsole.MarkupLine(Red($"{failedRequests.Count} failed downloads"));
                 foreach (var request in failedRequests)
                 {
-                    AnsiConsole.MarkupLine(Red($"Error downloading : {request.Uri} {request.LowerByteRange}-{request.UpperByteRange}"));
+                    _ansiConsole.MarkupLine(Red($"Error downloading : {request.Uri} {request.LowerByteRange}-{request.UpperByteRange}"));
                 }
                 return false;
             }
 
             // Logging some metrics about the download
-            ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.ToAverageString(downloadTimer))}");
-            ansiConsole.WriteLine();
+            _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.ToAverageString(downloadTimer))}");
+            _ansiConsole.WriteLine();
 
             return true;
         }
@@ -175,8 +184,6 @@ namespace BattleNetPrefill.Web
         /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
         /// </summary>
         /// <returns>A list of failed requests</returns>
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Want to catch all exceptions, regardless of type")]
-        [SuppressMessage("CodeSmell", "ERP022:Unobserved exception in generic exception handler", Justification = "Want to catch all exceptions, regardless of type")]
         private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requests)
         {
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requests.SumTotalBytes().Bytes });
@@ -240,7 +247,7 @@ namespace BattleNetPrefill.Web
                 return null;
             }
             
-            var uri = new Uri($"http://{_currentCdn}/{request.Uri}");
+            var uri = new Uri($"http://{_lancacheAddress}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)
@@ -253,6 +260,7 @@ namespace BattleNetPrefill.Web
             }
             
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+            requestMessage.Headers.Host = _currentCdn;
             if (!request.DownloadWholeFile)
             {
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);

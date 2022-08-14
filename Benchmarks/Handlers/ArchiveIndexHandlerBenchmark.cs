@@ -4,6 +4,7 @@ using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Web;
 using BenchmarkDotNet.Attributes;
+using Spectre.Console.Testing;
 
 namespace Benchmarks
 {
@@ -23,7 +24,7 @@ namespace Benchmarks
             public ArchiveIndexHandlerBenchmark()
             {
                 // Initialize the CdnRequestManager once.  We don't want to benchmark this initialization
-                _cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
+                _cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
                 _cdnRequestManager.InitializeAsync(_targetProduct).Wait();
 
                 // Load the latest version info once, don't want to repeatedly run this code either

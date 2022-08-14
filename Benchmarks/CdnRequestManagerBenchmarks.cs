@@ -2,6 +2,7 @@
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Web;
 using BenchmarkDotNet.Attributes;
+using Spectre.Console.Testing;
 
 namespace Benchmarks
 {
@@ -18,7 +19,7 @@ namespace Benchmarks
             [Benchmark(Baseline = true)]
             public void QueueRequests_List()
             {
-                var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, useDebugMode: true);
+                var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
 
                 for (int i = 0; i < iterations; i++)
                 {
