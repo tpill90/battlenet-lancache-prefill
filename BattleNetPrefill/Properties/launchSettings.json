@@ -12,14 +12,6 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p zeus --force"
     },
-    "Prefill MW2": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p lazr --force"
-    },
-    "Prefill Hearthstone": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p hsb --force"
-    },
     "Prefill Overwatch": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p pro --force"
@@ -28,13 +20,17 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow --force"
     },
-    "Prefill WOW Classic": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p wow_classic --force"
-    },
     "Prefill All": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all --force"
+      "commandLineArgs": "prefill --all"
+    },
+    "Clear Cache": {
+      "commandName": "Project",
+      "commandLineArgs": "clear-cache"
+    },
+    "Clear Cache - Accept": {
+      "commandName": "Project",
+      "commandLineArgs": "clear-cache -y"
     }
   }
 }
