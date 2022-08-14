@@ -86,6 +86,23 @@ Any data that was previously downloaded, will be retrieved from the Lancache, wh
 
 <img src="docs/img/Prefill-NewVersionAvailable.png" width="730" alt="Prefill run when game has an update">
 
+## Frequently Asked Questions
+
+### Can I run BattleNetPrefill on the Lancache server?
+
+You certainly can!  All you need to do is download **BattleNetPrefill** onto the server, and run it as you reguarly would!
+
+If everything works as expected, you should see a message saying it found the server at `127.0.0.1`
+<img src="docs/img/AutoDns-Server.png" width="830" alt="Prefill running on Lancache Server">
+
+Running from a Docker container on the Lancache server is also supported!  You should instead see a message saying the server was found at `172.17.0.1`
+<img src="docs/img/AutoDns-Docker.png" width="830" alt="Prefill running on Lancache Server in Docker">
+
+Running on the Lancache server itself can give you some advantages over running **BattleNetPrefill** on a client machine, primarily the speed at which you can prefill apps.  
+Since there is no network transfer happening, the `prefill` should only be limited by disk I/O and CPU throughput.  
+For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force` on previously cached game yields the following performance 
+<img src="docs/img/AutoDns-ServerPerf.png" width="830" alt="Prefill running on Lancache Server in Docker">
+
 # Detailed Usage
 
 ## list-products

@@ -37,6 +37,11 @@ namespace BattleNetPrefill.Web
         private string _currentCdn => _cdnList[_retryCount];
 
         /// <summary>
+        /// The URL/IP Address where the Lancache has been detected.
+        /// </summary>
+        private string _lancacheAddress;
+
+        /// <summary>
         /// The root path used to find the product's data on the CDN.  Must be queried from the patch API.
         /// </summary>
         private string _productBasePath;
@@ -98,6 +103,7 @@ namespace BattleNetPrefill.Web
             }
 
             _productBasePath = cdnsFile.entries[0].path;
+            _lancacheAddress = await LancacheIpResolver.ResolveLancacheIpAsync(AnsiConsole.Console, _currentCdn);
         }
 
         #region Queued Request Handling
@@ -175,8 +181,6 @@ namespace BattleNetPrefill.Web
         /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
         /// </summary>
         /// <returns>A list of failed requests</returns>
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Want to catch all exceptions, regardless of type")]
-        [SuppressMessage("CodeSmell", "ERP022:Unobserved exception in generic exception handler", Justification = "Want to catch all exceptions, regardless of type")]
         private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requests)
         {
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requests.SumTotalBytes().Bytes });
@@ -240,7 +244,7 @@ namespace BattleNetPrefill.Web
                 return null;
             }
             
-            var uri = new Uri($"http://{_currentCdn}/{request.Uri}");
+            var uri = new Uri($"http://{_lancacheAddress}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)
@@ -253,6 +257,7 @@ namespace BattleNetPrefill.Web
             }
             
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+            requestMessage.Headers.Host = _currentCdn;
             if (!request.DownloadWholeFile)
             {
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);

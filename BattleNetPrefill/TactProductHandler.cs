@@ -42,8 +42,7 @@ namespace BattleNetPrefill
         public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
         {
             var metadataTimer = Stopwatch.StartNew();
-            _ansiConsole.LogMarkup($"Starting {Cyan(_product.DisplayName)}");
-
+            
             // Initializing classes, now that we have our CDN info loaded
             using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
@@ -51,8 +50,9 @@ namespace BattleNetPrefill
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
             var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, _product);
             var patchLoader = new PatchLoader(cdnRequestManager);
-
             await cdnRequestManager.InitializeAsync(_product);
+
+            _ansiConsole.LogMarkup($"Starting {Cyan(_product.DisplayName)}");
 
             // Finding the latest version of the game
             VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
