@@ -5,7 +5,7 @@ using BattleNetPrefill.Structs;
 
 namespace BattleNetPrefill.Extensions
 {
-    public static class Extensions
+    public static class MiscExtensions
     {
         public static MD5Hash ToMD5(this string str)
         {

@@ -14,7 +14,7 @@ namespace BattleNetPrefill.Utils
 {
     public static class UpdateChecker
     {
-        private static readonly string _repoName = "tpill90/Battlenet-lancache-prefill";
+        private const string _repoName = "tpill90/Battlenet-lancache-prefill";
         private static readonly string _lastUpdateCheckFile = $"{AppConfig.CacheDir}/lastUpdateCheck.txt";
 
         /// <summary>
