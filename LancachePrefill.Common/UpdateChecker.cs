@@ -16,7 +16,7 @@
                 var fileInfo = new FileInfo(lastUpdateCheckFile);
                 if (fileInfo.Exists && fileInfo.LastWriteTimeUtc.AddDays(3) > DateTime.UtcNow)
                 {
-                    //return;
+                    return;
                 }
 
                 using var httpClient = new HttpClient();

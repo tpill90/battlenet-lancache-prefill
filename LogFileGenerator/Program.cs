@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Net.Http;
 using BattleNetPrefill;
 using BattleNetPrefill.Handlers;
@@ -11,7 +10,7 @@ using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Web;
 using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
+using static LancachePrefill.Common.SpectreColors;
 
 namespace LogFileGenerator
 {
