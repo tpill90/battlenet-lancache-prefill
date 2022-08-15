@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Extensions
+﻿namespace LancachePrefill.Common.Extensions
 {
     public static class ByteSizeExtensions
     {
@@ -18,11 +18,6 @@
             }
 
             return $"{(averageSpeed.GigaBytes * 8).ToString("0.##")} Gbit/s";
-        }
-
-        public static ByteSize SumTotalBytes(this List<Request> requests)
-        {
-            return ByteSize.FromBytes(requests.Sum(e => e.TotalBytes));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Structs.Exceptions
+﻿namespace LancachePrefill.Common.Exceptions
 {
     [Serializable]
     public class LancacheNotFoundException : Exception

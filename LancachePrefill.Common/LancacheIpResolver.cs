@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Web
+﻿namespace LancachePrefill.Common
 {
     /// <summary>
     /// Attempts to automatically resolve the Lancache's IP address,

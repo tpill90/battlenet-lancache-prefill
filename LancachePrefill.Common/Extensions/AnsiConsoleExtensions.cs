@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Extensions
+﻿namespace LancachePrefill.Common.Extensions
 {
     public static class AnsiConsoleExtensions
     {
@@ -62,6 +62,20 @@
         public static void MarkupLineTimer(this IAnsiConsole console, string message, Stopwatch stopwatch)
         {
             console.MarkupLine($"{message} " + SpectreColors.LightYellow(stopwatch.Elapsed.ToString(@"ss\.FFFF")));
+        }
+
+        public static string FormatElapsedString(this Stopwatch stopwatch)
+        {
+            var elapsed = stopwatch.Elapsed;
+            if (elapsed.TotalHours > 1)
+            {
+                return elapsed.ToString(@"h\:mm\:ss\.FF");
+            }
+            if (elapsed.TotalMinutes > 1)
+            {
+                return elapsed.ToString(@"mm\:ss\.FF");
+            }
+            return elapsed.ToString(@"ss\.FF");
         }
     }
 }

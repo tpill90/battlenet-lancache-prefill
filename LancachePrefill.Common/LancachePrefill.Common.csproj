@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ByteSize" Version="2.0.0" />
+    <PackageReference Include="CliFx" Version="2.0.6" />
+
+    <Reference Include="Spectre.Console">
+      <HintPath>..\lib\Spectre.Console.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -36,7 +36,7 @@ namespace BattleNetPrefill.CliCommands
             {
                 var timer = Stopwatch.StartNew();
 
-                await UpdateChecker.CheckForUpdatesAsync();
+                await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.CacheDir);
 
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
 
