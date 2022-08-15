@@ -1,4 +1,6 @@
-﻿using Utf8Json;
+﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BattleNetPrefill.Structs
 {
@@ -9,6 +11,7 @@ namespace BattleNetPrefill.Structs
     /// 
     /// See more: https://wowdev.wiki/TACT#File_types
     /// </summary>
+    [JsonConverter(typeof(RootFolderJsonConverter))]
     public class RootFolder : EnumBase<RootFolder>
     {
         /// <summary>
@@ -30,30 +33,17 @@ namespace BattleNetPrefill.Structs
         {
         }
     }
-
-    /// <summary>
-    /// Used to override the default serialization/deserialization behavior of Utf8Json
-    /// </summary>
-    public sealed class RootFolderFormatter : IJsonFormatter<RootFolder>, IObjectPropertyNameFormatter<RootFolder>
+    
+    public class RootFolderJsonConverter : JsonConverter<RootFolder>
     {
-        public void Serialize(ref JsonWriter writer, RootFolder value, IJsonFormatterResolver formatterResolver)
+        public override RootFolder Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            writer.WriteString(value.ToString());
+            return RootFolder.Parse(reader.GetString());
         }
 
-        public RootFolder Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        public override void Write(Utf8JsonWriter writer, RootFolder value, JsonSerializerOptions options)
         {
-            return RootFolder.Parse(reader.ReadString());
-        }
-
-        public void SerializeToPropertyName(ref JsonWriter writer, RootFolder value, IJsonFormatterResolver formatterResolver)
-        {
-            writer.WriteString(value.ToString());
-        }
-
-        public RootFolder DeserializeFromPropertyName(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
-        {
-            return RootFolder.Parse(reader.ReadString());
+            writer.WriteStringValue(value.ToString());
         }
     }
 }

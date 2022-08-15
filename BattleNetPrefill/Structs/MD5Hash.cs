@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using BattleNetPrefill.Utils;
 
 namespace BattleNetPrefill.Structs
@@ -11,6 +12,7 @@ namespace BattleNetPrefill.Structs
         public readonly ulong lowPart;
         public readonly ulong highPart;
 
+        [JsonConstructor]
         public MD5Hash(ulong lowPart, ulong highPart)
         {
             this.lowPart = lowPart;
