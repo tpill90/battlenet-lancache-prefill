@@ -4,8 +4,6 @@ using CliFx;
 
 namespace BattleNetPrefill
 {
-    //TODO make sure there are no instances of AnsiConsole being used 
-
     // TODO - General - Promote this app on r/lanparty
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
     // TODO - I wish there was a way to color the help text output from CliFx.  Everything is so flat, and cant draw attention to important parts
