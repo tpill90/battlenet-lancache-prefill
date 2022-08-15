@@ -5,9 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Spectre.Console;
-using Utf8Json;
 using static BattleNetPrefill.Utils.SpectreColors;
 
 namespace BattleNetPrefill.Utils
@@ -38,7 +39,7 @@ namespace BattleNetPrefill.Utils
 
                 // Query Github for a list of all available releases
                 var response = await httpClient.GetStringAsync(new Uri($"https://api.github.com/repos/{_repoName}/releases"));
-                GithubRelease latestRelease = JsonSerializer.Deserialize<List<GithubRelease>>(response)
+                GithubRelease latestRelease = JsonSerializer.Deserialize(response, Structs.Enums.SerializationContext.Default.ListGithubRelease)
                                                             .OrderByDescending(e => e.PublishedAt)
                                                             .First();
 
@@ -93,10 +94,15 @@ namespace BattleNetPrefill.Utils
     
     public class GithubRelease
     {
-        [DataMember(Name = "tag_name")]
+        [JsonPropertyName("tag_name")]
         public string TagName { get; set; }
 
-        [DataMember(Name = "published_at")]
+        [JsonPropertyName("published_at")]
         public DateTime PublishedAt { get; set; }
+
+        public override string ToString()
+        {
+            return $"{TagName} - {PublishedAt}";
+        }
     }
 }

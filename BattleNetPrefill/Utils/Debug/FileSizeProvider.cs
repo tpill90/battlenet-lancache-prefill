@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BattleNetPrefill.Utils.Debug.Models;
 
@@ -39,7 +40,7 @@ namespace BattleNetPrefill.Utils.Debug
             }
             if (File.Exists(CachedFileName))
             {
-                _cachedContentLengths = Utf8Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, long>>(File.ReadAllText(CachedFileName));
+                _cachedContentLengths = JsonSerializer.Deserialize(File.ReadAllText(CachedFileName), Structs.Enums.SerializationContext.Default.ConcurrentDictionaryStringInt64);
                 return;
             }
 
@@ -54,7 +55,7 @@ namespace BattleNetPrefill.Utils.Debug
             lock (_cacheFileLock)
             {
                 _cacheMisses = 0;
-                File.WriteAllText(CachedFileName, Utf8Json.JsonSerializer.ToJsonString(_cachedContentLengths));
+                File.WriteAllText(CachedFileName, JsonSerializer.Serialize(_cachedContentLengths, Structs.Enums.SerializationContext.Default.ConcurrentDictionaryStringInt64));
             }
         }
 
