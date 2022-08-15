@@ -1,10 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Net;
-using System.Runtime.CompilerServices;
-using BattleNetPrefill.Structs;
-
-namespace BattleNetPrefill.Extensions
+﻿namespace BattleNetPrefill.Extensions
 {
     public static class MiscExtensions
     {

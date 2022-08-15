@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace BattleNetPrefill.Structs
+﻿namespace BattleNetPrefill.Structs.Enums
 {
     /// <summary>
     /// Files are grouped on Blizzard's CDNs in one of three folders.

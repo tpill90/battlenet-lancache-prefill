@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using BattleNetPrefill.Utils;
-
-namespace BattleNetPrefill
+﻿namespace BattleNetPrefill
 {
     public static class AppConfig
     {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
-
-namespace BattleNetPrefill.Structs.Exceptions
+﻿namespace BattleNetPrefill.Structs.Exceptions
 {
     [Serializable]
     public class UserCancelledException : Exception

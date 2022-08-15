@@ -1,18 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Handlers;
-using BattleNetPrefill.Parsers;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils.Debug;
-using BattleNetPrefill.Utils.Debug.Models;
-using BattleNetPrefill.Web;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-namespace BattleNetPrefill
+﻿namespace BattleNetPrefill
 {
     public class TactProductHandler
     {

@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Linq;
-
-namespace BattleNetPrefill.Utils
+﻿namespace BattleNetPrefill.Utils
 {
     public static class DirectorySearch
     {

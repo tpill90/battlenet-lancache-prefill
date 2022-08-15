@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils.Debug.Models;
-
-namespace BattleNetPrefill.Utils.Debug
+﻿namespace BattleNetPrefill.Utils.Debug
 {
     public static class RequestUtils
     {

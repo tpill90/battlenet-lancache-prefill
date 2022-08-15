@@ -1,5 +1,6 @@
 ﻿using BattleNetPrefill;
 using BattleNetPrefill.Structs;
+using BattleNetPrefill.Structs.Enums;
 using BattleNetPrefill.Web;
 using BenchmarkDotNet.Attributes;
 using Spectre.Console.Testing;

@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using ByteSizeLib;
-using CliFx;
-using CliFx.Attributes;
-using CliFx.Infrastructure;
-using JetBrains.Annotations;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
+﻿// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
 namespace BattleNetPrefill.CliCommands
 {
     //TODO description

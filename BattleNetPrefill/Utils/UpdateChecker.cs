@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.Serialization;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-namespace BattleNetPrefill.Utils
+﻿namespace BattleNetPrefill.Utils
 {
     public static class UpdateChecker
     {

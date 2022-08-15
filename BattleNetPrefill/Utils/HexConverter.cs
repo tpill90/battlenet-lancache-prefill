@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-
-namespace BattleNetPrefill.Utils
+﻿namespace BattleNetPrefill.Utils
 {
     public static class HexConverter
     {

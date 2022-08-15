@@ -1,10 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using BattleNetPrefill.Utils;
-using CliFx.Infrastructure;
-using Spectre.Console;
-
-namespace BattleNetPrefill.Extensions
+﻿namespace BattleNetPrefill.Extensions
 {
     public static class AnsiConsoleExtensions
     {

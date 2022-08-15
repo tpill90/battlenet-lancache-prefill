@@ -1,26 +1,4 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Parsers;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Structs.Enums;
-using BattleNetPrefill.Utils.Debug;
-using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-namespace BattleNetPrefill.Web
+﻿namespace BattleNetPrefill.Web
 {
     public sealed class CdnRequestManager : IDisposable
     {

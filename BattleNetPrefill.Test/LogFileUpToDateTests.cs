@@ -1,4 +1,5 @@
-﻿using BattleNetPrefill.Handlers;
+﻿using System.Diagnostics.CodeAnalysis;
+using BattleNetPrefill.Handlers;
 using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Web;
@@ -30,6 +31,7 @@ namespace BattleNetPrefill.Test
         [TestCase("wow_classic")]
         [TestCase("zeus")]
         [Parallelizable(ParallelScope.All)]
+        [ExcludeFromCodeCoverage, Category("NoCoverage")]
         public void LogFilesAreUpToDate(string productCode)
         {
             var targetProduct = TactProduct.Parse(productCode);

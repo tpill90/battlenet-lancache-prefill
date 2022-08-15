@@ -1,10 +1,4 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs;
-
-namespace BattleNetPrefill.EncryptDecrypt
+﻿namespace BattleNetPrefill.EncryptDecrypt
 {
     public static class BLTE
     {

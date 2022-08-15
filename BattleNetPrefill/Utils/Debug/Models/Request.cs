@@ -1,8 +1,4 @@
-﻿using System;
-using BattleNetPrefill.Structs;
-using ByteSizeLib;
-
-namespace BattleNetPrefill.Utils.Debug.Models
+﻿namespace BattleNetPrefill.Utils.Debug.Models
 {
     /// <summary>
     /// Model that represents a request that could be made to a CDN.  

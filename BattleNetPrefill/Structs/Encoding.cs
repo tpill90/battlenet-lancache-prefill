@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace BattleNetPrefill.Structs
+﻿namespace BattleNetPrefill.Structs
 {
     /// <summary>
     /// https://wowdev.wiki/TACT#Encoding_table

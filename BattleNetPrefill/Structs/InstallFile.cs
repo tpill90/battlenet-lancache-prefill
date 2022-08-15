@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace BattleNetPrefill.Structs
+﻿namespace BattleNetPrefill.Structs
 {
     /// <summary>
     /// The install file lists files installed on disk. Since the install file is shared by architectures and OSs, there are also tags to select a subset of files.

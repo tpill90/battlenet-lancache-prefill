@@ -1,8 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using CliFx;
-
-namespace BattleNetPrefill
+﻿namespace BattleNetPrefill
 {
     // TODO - General - Promote this app on r/lanparty
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project

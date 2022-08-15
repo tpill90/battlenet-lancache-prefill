@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Web;
-
-namespace BattleNetPrefill.Parsers
+﻿namespace BattleNetPrefill.Parsers
 {
     public class PatchLoader
     {

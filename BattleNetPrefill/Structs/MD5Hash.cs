@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text.Json.Serialization;
-using BattleNetPrefill.Utils;
-
-namespace BattleNetPrefill.Structs
+﻿namespace BattleNetPrefill.Structs
 {
     public readonly struct MD5Hash : IEquatable<MD5Hash>
     {

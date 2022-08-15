@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using BattleNetPrefill.Utils.Debug.Models;
-
-namespace BattleNetPrefill.Utils.Debug
+﻿namespace BattleNetPrefill.Utils.Debug
 {
     /// <summary>
     /// The majority of requests made by Battle.Net specify a byte range, ex 0-100.

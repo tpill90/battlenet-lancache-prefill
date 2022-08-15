@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using BattleNetPrefill.Structs;
-
-namespace BattleNetPrefill.Utils
+﻿namespace BattleNetPrefill.Utils
 {
     public class Md5HashEqualityComparer : IEqualityComparer<MD5Hash>
     {

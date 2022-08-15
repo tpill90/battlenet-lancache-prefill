@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BattleNetPrefill.Extensions;
-using ByteSizeLib;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-namespace BattleNetPrefill.Utils.Debug.Models
+﻿namespace BattleNetPrefill.Utils.Debug.Models
 {
     public class ComparisonResult
     {

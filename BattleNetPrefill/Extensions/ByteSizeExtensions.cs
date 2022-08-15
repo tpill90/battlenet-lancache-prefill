@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
-
-namespace BattleNetPrefill.Extensions
+﻿namespace BattleNetPrefill.Extensions
 {
     public static class ByteSizeExtensions
     {

@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using BattleNetPrefill.EncryptDecrypt;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Parsers;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Web;
-
-namespace BattleNetPrefill.Handlers
+﻿namespace BattleNetPrefill.Handlers
 {
     /// <summary>
     /// Handles the "DownloadFile", which is in essence a "download manifest" listing all files that will need to be downloaded, for a complete installation.

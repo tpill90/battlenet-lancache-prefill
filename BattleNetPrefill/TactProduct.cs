@@ -1,6 +1,4 @@
-﻿using BattleNetPrefill.Structs;
-
-namespace BattleNetPrefill
+﻿namespace BattleNetPrefill
 {
     /// <summary>
     /// A list of all possible games that can be downloaded from Battle.Net.  This list is not comprehensive, as it does not include alpha/beta/PTR versions,

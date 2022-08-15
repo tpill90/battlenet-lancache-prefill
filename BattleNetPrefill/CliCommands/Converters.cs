@@ -1,6 +1,4 @@
-﻿using CliFx.Extensibility;
-
-namespace BattleNetPrefill.CliCommands
+﻿namespace BattleNetPrefill.CliCommands
 {
     public class TactProductConverter : BindingConverter<TactProduct>
     {

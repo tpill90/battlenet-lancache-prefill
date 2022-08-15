@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-
-namespace BattleNetPrefill.Structs
+﻿namespace BattleNetPrefill.Structs.Enums
 {
     /// <summary>
     /// This class is intended to be used to create "strongly typed enums", as an alternative to regular "int" enums in C#.

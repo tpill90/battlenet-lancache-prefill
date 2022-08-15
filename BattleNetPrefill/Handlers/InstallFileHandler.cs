@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BattleNetPrefill.EncryptDecrypt;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Web;
-
-namespace BattleNetPrefill.Handlers
+﻿namespace BattleNetPrefill.Handlers
 {
     /// <summary>
     /// https://wowdev.wiki/TACT#Install_manifest

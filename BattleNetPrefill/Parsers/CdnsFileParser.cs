@@ -1,11 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Structs.Enums;
-using BattleNetPrefill.Web;
-
-namespace BattleNetPrefill.Parsers
+﻿namespace BattleNetPrefill.Parsers
 {
     public static class CdnsFileParser
     {

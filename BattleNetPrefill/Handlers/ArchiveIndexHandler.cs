@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils;
-using BattleNetPrefill.Web;
-using Spectre.Console;
-
-namespace BattleNetPrefill.Handlers
+﻿namespace BattleNetPrefill.Handlers
 {
     /// <summary>
     /// https://wowdev.wiki/TACT#Archive_Indexes_.28.index.29

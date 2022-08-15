@@ -1,16 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils.Debug.Models;
-using Spectre.Console;
-
-namespace BattleNetPrefill.Utils.Debug
+﻿namespace BattleNetPrefill.Utils.Debug
 {
     public static class NginxLogParser
     {

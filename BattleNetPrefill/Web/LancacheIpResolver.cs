@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using BattleNetPrefill.Extensions;
-using BattleNetPrefill.Structs.Exceptions;
-using Spectre.Console;
-using static BattleNetPrefill.Utils.SpectreColors;
-
-namespace BattleNetPrefill.Web
+﻿namespace BattleNetPrefill.Web
 {
     /// <summary>
     /// Attempts to automatically resolve the Lancache's IP address,
