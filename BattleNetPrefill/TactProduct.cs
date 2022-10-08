@@ -62,6 +62,8 @@
         /// </summary>
         public string DisplayName { get; private init; }
 
+        public string DisplayNameSanitized => DisplayName.Replace(":", "");
+
         /// <summary>
         /// TACT Product code.  Used to find content on Blizzard CDNs.
         /// </summary>

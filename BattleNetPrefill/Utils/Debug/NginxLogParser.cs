@@ -13,7 +13,7 @@
         public static List<Request> GetSavedRequestLogs(string logBasePath, TactProduct product)
         {
             var timer = Stopwatch.StartNew();
-            var logFolder = $"{logBasePath}/{product.DisplayName.Replace(":", "")}";
+            var logFolder = $"{logBasePath}/{product.DisplayNameSanitized}";
 
             var latestFile = new DirectoryInfo(logFolder)
                                     .GetFiles()
@@ -102,7 +102,7 @@
         
         public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
-            var logFolder = $@"{logBasePath}\{product.DisplayName.Replace(":", "")}";
+            var logFolder = $@"{logBasePath}\{product.DisplayNameSanitized}";
 
             if (!Directory.Exists(logFolder))
             {

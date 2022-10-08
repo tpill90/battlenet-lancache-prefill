@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using BattleNetPrefill;
 using BattleNetPrefill.Handlers;
@@ -14,6 +15,7 @@ using static LancachePrefill.Common.SpectreColors;
 
 namespace LogFileGenerator
 {
+    //TODO make this uninstall rather than delete the folder
     public static class Program
     {
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console));
@@ -29,7 +31,7 @@ namespace LogFileGenerator
         public static void Main()
         {
             EnsureBnetInstallerIsDownloaded();
-
+            
             var products = TactProduct.AllEnumValues;
             foreach (var product in products)
             {
@@ -52,6 +54,12 @@ namespace LogFileGenerator
                 }
                 
                 CopyLogsToHost(product);
+
+                // Deleting start menu entries
+                foreach (var dir in Directory.EnumerateDirectories(@"C:\ProgramData\Microsoft\Windows\Start Menu\Programs", product.DisplayNameSanitized))
+                {
+                    Directory.Delete(dir, true);
+                }
             }
 
             DeleteGameFiles();
@@ -71,7 +79,7 @@ namespace LogFileGenerator
         {
             var info = new ProcessStartInfo("ssh")
             {
-                Arguments = "-t tim@192.168.1.222 pwsh -f ./scripts/Clear-SteamCacheLogs.ps1",
+                Arguments = "-t tim@192.168.1.222 pwsh -f ./scripts/Clear-LancacheLogs.ps1",
                 UseShellExecute = false
             };
             var process = Process.Start(info);
