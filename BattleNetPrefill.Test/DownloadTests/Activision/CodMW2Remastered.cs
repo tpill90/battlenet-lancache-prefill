@@ -9,7 +9,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
     [ExcludeFromCodeCoverage, Category("NoCoverage")]
-    public class CodModernWarfare2
+    public class CodMW2Remastered
     {
         private ComparisonResult _results;
 
@@ -18,7 +18,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Activision
         {
             // Run the download process only once
             var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
-            var tactProductHandler = new TactProductHandler(TactProduct.CodMW2, new TestConsole(), debugConfig: debugConfig);
+            var tactProductHandler = new TactProductHandler(TactProduct.CodMW2Remastered, new TestConsole(), debugConfig: debugConfig);
             _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
         }
 

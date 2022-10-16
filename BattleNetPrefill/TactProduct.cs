@@ -47,8 +47,9 @@
         public static readonly TactProduct CodBOCW = new TactProduct("zeus") { DisplayName = "Call of Duty: Black Ops Cold War", 
                                                                                DefaultTags = new[] { "enUS", "acct-DEU", "cp", "mp", "zm", "zm2" }, 
                                                                                IsActivision = true };
-        public static readonly TactProduct CodWarzone = new TactProduct("odin") { DisplayName = "Call of Duty: Modern Warfare", IsActivision = true };
-        public static readonly TactProduct CodMW2 = new TactProduct("lazr") { DisplayName = "Call of Duty: Modern Warfare 2", IsActivision = true };
+        public static readonly TactProduct CodWarzone = new TactProduct("odin") { DisplayName = "Call of Duty: Warzone", IsActivision = true };
+
+        public static readonly TactProduct CodMW2Remastered = new TactProduct("lazr") { DisplayName = "Call of Duty: MW2 Remastered", IsActivision = true };
         public static readonly TactProduct CodVanguard = new TactProduct("fore") { DisplayName = "Call of Duty: Vanguard", IsActivision = true };
 
         public static readonly TactProduct CrashBandicoot4 = new TactProduct("wlby") { DisplayName = "Crash Bandicoot 4: It's About Time", 
