@@ -1,5 +1,6 @@
 ﻿namespace BattleNetPrefill
 {
+    // TODO - Update to dotnet 7 sdk + dotnet 7 target
     // TODO - Spectre - Once pull request has been merged into Spectre, remove reference to forked copy of the project
     // TODO - I wish there was a way to color the help text output from CliFx.  Everything is so flat, and cant draw attention to important parts
     // TODO - When running on the server, it doesn't seem to be detecting 127.0.0.1 correctly
