@@ -149,7 +149,7 @@ These cache files will also build up over time, as newer versions of games are r
 In the case that you would like to save disk space without having to constantly clear the cache, 
 running `prefill` with the `--nocache` flag specified will prevent the cache files from being written in the first place.
 
-### -y|--y
+### -y|--yes
 Skips the prompt asking to clear the cache, and immediately begins clearing the cache.
 
 # Updating
