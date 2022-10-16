@@ -48,7 +48,7 @@
             // This default performs well for most TactProducts.
             int maxTasks = 3;
             // Overwatch's indexes parse significantly faster when increasing the concurrency.
-            if (_targetProduct == TactProduct.Overwatch)
+            if (_targetProduct == TactProduct.Overwatch2)
             {
                 maxTasks = 6;
             }
@@ -123,7 +123,7 @@
         private int ComputeInitialDictionarySize()
         {
             int initialDictionarySize = 1;
-            if (_targetProduct == TactProduct.Overwatch)
+            if (_targetProduct == TactProduct.Overwatch2)
             {
                 initialDictionarySize = 2_000_000;
             }

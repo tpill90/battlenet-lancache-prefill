@@ -19,7 +19,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         {
             // Run the download process only once
             var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
-            var tactProductHandler = new TactProductHandler(TactProduct.Overwatch, new TestConsole(), debugConfig: debugConfig);
+            var tactProductHandler = new TactProductHandler(TactProduct.Overwatch2, new TestConsole(), debugConfig: debugConfig);
             _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
         }
 

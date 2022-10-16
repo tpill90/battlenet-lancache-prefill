@@ -27,7 +27,7 @@
             DefaultTags = new[] { "Windows", "enUS" }, 
             IsBlizzard = true };
 
-        public static readonly TactProduct Overwatch = new TactProduct("pro") { DisplayName = "Overwatch",
+        public static readonly TactProduct Overwatch2 = new TactProduct("pro") { DisplayName = "Overwatch 2",
             DefaultTags = new[] { "DevReg", "enUS" },
             IsBlizzard = true };
 

@@ -41,7 +41,7 @@
 
             // Unused by Hearthstone
             if (cdnConfig.patchArchives != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection
-                && targetProduct != TactProduct.Overwatch)
+                && targetProduct != TactProduct.Overwatch2)
             {
                 for (var i = 0; i < cdnConfig.patchArchives.Length; i++)
                 {
