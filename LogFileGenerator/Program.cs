@@ -28,12 +28,17 @@ namespace LogFileGenerator
             TactProduct.Hearthstone, TactProduct.CodBOCW
         };
 
+        private static List<TactProduct> ProductsToCheck = TactProduct.AllEnumValues.Where(e => e.Name == "pro").ToList();
+
         public static void Main()
         {
             EnsureBnetInstallerIsDownloaded();
+            if (!Directory.Exists(RootInstallDir))
+            {
+                Directory.CreateDirectory(RootInstallDir);
+            }
             
-            var products = TactProduct.AllEnumValues;
-            foreach (var product in products)
+            foreach (var product in ProductsToCheck)
             {
                 if (IsLogFileUpToDate(product))
                 {
