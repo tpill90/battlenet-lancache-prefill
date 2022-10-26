@@ -49,6 +49,7 @@
                                                                                IsActivision = true };
         public static readonly TactProduct CodWarzone = new TactProduct("odin") { DisplayName = "Call of Duty: Warzone", IsActivision = true };
 
+        public static readonly TactProduct CodMW2 = new TactProduct("auks") { DisplayName = "Call of Duty: Modern Warfare 2", IsActivision = true };
         public static readonly TactProduct CodMW2Remastered = new TactProduct("lazr") { DisplayName = "Call of Duty: MW2 Remastered", IsActivision = true };
         public static readonly TactProduct CodVanguard = new TactProduct("fore") { DisplayName = "Call of Duty: Vanguard", IsActivision = true };
 
