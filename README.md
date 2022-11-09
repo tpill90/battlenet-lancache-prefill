@@ -41,10 +41,13 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 
 ## Selecting what to prefill
 
+> **Warning**
+> This guide was written with Linux in mind.  If you are running **BattleNetPrefill** on Windows you will need to substitute `./BattleNetPrefill` with `.\BattleNetPrefill.exe` instead.
+
 Prior to prefilling for the first time, you will have to decide which games should be prefilled.  
 A table of all currently downloadable games can be listed with the following command
 ```powershell
-.\BattleNetPrefill.exe list-products
+./BattleNetPrefill list-products
 ```
 <img src="docs/img/ListProducts.png" width="630" alt="List Products">
 
@@ -57,15 +60,15 @@ Now that we've decided on some games that we'd like to prefill, we can move onto
 
 One or more games can be downloaded by specifying as many product codes as desired, in this example we will be prefilling 3 total games
 ```powershell
-.\BattleNetPrefill.exe prefill --products s1 d3 zeus
+./BattleNetPrefill prefill --products s1 d3 zeus
 ```
 
 Alternatively, optional flags can be used to bulk preload products, without having to specify each product code individually.  This can be useful when you are interested
 in installing most of the available games, as specifiying the individual product codes is not required.
 ```powershell
-.\BattleNetPrefill.exe prefill --all
-.\BattleNetPrefill.exe prefill --blizzard 
-.\BattleNetPrefill.exe prefill --activision 
+./BattleNetPrefill prefill --all
+./BattleNetPrefill prefill --blizzard 
+./BattleNetPrefill prefill --activision 
 ```
 
 During this initial run, it is likely that the Lancache is empty, 
