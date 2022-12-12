@@ -17,6 +17,7 @@
 
         public static readonly DebugConfig DebugConfig = new DebugConfig
         {
+            //TODO turn this into a cli flag
             UseCdnDebugMode = false,
             CompareAgainstRealRequests = false
         };

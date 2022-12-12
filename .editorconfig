@@ -1,3 +1,8 @@
+root = true
+
+[*]
+end_of_line = lf
+
 # .NET formatting rules.  See https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules
 # Resharper Rules. See https://www.jetbrains.com/help/resharper/EditorConfig_Index.html
 [*.cs]
@@ -18,6 +23,8 @@ space_between_attribute_sections = false
 
 # CA1002: Do not expose generic lists
 dotnet_diagnostic.CA1002.severity = none
+# CA1008: Enums should have zero value - The enums in this case are modeling Steam enums.
+dotnet_diagnostic.CA1008.severity = none
 # CA1014: Mark assemblies with CLSCompliant
 dotnet_diagnostic.CA1014.severity = none
 # CA1031: Modify (method) to catch a more specific allowed exception type, or rethrow the exception
@@ -53,3 +60,6 @@ dotnet_diagnostic.cs4014.severity = error
 
 # IDE0090 : 'new' expression can be simplified
 csharp_style_implicit_object_creation_when_type_is_apparent = false
+
+# The method does not need to use async/await - Introduces annoying 'return' statements for async methods, that hurt code readability.
+dotnet_diagnostic.AsyncFixer01.severity = none

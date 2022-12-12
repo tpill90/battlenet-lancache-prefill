@@ -4,29 +4,17 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p s1 --force"
     },
-    "Prefill Starcraft 2": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p s2 --force"
-    },
     "Prefill BOCW": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p zeus --force"
-    },
-    "Prefill Overwatch": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p pro --force"
     },
     "Prefill WOW": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow --force"
     },
-    "Prefill All": {
+    "Prefill Blizzard": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all"
-    },
-    "Clear Cache": {
-      "commandName": "Project",
-      "commandLineArgs": "clear-cache"
+      "commandLineArgs": "prefill --blizzard"
     },
     "Clear Cache - Accept": {
       "commandName": "Project",
