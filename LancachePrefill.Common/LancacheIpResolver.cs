@@ -1,4 +1,6 @@
-﻿namespace LancachePrefill.Common
+﻿using System.Net.Sockets;
+
+namespace LancachePrefill.Common
 {
     /// <summary>
     /// Attempts to automatically resolve the Lancache's IP address,
@@ -12,45 +14,45 @@
     {
         private static IAnsiConsole _ansiConsole;
 
-        private static Dictionary<string, string> _resolvedUrls = new Dictionary<string, string>();
-
         public static async Task<string> ResolveLancacheIpAsync(IAnsiConsole ansiConsole, string cdnUrl)
         {
             if (_ansiConsole == null)
             {
                 _ansiConsole = ansiConsole;
             }
-            // Short circuit if Lancache server has been previously detected
-            if (_resolvedUrls.ContainsKey(cdnUrl))
-            {
-                return _resolvedUrls[cdnUrl];
-            }
 
-            string detectedServer = await _ansiConsole.StatusSpinner().StartAsync("Detecting Lancache server...", async context =>
+            DetectedServer detectedServer = null;
+            await _ansiConsole.StatusSpinner().StartAsync("Detecting Lancache server...", async _ =>
             {
-                return await DetectLancacheServerAsync(cdnUrl);
+                detectedServer = await DetectLancacheServerAsync(cdnUrl);
             });
 
             if (detectedServer != null)
             {
-                _ansiConsole.LogMarkupLine($"Detected Lancache server at {Cyan(detectedServer)}!");
-                _resolvedUrls.Add(cdnUrl, detectedServer);
-                return detectedServer;
+                _ansiConsole.LogMarkupLine($"Detected Lancache server at {Cyan(detectedServer.Url)} [[{MediumPurple(detectedServer.IpAddress)}]]");
+                return detectedServer.IpAddress.ToString();
             }
 
+            // If no server was detected, checks for common configuration issues
             await DetectPublicIpAsync(cdnUrl);
-            return cdnUrl;
+            return null;
         }
-        
-        private static async Task<string> DetectLancacheServerAsync(string cdnUrl)
+
+        private static async Task<DetectedServer> DetectLancacheServerAsync(string cdnUrl)
         {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+
             // Tries to resolve poisoned DNS record, then localhost, then Docker's host
-            var possibleLancacheUrls = new List<string> { cdnUrl, "127.0.0.1", "172.17.0.1" };
+            var possibleLancacheUrls = new List<string> { cdnUrl, "localhost", "172.17.0.1" };
 
             foreach (var url in possibleLancacheUrls)
             {
-                var ipAddresses = await Dns.GetHostAddressesAsync(url);
+                // Gets a list of ipv4 addresses
+                var ipAddresses = (await Dns.GetHostAddressesAsync(url))
+                    .Where(e => e.AddressFamily == AddressFamily.InterNetwork)
+                    .ToArray();
+
+                // If there are no public IPs, then continue onto the next url
                 if (!ipAddresses.Any(e => e.IsInternal()))
                 {
                     continue;
@@ -62,9 +64,9 @@
                     var response = await httpClient.GetAsync(new Uri($"http://{url}/lancache-heartbeat"));
                     if (response.Headers.Contains("X-LanCache-Processed-By"))
                     {
-                        return url;
+                        return new DetectedServer(url, ipAddresses[0]);
                     }
-                    else if (!response.Headers.Contains("X-LanCache-Processed-By") && url == cdnUrl)
+                    if (!response.Headers.Contains("X-LanCache-Processed-By") && url == cdnUrl)
                     {
                         _ansiConsole.MarkupLine(Red($" Error!  {White(cdnUrl)} is resolving to a private IP address {Cyan($"({ipAddresses.First()})")},\n" +
                                                     " however no Lancache can be found at that address.\n" +
@@ -72,14 +74,14 @@
                         throw new LancacheNotFoundException($"No Lancache server detected at {ipAddresses.First()}");
                     }
                 }
-                catch (Exception e ) when (e is HttpRequestException | e is TaskCanceledException)
+                catch (Exception e) when (e is HttpRequestException | e is TaskCanceledException)
                 {
                     // Catching target machine refused connection + timeout exceptions, so we can try the next address
                 }
             }
             return null;
         }
-        
+
         private static async Task DetectPublicIpAsync(string cdnUrl)
         {
             var ipAddresses = await Dns.GetHostAddressesAsync(cdnUrl);
@@ -101,6 +103,18 @@
             if (publicDownloadOverride == false)
             {
                 throw new UserCancelledException("User cancelled download!");
+            }
+        }
+
+        private sealed class DetectedServer
+        {
+            public string Url { get; }
+            public IPAddress IpAddress { get; }
+
+            public DetectedServer(string url, IPAddress ipAddress)
+            {
+                Url = url;
+                IpAddress = ipAddress;
             }
         }
     }

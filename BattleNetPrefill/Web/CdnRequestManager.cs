@@ -126,7 +126,7 @@
 
             var downloadTimer = Stopwatch.StartNew();
             var failedRequests = new ConcurrentBag<Request>();
-            await _ansiConsole.CreateSpectreProgress().StartAsync(async ctx =>
+            await _ansiConsole.CreateSpectreProgress(TransferSpeedUnit.Bits).StartAsync(async ctx =>
             {
                 // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
@@ -152,7 +152,7 @@
             }
 
             // Logging some metrics about the download
-            _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.ToAverageString(downloadTimer))}");
+            _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.CalculateBitrate(downloadTimer))}");
             _ansiConsole.WriteLine();
 
             return true;

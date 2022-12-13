@@ -1,4 +1,6 @@
-﻿namespace BattleNetPrefill
+﻿using LancachePrefill.Common.Util;
+
+namespace BattleNetPrefill
 {
     public static class AppConfig
     {

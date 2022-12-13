@@ -53,7 +53,7 @@ namespace BattleNetPrefill.CliCommands
                     await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
                 }
 
-                ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps in {LightYellow(timer.FormatElapsedString())}");
+                ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
             }
             catch (Exception e)
             {

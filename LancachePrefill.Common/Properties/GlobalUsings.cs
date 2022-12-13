@@ -1,5 +1,6 @@
 ﻿global using ByteSizeLib;
 global using CliFx.Infrastructure;
+global using LancachePrefill.Common.Enums;
 global using LancachePrefill.Common.Exceptions;
 global using LancachePrefill.Common.Extensions;
 global using Spectre.Console;
@@ -18,4 +19,4 @@ global using System.Runtime.Serialization;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Threading.Tasks;
-global using static LancachePrefill.Common.SpectreColors;
+global using static LancachePrefill.Common.SpectreFormatters;

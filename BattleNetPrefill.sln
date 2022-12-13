@@ -9,11 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BattleNetPrefill.Test", "Ba
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FBFF3357-782F-4754-B495-AB0C8203F76B}"
 	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
 		.github\workflows\actions.yml = .github\workflows\actions.yml
-		docs\Development.md = docs\Development.md
-		global.json = global.json
-		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogFileGenerator", "LogFileGenerator\LogFileGenerator.csproj", "{EB693B7C-27A1-46FC-8D5E-6516120BDBED}"

@@ -1,12 +1,12 @@
-﻿namespace BattleNetPrefill.Utils
+﻿namespace LancachePrefill.Common
 {
     public static class UpdateChecker
     {
-        //TODO update docs
         /// <summary>
-        /// Compares the current application version against the newest version available on Github Releases.  If there is a newer version, displays a message
-        /// to the user.
+        /// Compares the current application version against the newest version available on Github Releases.
+        /// If there is a newer version, displays a message to the user.
         /// </summary>
+        /// <param name="repoName">Expected to be in the format "username/repoName"</param>
         public static async Task CheckForUpdatesAsync(Type executingAppType, string repoName, string cacheDir)
         {
             string lastUpdateCheckFile = Path.Combine(cacheDir, "lastUpdateCheck.txt");
@@ -20,15 +20,15 @@
                 }
 
                 using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(5);
+                httpClient.Timeout = TimeSpan.FromSeconds(15);
                 httpClient.DefaultRequestHeaders.Accept.Clear();
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
                 httpClient.DefaultRequestHeaders.Add("User-Agent", repoName);
 
                 // Query Github for a list of all available releases
                 var response = await httpClient.GetStringAsync(new Uri($"https://api.github.com/repos/{repoName}/releases"));
-                GithubRelease latestRelease = JsonSerializer.Deserialize(response, Structs.Enums.SerializationContext.Default.ListGithubRelease)
-                                                            .OrderByDescending(e => e.PublishedAt)
+                GithubRelease latestRelease = JsonSerializer.Deserialize(response, SerializationContext.Default.ListGithubRelease)
+                                                            .OrderByDescending(e => e.CreatedAt)
                                                             .First();
 
                 // Compare the available releases against our known releases
@@ -70,18 +70,33 @@
             AnsiConsole.WriteLine();
         }
     }
-    
-    public class GithubRelease
+
+    [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Default)]
+    [JsonSerializable(typeof(List<GithubRelease>))]
+    internal partial class SerializationContext : JsonSerializerContext
+    {
+    }
+
+    public sealed class GithubRelease
     {
         [JsonPropertyName("tag_name")]
         public string TagName { get; set; }
 
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
         [JsonPropertyName("published_at")]
         public DateTime PublishedAt { get; set; }
 
+        [JsonPropertyName("draft")]
+        public bool IsDraft { get; set; }
+
+        [JsonPropertyName("prerelease")]
+        public bool IsPrerelease { get; set; }
+
         public override string ToString()
         {
-            return $"{TagName} - {PublishedAt}";
+            return $"{TagName} - Created : {CreatedAt} - Published: {PublishedAt}";
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace LancachePrefill.Common
+﻿namespace LancachePrefill.Common.Enums
 {
     /// <summary>
     /// This class is intended to be used to create "strongly typed enums", as an alternative to regular "int" enums in C#.
@@ -16,7 +16,7 @@
 
         private static object _lockObject = new object();
 
-        
+
         public static List<T> AllEnumValues
         {
             get
@@ -61,6 +61,19 @@
                 }
             }
             throw new FormatException($"{toParse} is not a valid enum value for {typeof(T).Name}!");
+        }
+
+        public static bool IsValidEnumValue(string inputValue)
+        {
+            for (var index = 0; index < AllEnumValues.Count; index++)
+            {
+                var type = AllEnumValues[index];
+                if (inputValue == type.Name)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public override string ToString()

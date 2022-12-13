@@ -2,6 +2,7 @@
 global using BattleNetPrefill.Extensions;
 global using LancachePrefill.Common;
 global using LancachePrefill.Common.Extensions;
+global using LancachePrefill.Common.Enums;
 global using BattleNetPrefill.Handlers;
 global using BattleNetPrefill.Parsers;
 global using BattleNetPrefill.Structs;
@@ -39,4 +40,4 @@ global using System.Text.Json.Serialization;
 global using System.Text.RegularExpressions;
 global using System.Threading;
 global using System.Threading.Tasks;
-global using static LancachePrefill.Common.SpectreColors;
+global using static LancachePrefill.Common.SpectreFormatters;

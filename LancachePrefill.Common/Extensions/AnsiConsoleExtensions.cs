@@ -1,81 +1,66 @@
 ﻿namespace LancachePrefill.Common.Extensions
 {
+    //TODO comment
     public static class AnsiConsoleExtensions
     {
-        public static IAnsiConsole CreateAnsiConsole(this IConsole console)
-        {
-            return AnsiConsole.Create(new AnsiConsoleSettings
-            {
-                Ansi = AnsiSupport.Detect,
-                ColorSystem = ColorSystemSupport.Detect,
-                Out = new AnsiConsoleOutput(console.Output)
-            });
-        }
+        //TODO I don't particularly like this.  Refactor into something more sane
+        //TODO comment
+        public static bool WriteVerboseLogs = false;
 
-        public static Status StatusSpinner(this IAnsiConsole ansiConsole)
-        {
-            return ansiConsole.Status()
-                              .AutoRefresh(true)
-                              .SpinnerStyle(Style.Parse("green"))
-                              .Spinner(Spinner.Known.Dots2);
-        }
+        private static string FormattedTime => $"[[{DateTime.Now.ToString("h:mm:ss tt")}]]";
 
-        public static Progress CreateSpectreProgress(this IAnsiConsole ansiConsole)
-        {
-            var spectreProgress = ansiConsole.Progress()
-                                             .HideCompleted(true)
-                                             .AutoClear(true)
-                                             .Columns(
-                                                 new TaskDescriptionColumn(),
-                                                 new ProgressBarColumn(),
-                                                 new PercentageColumn(),
-                                                 new RemainingTimeColumn(),
-                                                 new DownloadedColumn(),
-                                                 new TransferSpeedColumn
-                                                 {
-                                                     Base = FileSizeBase.Decimal,
-                                                     DisplayBits = true
-                                                 });
-            return spectreProgress;
-        }
-
+        /// <summary>
+        /// Writes formatted markup text to the console, without a newline.
+        /// </summary>
+        /// <param name="console"></param>
+        /// <param name="message"></param>
         public static void LogMarkup(this IAnsiConsole console, string message)
         {
-            console.Markup($"[[{DateTime.Now.ToString("h:mm:ss tt")}]] {message}");
+            console.Markup($"{FormattedTime} {message}");
         }
 
         public static void LogMarkupLine(this IAnsiConsole console, string message)
         {
-            console.MarkupLine($"[[{DateTime.Now.ToString("h:mm:ss tt")}]] {message}");
+            console.MarkupLine($"{FormattedTime} {message}");
+            FileLogger.Log(message);
         }
 
         public static void LogMarkupLine(this IAnsiConsole console, string message, Stopwatch stopwatch)
         {
-            console.LogMarkupLine(message, stopwatch.Elapsed);
+            var messageWithTime = $"{FormattedTime} {message}";
+            // Taking the difference between the original message length, and the message length with markup removed.  
+            // Ensures that PadRight will align messages with markup correctly.
+            var paddingDiff = messageWithTime.Length - new Markup(messageWithTime).Length;
+
+            var formattedElapsedTime = stopwatch.Elapsed.ToString(@"ss\.FFFF");
+            console.MarkupLine(messageWithTime.PadRight(65 + paddingDiff) + LightYellow(formattedElapsedTime));
+            FileLogger.Log($"{message} {formattedElapsedTime}");
         }
 
-        public static void LogMarkupLine(this IAnsiConsole console, string message, TimeSpan elapsed)
+        //TODO Replace LogMarkupLine() instances in the codebase that could use this instead.
+        /// <summary>
+        /// Will log error messages to the console, only when <see cref="WriteVerboseLogs"/> has been set to true.
+        /// </summary>
+        public static void LogMarkupVerbose(this IAnsiConsole console, string message)
         {
-            console.MarkupLine($"[[{DateTime.Now.ToString("h:mm:ss tt")}]] {message}".PadRight(65) + SpectreColors.LightYellow(elapsed.ToString(@"ss\.FFFF")));
-        }
+            // Always write to the logfile
+            FileLogger.Log(message);
 
-        public static void MarkupLineTimer(this IAnsiConsole console, string message, Stopwatch stopwatch)
-        {
-            console.MarkupLine($"{message} " + SpectreColors.LightYellow(stopwatch.Elapsed.ToString(@"ss\.FFFF")));
-        }
-
-        public static string FormatElapsedString(this Stopwatch stopwatch)
-        {
-            var elapsed = stopwatch.Elapsed;
-            if (elapsed.TotalHours > 1)
+            // Skip writing to console unless verbose logging is enabled
+            if (!WriteVerboseLogs)
             {
-                return elapsed.ToString(@"h\:mm\:ss\.FF");
+                return;
             }
-            if (elapsed.TotalMinutes > 1)
-            {
-                return elapsed.ToString(@"mm\:ss\.FF");
-            }
-            return elapsed.ToString(@"ss\.FF");
+            console.MarkupLine($"{FormattedTime} {message}");
+        }
+
+        /// <summary>
+        /// Logs an error message to the console, as well as to the log file.
+        /// </summary>
+        public static void LogMarkupError(this IAnsiConsole console, string message)
+        {
+            console.MarkupLine($"{FormattedTime} {Red(message)}");
+            FileLogger.Log(message);
         }
     }
 }

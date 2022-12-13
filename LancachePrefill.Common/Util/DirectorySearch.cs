@@ -1,4 +1,4 @@
-﻿namespace LancachePrefill.Common
+﻿namespace LancachePrefill.Common.Util
 {
     public static class DirectorySearch
     {

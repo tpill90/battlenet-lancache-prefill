@@ -37,7 +37,7 @@
 
             comparisonResult.PrintOutput();
 
-            AnsiConsole.Console.MarkupLineTimer("Comparison complete!", timer);
+            AnsiConsole.Console.LogMarkupLine("Comparison complete!", timer);
             return comparisonResult;
         }
         

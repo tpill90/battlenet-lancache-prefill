@@ -38,7 +38,7 @@
                 var coalescedFileName = $"{logFolder}/{latestFile.Name.Replace(".zip", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonSerializer.Serialize(requestsToReplay, Structs.Enums.SerializationContext.Default.ListRequest));
                 
-                AnsiConsole.Console.MarkupLineTimer("Parsed request logs", timer);
+                AnsiConsole.Console.LogMarkupLine("Parsed request logs", timer);
                 return requestsToReplay;
             }
 
