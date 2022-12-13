@@ -62,7 +62,7 @@
 
             _client = new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(15)
+                Timeout = TimeSpan.FromSeconds(60)
             };
         }
 
@@ -204,11 +204,14 @@
         ///                              This can be used with "non-required" requests, to speed up processing since we only care about reading the data once to prefill.
         /// </param>
         /// <returns></returns>
-        public Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false,
+        public async Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false,
             bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull, isIndex);
-            return GetRequestAsBytesAsync(request);
+            return await AppConfig.RetryPolicy.ExecuteAsync(async () =>
+            {
+                return await GetRequestAsBytesAsync(request);
+            });
         }
 
         public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)
