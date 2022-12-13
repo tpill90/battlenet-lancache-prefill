@@ -111,7 +111,7 @@ namespace BattleNetPrefill.Test.DebugUtilTests
 
             var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
-            
+
             // Since this matched fully, should be completely removed
             Assert.IsEmpty(generatedRequests);
 
@@ -159,7 +159,7 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             var comparisonUtil = new ComparisonUtil();
             comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
-            
+
             // Since this matched fully, should be completely removed
             Assert.IsEmpty(generatedRequests);
 

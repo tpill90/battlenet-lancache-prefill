@@ -7,7 +7,7 @@
             return TactProduct.Parse(rawValue);
         }
     }
-    
+
     public class NullableBoolConverter : BindingConverter<bool?>
     {
         // Required in order to prevent CliFx from showing the unnecessary 'Default: "False"' text for boolean flags

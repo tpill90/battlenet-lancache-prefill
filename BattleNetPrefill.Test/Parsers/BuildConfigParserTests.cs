@@ -37,7 +37,7 @@ namespace BattleNetPrefill.Test.Parsers
         public async Task BuildConfig_ShouldHaveNoUnknownKeyPairs(string productCode)
         {
             var tactProduct = TactProduct.Parse(productCode);
-            
+
             // Setting up required classes
             CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
             await cdnRequestManager.InitializeAsync(tactProduct);

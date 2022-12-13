@@ -37,7 +37,7 @@ namespace LogFileGenerator
             {
                 Directory.CreateDirectory(RootInstallDir);
             }
-            
+
             foreach (var product in ProductsToCheck)
             {
                 if (IsLogFileUpToDate(product))
@@ -57,7 +57,7 @@ namespace LogFileGenerator
                 {
                     InstallProduct(product);
                 }
-                
+
                 CopyLogsToHost(product);
 
                 // Deleting start menu entries
@@ -114,9 +114,9 @@ namespace LogFileGenerator
                 Directory.CreateDirectory(installPath);
             }
 
-            var process = Process.Start(new ProcessStartInfo(BnetInstallerPath , @$"--prod {product.ProductCode} --lang enus --dir {installPath}"));
+            var process = Process.Start(new ProcessStartInfo(BnetInstallerPath, @$"--prod {product.ProductCode} --lang enus --dir {installPath}"));
             process.WaitForExit();
-            
+
             AnsiConsole.MarkupLine("Installing done!");
         }
 
@@ -136,7 +136,7 @@ namespace LogFileGenerator
             {
                 File.Delete(file);
             }
-            
+
             VersionsEntry cdnVersion = ConfigFileHandler.GetLatestVersionEntryAsync(product).Result;
             var logFilePath = $@"{logFileFolder}\{cdnVersion.versionsName}.log";
             // Copying the logs down
@@ -146,7 +146,7 @@ namespace LogFileGenerator
             };
             var process = Process.Start(info);
             process.WaitForExit();
-            
+
             FilterLogs(logFilePath);
 
             // Creating a zip file

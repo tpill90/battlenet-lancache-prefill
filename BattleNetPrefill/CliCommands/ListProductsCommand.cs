@@ -22,7 +22,7 @@ namespace BattleNetPrefill.CliCommands
             {
                 table.AddRow(product.DisplayName, product.ProductCode);
             }
-            
+
             // Activision
             table.AddEmptyRow();
             var activisionMarkup = new Markup("Activision", new Style(Color.Green1, decoration: Decoration.Bold | Decoration.Underline));

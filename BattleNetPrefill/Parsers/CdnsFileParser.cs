@@ -5,7 +5,7 @@
         public static async Task<CdnsFile> ParseCdnsFileAsync(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
             string content = await cdnRequestManager.MakePatchRequestAsync(targetProduct, PatchRequest.cdns);
-            var lines = content.Split(new [] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+            var lines = content.Split(new[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
                                .Where(e => e[0] != '#')
                                .ToArray();
 
@@ -55,7 +55,7 @@
                     }
                 }
             }
-            
+
             if (!cdns.entries.Any())
             {
                 throw new Exception($"Invalid CDNs file for {targetProduct.DisplayName}, skipping!");

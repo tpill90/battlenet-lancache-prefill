@@ -9,7 +9,7 @@ namespace BattleNetPrefill.Test.DebugUtilTests
         [Test]
         public void DuplicateRequests_AreOverlapping()
         {
-            var leftHandRequest  = new Request { LowerByteRange = 0, UpperByteRange = 100 };
+            var leftHandRequest = new Request { LowerByteRange = 0, UpperByteRange = 100 };
             var rightHandRequest = new Request { LowerByteRange = 0, UpperByteRange = 100 };
 
             var areOverlapping = leftHandRequest.Overlaps(rightHandRequest, false);

@@ -3,7 +3,7 @@
     public sealed class BuildConfigFile
     {
         public MD5Hash root;
-        
+
         public MD5Hash[] download;
         public string[] downloadSize;
 
@@ -27,7 +27,7 @@
         public MD5Hash[] vfsRoot;
         public int[] vfsRootSize;
 
-        public Dictionary<string,string> vfs = new Dictionary<string, string>();
+        public Dictionary<string, string> vfs = new Dictionary<string, string>();
         public Dictionary<string, string> vfsSize = new Dictionary<string, string>();
 
         public string buildName;

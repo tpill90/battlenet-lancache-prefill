@@ -3,7 +3,7 @@
     public class ComparisonUtil
     {
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
-      
+
         public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)
         {
             AnsiConsole.WriteLine("Comparing requests against real request logs...");
@@ -12,7 +12,7 @@
             // Need to re-coalesce, in the case that we made duplicate requests.  Doesn't really matter, since the lancache can serve them again so quickly
             generatedRequests = RequestUtils.CoalesceRequests(generatedRequests, true);
             var realRequests = NginxLogParser.GetSavedRequestLogs(AppConfig.LogFileBasePath, product);
-            
+
             var comparisonResult = new ComparisonResult
             {
                 RequestMadeCount = generatedRequests.Count,
@@ -40,7 +40,7 @@
             AnsiConsole.Console.LogMarkupLine("Comparison complete!", timer);
             return comparisonResult;
         }
-        
+
         public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
             CompareExactMatches(generatedRequests, originalRequests);
@@ -120,7 +120,7 @@
 
             // Bucketing requests by MD5 to speed up comparisons
             Dictionary<MD5Hash, List<Request>> generatedGrouped = generatedRequests.GroupBy(e => e.CdnKey).ToDictionary(e => e.Key, e => e.ToList());
-            
+
             // Taking each "real" request, and "subtracting" it from the requests our app made.  Hoping to figure out what excess is being left behind.
             while (requestsToProcess.Any())
             {
@@ -165,7 +165,7 @@
             }
 
             // Finally, take the leftover generated requests, and aggregate them back into their original list
-            generatedRequests.Clear(); 
+            generatedRequests.Clear();
             generatedRequests.AddRange(generatedGrouped.SelectMany(e => e.Value).ToList());
         }
 
@@ -209,7 +209,7 @@
                     requestsToProcess.RemoveAt(0);
                     continue;
                 }
-               
+
                 // No match found - Put it back into the original array, as a "miss"
                 requestsToProcess.RemoveAt(0);
                 originalRequests.Add(current);

@@ -29,7 +29,7 @@
         {
         }
     }
-    
+
     public class RootFolderJsonConverter : JsonConverter<RootFolder>
     {
         public override RootFolder Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

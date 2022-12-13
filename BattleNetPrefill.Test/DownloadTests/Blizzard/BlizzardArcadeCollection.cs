@@ -33,7 +33,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         public void MissedBandwidth()
         {
             var expected = ByteSize.FromMegaBytes(2);
-            
+
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
 

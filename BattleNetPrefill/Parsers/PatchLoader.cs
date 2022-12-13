@@ -30,9 +30,9 @@
             // Unused by Hearthstone
             if (cdnConfig.patchFileIndex != null && targetProduct != TactProduct.Hearthstone && targetProduct != TactProduct.BlizzardArcadeCollection)
             {
-                _cdnRequestManager.QueueRequest(RootFolder.patch, cdnConfig.patchFileIndex.Value,  0, cdnConfig.patchFileIndexSize - 1, isIndex: true);
+                _cdnRequestManager.QueueRequest(RootFolder.patch, cdnConfig.patchFileIndex.Value, 0, cdnConfig.patchFileIndexSize - 1, isIndex: true);
             }
-            
+
             if (buildConfig.patchIndex != null)
             {
                 var upperByteRange = Math.Max(4095, buildConfig.patchIndexSize[1] - 1);

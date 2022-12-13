@@ -10,7 +10,7 @@
 
         }
 
-        public Request(string productRootUri, RootFolder rootFolder, MD5Hash cdnKey, long? startBytes = null, long? endBytes = null, 
+        public Request(string productRootUri, RootFolder rootFolder, MD5Hash cdnKey, long? startBytes = null, long? endBytes = null,
                         bool writeToDevNull = false, bool isIndex = false)
         {
             ProductRootUri = productRootUri;
@@ -42,7 +42,7 @@
         public bool IsIndex { get; set; }
 
         public bool DownloadWholeFile { get; set; }
-        
+
         public long LowerByteRange { get; set; }
         public long UpperByteRange { get; set; }
 
@@ -95,7 +95,7 @@
                 // ex. only bytes 0-340 and bytes 1400-2650 should be individually requested.  However these two individual requests get combined into 0-2650
                 overlap = 4096;
             }
-            
+
             if (LowerByteRange <= request2.LowerByteRange)
             {
                 // Checks to see if ranges are overlapping ex 0-100 and 50-200
@@ -112,7 +112,7 @@
             }
             return request2.UpperByteRange >= LowerByteRange;
         }
-         
+
         public void MergeWith(Request request2)
         {
             LowerByteRange = Math.Min(LowerByteRange, request2.LowerByteRange);

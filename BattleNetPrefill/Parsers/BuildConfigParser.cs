@@ -5,9 +5,9 @@
         public static async Task<BuildConfigFile> GetBuildConfigAsync(VersionsEntry versionsEntry, CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
             var buildConfig = new BuildConfigFile();
-            
+
             string content = Encoding.UTF8.GetString(await cdnRequestManager.GetRequestAsBytesAsync(RootFolder.config, versionsEntry.buildConfig));
-            
+
             if (string.IsNullOrEmpty(content) || !content.StartsWith("# Build"))
             {
                 throw new Exception("Error reading build config!");
@@ -162,14 +162,14 @@
                         break;
                 }
             }
-            
+
             // This data isn't used by our application.  Some TactProducts will make this call, so we do it anyway to match what Battle.Net does
             cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.size[1], 0, buildConfig.sizeSize[1] - 1);
-           
+
             // This can sometimes be skipped over, as it isn't always required to parse the encoding table.
             // Requesting it anyway since almost every product will download it in the real Battle.net client.
             cdnRequestManager.QueueRequest(RootFolder.data, buildConfig.encoding[1], 0, buildConfig.encodingSize[1] - 1);
-            
+
             if (buildConfig.vfsRoot != null)
             {
                 // Making a request to load "vfsRoot" files.  Not used by anything in our application,

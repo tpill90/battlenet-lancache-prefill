@@ -25,11 +25,11 @@
         public async Task HandleInstallFileAsync(BuildConfigFile buildConfig, ArchiveIndexHandler archiveIndexHandler, CDNConfigFile cdnConfigFile)
         {
             InstallFile installFile = await ParseInstallFileAsync(buildConfig);
-            
+
             List<InstallFileEntry> filtered = installFile.entries
                     .Where(e => e.tags.Contains("1=enUS") && e.tags.Contains("2=Windows"))
                     .ToList();
-        
+
             if (!filtered.Any())
             {
                 return;
@@ -74,7 +74,7 @@
             using BinaryReader bin = new BinaryReader(memoryStream);
             if (Encoding.UTF8.GetString(bin.ReadBytes(2)) != "IN")
             {
-                throw new Exception("Error while parsing install file. Did BLTE header size change?"); 
+                throw new Exception("Error while parsing install file. Did BLTE header size change?");
             }
 
             bin.ReadByte();

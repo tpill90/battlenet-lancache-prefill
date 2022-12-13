@@ -5,8 +5,8 @@ namespace BattleNetPrefill.CliCommands
     [Command("prefill", Description = "Downloads the latest files for one or more specified product(s)")]
     public sealed class PrefillCommand : ICommand
     {
-        [CommandOption("products", shortName: 'p', 
-            Description = "Specifies which products to prefill.  Example '--products s1' will prefill Starcraft 1", 
+        [CommandOption("products", shortName: 'p',
+            Description = "Specifies which products to prefill.  Example '--products s1' will prefill Starcraft 1",
             Converter = typeof(TactProductConverter))]
         public IReadOnlyList<TactProduct> ProductCodes { get; init; }
 
@@ -19,13 +19,13 @@ namespace BattleNetPrefill.CliCommands
         [CommandOption("blizzard", Description = "Prefills all Blizzard products.", Converter = typeof(NullableBoolConverter))]
         public bool? PrefillBlizzard { get; init; }
 
-        [CommandOption("nocache", 
-            Description = "Skips using locally cached files.  Saves disk space, at the expense of slower subsequent runs.", 
+        [CommandOption("nocache",
+            Description = "Skips using locally cached files.  Saves disk space, at the expense of slower subsequent runs.",
             Converter = typeof(NullableBoolConverter))]
         public bool? NoLocalCache { get; init; }
 
-        [CommandOption("force", shortName: 'f', 
-            Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.", 
+        [CommandOption("force", shortName: 'f',
+            Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.",
             Converter = typeof(NullableBoolConverter))]
         public bool? ForcePrefill { get; init; }
 
@@ -45,7 +45,7 @@ namespace BattleNetPrefill.CliCommands
                     throw new CommandException("At least one product is required!  Use '--products' to specify which products to load, " +
                                                "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
                 }
-                
+
                 ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {

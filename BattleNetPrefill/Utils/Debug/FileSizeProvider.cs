@@ -16,7 +16,7 @@
 
         private readonly ConcurrentDictionary<string, long> _cachedContentLengths;
         private int _cacheMisses;
-        
+
         private string _cacheDir = "cache/cachedContentLengths";
         private string CachedFileName => $"{_cacheDir}/{_targetProduct.ProductCode}.json";
         private object _cacheFileLock = new object();
@@ -25,7 +25,7 @@
         {
             _targetProduct = targetProduct;
             _blizzardCdnBaseUrl = baseCdnUrl;
-            if(!Directory.Exists(_cacheDir))
+            if (!Directory.Exists(_cacheDir))
             {
                 Directory.CreateDirectory(_cacheDir);
             }

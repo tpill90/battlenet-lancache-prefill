@@ -26,7 +26,7 @@
             };
 
             footer.footerChecksum = bin.ReadBytes(footer.checksumSize);
-            
+
             if ((footer.numElements & 0xff000000) != 0)
             {
                 bin.BaseStream.Position -= footer.checksumSize + 4;

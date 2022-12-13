@@ -63,7 +63,7 @@
             resultStream.Seek(0, SeekOrigin.Begin);
             return resultStream;
         }
-        
+
         private static void HandleDataBlock(BinaryReader bin, BLTEChunkInfo chunk, MemoryStream result)
         {
             var chunkType = bin.ReadByte();

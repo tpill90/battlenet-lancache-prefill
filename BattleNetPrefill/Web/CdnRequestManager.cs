@@ -4,7 +4,7 @@
     {
         private readonly HttpClient _client;
 
-        private readonly List<string> _cdnList = new List<string> 
+        private readonly List<string> _cdnList = new List<string>
         {
             "level3.blizzard.com",  // Level3
             "cdn.blizzard.com",     // Official region-less CDN - Slow downloads
@@ -52,7 +52,7 @@
         public ConcurrentBag<Request> allRequestsMade = new ConcurrentBag<Request>();
 
         #endregion
-        
+
         public CdnRequestManager(Uri battleNetPatchUri, IAnsiConsole ansiConsole, bool useDebugMode = false, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
@@ -92,7 +92,7 @@
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
             Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
-         
+
             List<Request> requests;
             _queuedRequests.TryGetValue(hash, out requests);
             if (requests == null)
@@ -204,7 +204,7 @@
         ///                              This can be used with "non-required" requests, to speed up processing since we only care about reading the data once to prefill.
         /// </param>
         /// <returns></returns>
-        public Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false, 
+        public Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false,
             bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
             Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull, isIndex);
@@ -224,7 +224,7 @@
             {
                 return null;
             }
-            
+
             var uri = new Uri($"http://{_lancacheAddress}/{request.Uri}");
 
             // Try to return a cached copy from the disk first, before making an actual request
@@ -236,7 +236,7 @@
                     return await File.ReadAllBytesAsync(outputFilePath);
                 }
             }
-            
+
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
             requestMessage.Headers.Host = _currentCdn;
             if (!request.DownloadWholeFile)
@@ -248,7 +248,7 @@
             await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
 
             responseMessage.EnsureSuccessStatusCode();
-            if(writeToDevNull)
+            if (writeToDevNull)
             {
                 byte[] buffer = ArrayPool<byte>.Shared.Rent(524_288);
                 var totalBytesRead = 0;
@@ -284,7 +284,7 @@
             {
                 return await Task.FromResult(byteArray);
             }
-                
+
             // Cache to disk
             FileInfo file = new FileInfo(Path.Combine(AppConfig.CacheDir + uri.AbsolutePath));
             file.Directory.Create();

@@ -19,7 +19,7 @@
                                     .GetFiles()
                                     .OrderByDescending(e => e.LastWriteTime)
                                     .FirstOrDefault();
-            
+
             // Loading the pre-computed log file if it exists, speeds up subsequent runs
             if (latestFile.FullName.Contains("coalesced"))
             {
@@ -37,7 +37,7 @@
                 // Save the coalesced results to speed up future runs
                 var coalescedFileName = $"{logFolder}/{latestFile.Name.Replace(".zip", ".coalesced.log")}";
                 File.WriteAllText(coalescedFileName, JsonSerializer.Serialize(requestsToReplay, Structs.Enums.SerializationContext.Default.ListRequest));
-                
+
                 AnsiConsole.Console.LogMarkupLine("Parsed request logs", timer);
                 return requestsToReplay;
             }
@@ -99,7 +99,7 @@
 
             return parsedRequests;
         }
-        
+
         public static string GetLatestLogVersionForProduct(string logBasePath, TactProduct product)
         {
             var logFolder = $@"{logBasePath}\{product.DisplayNameSanitized}";

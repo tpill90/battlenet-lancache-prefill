@@ -82,15 +82,15 @@
             {
                 throw new Exception("Invalid CDNConfig");
             }
-            
+
             return cdnConfig;
         }
-        
+
         public async Task<VersionsEntry> GetLatestVersionEntryAsync(TactProduct tactProduct)
         {
             var versions = new VersionsFile();
             string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
-            
+
             var lines = content.Replace("\0", "")
                                .Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 

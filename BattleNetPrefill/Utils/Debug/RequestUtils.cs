@@ -23,7 +23,7 @@
 
                 coalesced.AddRange(merged);
             }
-            
+
             return coalesced;
         }
 

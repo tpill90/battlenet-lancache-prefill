@@ -46,7 +46,7 @@ namespace BattleNetPrefill.CliCommands
                 {
                     return default;
                 }
-                
+
                 ansiConsole.StatusSpinner().Start("Deleting cached files...", ctx =>
                 {
                     Directory.Delete(AppConfig.CacheDir, true);

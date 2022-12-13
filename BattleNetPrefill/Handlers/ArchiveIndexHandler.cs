@@ -52,12 +52,12 @@
             {
                 maxTasks = 6;
             }
-            
+
             // Building the archive index dictionaries in parallel.  Slicing up the work across multiple tasks.
             var tasks = new List<Task<Dictionary<MD5Hash, ArchiveIndexEntry>>>();
 
             int sliceAmount = (int)Math.Ceiling((double)cdnConfig.archives.Length / maxTasks);
-            
+
             for (int i = 0; i < maxTasks; i++)
             {
                 var lowerLimit = (i * sliceAmount);
@@ -77,7 +77,7 @@
                 _indexDictionaries.Add(await task);
             }
         }
-        
+
         private async Task<Dictionary<MD5Hash, ArchiveIndexEntry>> ProcessArchiveAsync(CDNConfigFile cdnConfig, int start, int finish)
         {
             int initialDictionarySize = ComputeInitialDictionarySize();
@@ -97,8 +97,8 @@
                 for (int j = 0; j < footer.numElements; j++)
                 {
                     MD5Hash key = br.ReadMd5Hash(md5Buffer);
-                    var indexEntry = new ArchiveIndexEntry((short)i, 
-                                                            br.ReadUInt32BigEndian(uint32Buffer), 
+                    var indexEntry = new ArchiveIndexEntry((short)i,
+                                                            br.ReadUInt32BigEndian(uint32Buffer),
                                                             br.ReadUInt32BigEndian(uint32Buffer));
 
                     indexDictionary.Add(key, indexEntry);

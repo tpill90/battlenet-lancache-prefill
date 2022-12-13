@@ -31,8 +31,8 @@
 
             using var memoryStream = BLTE.Parse(content);
             using BinaryReader bin = new BinaryReader(memoryStream);
-            
-            
+
+
             var unusedBytesToSkip = ReadHeader(bin);
 
             // Reading the DownloadFile entries
@@ -54,7 +54,7 @@
                 DownloadTag tag = new DownloadTag();
                 tag.Name = bin.ReadCString();
                 tag.Type = bin.ReadInt16BigEndian();
-                
+
                 tag.Mask = bin.ReadBytes(numMaskBytes);
 
                 for (int j = 0; j < numMaskBytes; j++)
@@ -112,7 +112,7 @@
             for (var i = 0; i < _downloadFile.entries.Length; i++)
             {
                 DownloadEntry current = _downloadFile.entries[i];
-                
+
                 //Filtering out files that shouldn't be downloaded by tag.  Ex. only want English audio files for a US install
                 if (!computedMask.FileShouldBeDownloaded(i))
                 {
@@ -205,7 +205,7 @@
             // Files should only be downloaded if ALL tags say to download the file, eg. perform a logical AND across all tags
             var computedMask = tagsToUse.First();
             tagsToUse.RemoveAt(0);
-            
+
             foreach (var currentTag in tagsToUse)
             {
                 for (int i = 0; i < computedMask.Mask.Length; i++)

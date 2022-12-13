@@ -28,7 +28,7 @@
         public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
         {
             var metadataTimer = Stopwatch.StartNew();
-            
+
             // Initializing classes, now that we have our CDN info loaded
             using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, _debugConfig.UseCdnDebugMode, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
@@ -78,8 +78,8 @@
             {
                 SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
             }
-            
-            
+
+
             if (!_debugConfig.CompareAgainstRealRequests)
             {
                 return null;

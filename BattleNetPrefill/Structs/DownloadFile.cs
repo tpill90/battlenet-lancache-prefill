@@ -8,7 +8,7 @@
         public DownloadEntry[] entries;
         public DownloadTag[] tags;
     }
-    
+
     public struct DownloadEntry
     {
         public MD5Hash hash;
@@ -18,7 +18,7 @@
             return hash.ToString();
         }
     }
-    
+
     public sealed class DownloadTag
     {
         /// <summary>
@@ -36,7 +36,7 @@
         public short Type;
 
         public byte[] Mask;
-        
+
         public bool FileShouldBeDownloaded(int index)
         {
             return (Mask[index / 8] & (1 << (index % 8))) != 0;

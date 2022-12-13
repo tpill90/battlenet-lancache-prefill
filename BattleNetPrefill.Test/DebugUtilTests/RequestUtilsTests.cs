@@ -53,7 +53,7 @@ namespace BattleNetPrefill.Test.DebugUtilTests
                 // Requests differ by ProductRootUri, won't be combined
                 new Request { ProductRootUri = "SampleUri", RootFolder = RootFolder.data, CdnKey = "01d2060c711a275d39be37732fbeee16".ToMD5(),
                                     LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true },
-                new Request { ProductRootUri = "DifferentURI", RootFolder = RootFolder.data, CdnKey = "0002060c711a275d39be37732fbeee16".ToMD5(), 
+                new Request { ProductRootUri = "DifferentURI", RootFolder = RootFolder.data, CdnKey = "0002060c711a275d39be37732fbeee16".ToMD5(),
                                     LowerByteRange = 0, UpperByteRange = 100, DownloadWholeFile = true }
             };
 
@@ -96,7 +96,7 @@ namespace BattleNetPrefill.Test.DebugUtilTests
             Assert.AreEqual(0, result[0].LowerByteRange);
             Assert.AreEqual(999999, result[0].UpperByteRange);
         }
-        
+
         [Test]
         public void SequentialByteRanges_WillBeCombined()
         {
