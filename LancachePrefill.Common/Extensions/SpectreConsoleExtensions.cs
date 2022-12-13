@@ -33,6 +33,7 @@
             if (displayTransferRate)
             {
                 columns.Add(new DownloadedColumn());
+                //TODO this breaks unit tests for some reason
                 columns.Add(new TransferSpeedColumn { Base = FileSizeBase.Decimal, DisplayBits = displayBits });
             }
             var spectreProgress = ansiConsole.Progress()

@@ -11,7 +11,7 @@ using BattleNetPrefill.Structs;
 using BattleNetPrefill.Utils.Debug;
 using BattleNetPrefill.Web;
 using Spectre.Console;
-using static LancachePrefill.Common.SpectreColors;
+using static LancachePrefill.Common.SpectreFormatters;
 
 namespace LogFileGenerator
 {
