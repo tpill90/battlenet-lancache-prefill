@@ -68,9 +68,8 @@
                 await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
                 await patchLoader.HandlePatchesAsync(buildConfig, _product, cdnConfig);
             });
-#if DEBUG
+
             _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
-#endif
 
             // Actually start the download of any deferred requests
             var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync();

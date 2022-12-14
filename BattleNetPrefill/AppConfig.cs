@@ -1,6 +1,4 @@
-﻿using LancachePrefill.Common.Util;
-
-namespace BattleNetPrefill
+﻿namespace BattleNetPrefill
 {
     public static class AppConfig
     {
@@ -14,7 +12,6 @@ namespace BattleNetPrefill
         /// https://wowdev.wiki/TACT#HTTP_URLs
         /// </summary>
         public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
-
         public static readonly string CacheDir = Path.Combine(AppContext.BaseDirectory, "Cache");
 
         public static readonly DebugConfig DebugConfig = new DebugConfig
@@ -25,6 +22,12 @@ namespace BattleNetPrefill
         };
 
         public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
+
+        /// <summary>
+        /// Global retry policy that will wait increasingly longer periods after a failed request
+        /// </summary>
+        public static AsyncRetryPolicy RetryPolicy = Policy.Handle<Exception>()
+                                                 .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
     }
 
     public class DebugConfig
