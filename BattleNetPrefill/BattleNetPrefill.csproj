@@ -9,7 +9,7 @@
     <StartupObject>BattleNetPrefill.Program</StartupObject>
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
-    <VersionPrefix>1.4.2</VersionPrefix>
+    <VersionPrefix>1.5.0</VersionPrefix>
     <Authors>tpill90</Authors>
 
     <!-- Code analysis settings -->
