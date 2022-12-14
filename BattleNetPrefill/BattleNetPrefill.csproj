@@ -9,7 +9,7 @@
     <StartupObject>BattleNetPrefill.Program</StartupObject>
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
-    <Version>1.4.2</Version>
+    <VersionPrefix>1.4.2</VersionPrefix>
     <Authors>tpill90</Authors>
 
     <!-- Code analysis settings -->
@@ -30,6 +30,9 @@
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>BattleNetPrefill.Test</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>BattleNetPrefill.Integration.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
