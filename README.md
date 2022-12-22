@@ -2,11 +2,11 @@
 # battlenet-lancache-prefill
 
 [![](https://dcbadge.vercel.app/api/server/BKnBS4u?style=for-the-badge)](https://discord.com/invite/BKnBS4u)
-
-[![dockerhub](https://img.shields.io/docker/pulls/tpill90/battlenet-lancache-prefill?color=9af&style=for-the-badge)](https://hub.docker.com/r/tpill90/battlenet-lancache-prefill)
-![GitHub all releases](https://img.shields.io/github/downloads/tpill90/battlenet-lancache-prefill/total?color=red&style=for-the-badge)
-
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y5DWGZN)
+
+![GitHub all releases](https://img.shields.io/github/downloads/tpill90/battlenet-lancache-prefill/total?color=red&style=for-the-badge)
+[![dockerhub](https://img.shields.io/docker/pulls/tpill90/battlenet-lancache-prefill?color=9af&style=for-the-badge)](https://hub.docker.com/r/tpill90/battlenet-lancache-prefill)
+
 
 Automatically fills a [Lancache](https://lancache.net/) with games from Battle.net, so that subsequent downloads for the same content will be served from the Lancache, improving speeds and reducing load on your internet connection.
 
