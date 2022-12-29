@@ -20,13 +20,9 @@
       "commandName": "Project",
       "commandLineArgs": "prefill --blizzard --force"
     },
-    "Prefill All - Force - No Cache": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill --all --force --nocache"
-    },
     "Prefill All - Force": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all"
+      "commandLineArgs": "prefill --all --force"
     },
     "Clear Cache - Accept": {
       "commandName": "Project",
