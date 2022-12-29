@@ -43,6 +43,7 @@
         public static AsyncRetryPolicy RetryPolicy = Policy.Handle<Exception>()
                                                  .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
 
+        //TODO move to lancacheprefill.common
         /// <summary>
         /// Gets the base directories for the cache folder, determined by which Operating System the app is currently running on.
         /// </summary>

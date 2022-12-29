@@ -143,6 +143,9 @@ By default, **BattleNetPrefill** will keep track of the most recently prefilled 
 
 Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the specified product.  This flag may be useful for diagnostics, or benchmarking network performance.
 
+### --no-ansi 
+Application output will be in plain text, rather than using the visually appealing colors and progress bars.  Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.
+
 ## clear-cache
 Deletes temporary cache files stored in the `/Cache` directory.  
 These files are cached in order to dramatically speed up future `prefill` runs (in some cases 3X faster),
