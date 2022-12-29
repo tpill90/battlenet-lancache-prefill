@@ -29,9 +29,18 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(NullableBoolConverter))]
         public bool? ForcePrefill { get; init; }
 
+        [CommandOption("no-ansi",
+            Description = "Application output will be in plain text.  " +
+                          "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.",
+            Converter = typeof(NullableBoolConverter))]
+        public bool? NoAnsiEscapeSequences { get; init; }
+
         public async ValueTask ExecuteAsync(IConsole console)
         {
             var ansiConsole = console.CreateAnsiConsole();
+            // Property must be set to false in order to disable ansi escape sequences
+            ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
+
             try
             {
                 var timer = Stopwatch.StartNew();
