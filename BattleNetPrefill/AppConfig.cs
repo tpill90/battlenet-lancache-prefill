@@ -31,7 +31,7 @@
         public static readonly DebugConfig DebugConfig = new DebugConfig
         {
             //TODO turn this into a cli flag
-            UseCdnDebugMode = true,
+            UseCdnDebugMode = false,
             CompareAgainstRealRequests = false
         };
 
@@ -78,6 +78,7 @@
         }
     }
 
+    //TODO this should be wrapped with a #if debug condition
     public class DebugConfig
     {
         /// <summary>
