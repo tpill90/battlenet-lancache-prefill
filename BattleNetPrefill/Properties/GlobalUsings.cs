@@ -18,7 +18,6 @@ global using JetBrains.Annotations;
 global using LancachePrefill.Common;
 global using LancachePrefill.Common.Enums;
 global using LancachePrefill.Common.Extensions;
-global using LancachePrefill.Common.Util;
 global using Microsoft.IO;
 global using Polly;
 global using Polly.Retry;
