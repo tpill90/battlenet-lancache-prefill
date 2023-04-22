@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Additional Details**
- - Platform you are running Batt;enetPrefill on:  [e.g Windows, Linux, Docker]
+ - Platform you are running BattlenetPrefill on:  [e.g Windows, Linux, Docker]
  - Discord Username (if you are part of the Lancache Discord Server) : [e.g username#0000]
  - Region : [e.g US East Coast, Germany, Australia]
 
