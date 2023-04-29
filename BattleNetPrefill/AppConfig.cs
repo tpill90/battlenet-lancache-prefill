@@ -6,11 +6,6 @@
         {
             // Create required folders
             Directory.CreateDirectory(CacheDir);
-
-            if (Directory.Exists(CacheDirOriginal))
-            {
-                Directory.Delete(CacheDirOriginal, true);
-            }
         }
 
         /// <summary>
@@ -18,15 +13,11 @@
         /// </summary>
         public static readonly Uri BattleNetPatchUri = new Uri("http://us.patch.battle.net:1119");
 
-        //TODO add migration to remove this
-        //TODO remove after 2023/02/01
-        public static readonly string CacheDirOriginal = Path.Combine(AppContext.BaseDirectory, "Cache");
-
         /// <summary>
         /// Downloaded archive indexes, as well as other metadata, are saved into this directory to speedup future prefill runs.
         /// All data in here should be able to be deleted safely.
         /// </summary>
-        public static readonly string CacheDir = GetCacheDirBaseDirectories();
+        public static readonly string CacheDir = CacheDirUtils.GetCacheDirBaseDirectories("BattlenetPrefill", cacheDirVersion: "");
 
         public static readonly DebugConfig DebugConfig = new DebugConfig
         {
@@ -42,40 +33,6 @@
         /// </summary>
         public static AsyncRetryPolicy RetryPolicy => Policy.Handle<Exception>()
                                                  .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
-
-        //TODO move to lancacheprefill.common
-        /// <summary>
-        /// Gets the base directories for the cache folder, determined by which Operating System the app is currently running on.
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private static string GetCacheDirBaseDirectories()
-        {
-            if (System.OperatingSystem.IsWindows())
-            {
-                string pathAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                return Path.Combine(pathAppData, "BattlenetPrefill", "Cache");
-            }
-            if (System.OperatingSystem.IsLinux())
-            {
-                // Gets base directories for the XDG Base Directory specification (Linux)
-                string pathHome = Environment.GetEnvironmentVariable("HOME")
-                                  ?? throw new ArgumentNullException("HOME", "Could not determine HOME directory");
-
-                string pathXdgCacheHome = Environment.GetEnvironmentVariable("XDG_CACHE_HOME")
-                                          ?? Path.Combine(pathHome, ".cache");
-
-                return Path.Combine(pathXdgCacheHome, "SteamPrefill");
-            }
-            if (System.OperatingSystem.IsMacOS())
-            {
-                string pathLibraryCaches = Path.GetFullPath("~/Library/Caches");
-                return Path.Combine(pathLibraryCaches, "SteamPrefill");
-            }
-
-            throw new NotSupportedException($"Unknown platform {RuntimeInformation.OSDescription}");
-        }
     }
 
     //TODO this should be wrapped with a #if debug condition

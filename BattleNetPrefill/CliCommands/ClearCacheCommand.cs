@@ -54,7 +54,7 @@ namespace BattleNetPrefill.CliCommands
             }
             catch (Exception e)
             {
-                ansiConsole.WriteException(e, ExceptionFormats.ShortenPaths);
+                ansiConsole.LogException(e);
             }
             ansiConsole.LogMarkupLine("Done!");
 
