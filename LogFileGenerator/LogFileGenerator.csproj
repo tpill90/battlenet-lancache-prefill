@@ -7,15 +7,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
-  </ItemGroup>
 
-  <ItemGroup>
+    <!-- Custom Spectre.Console build -->
     <Reference Include="Spectre.Console">
-      <HintPath>..\lib\Spectre.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="Spectre.Console.Cli">
-      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
+      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>

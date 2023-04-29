@@ -18,7 +18,6 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-
   </PropertyGroup>
 
   <PropertyGroup Label="Trim Settings">
@@ -57,11 +56,16 @@
 	  <PackageReference Include="CliFx" Version="2.3.0" />
 	  <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
 	  <PackageReference Include="Polly" Version="7.2.3" />
-	  <PackageReference Include="System.Text.Json" Version="6.0.5" />
+    <PackageReference Include="System.Text.Json" Version="6.0.5" />
     <PackageReference Include="ThisAssembly.AssemblyInfo" Version="1.2.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+
+    <!-- Custom Spectre.Console build -->
+    <Reference Include="Spectre.Console">
+      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.dll</HintPath>
+    </Reference>
 
     <!-- Debugging Packages -->
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
@@ -90,18 +94,7 @@
     </PackageReference>
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\LancachePrefill.Common\LancachePrefill.Common.csproj" />
   </ItemGroup>
-	 
-  <ItemGroup>
-    <Reference Include="Spectre.Console">
-      <HintPath>..\lib\Spectre.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="Spectre.Console.Cli">
-      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
