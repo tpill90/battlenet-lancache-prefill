@@ -21,6 +21,7 @@
                          .SetTitle("BattleNetPrefill")
                          .SetExecutableName($"BattleNetPrefill{(IsWindows() ? ".exe" : "")}")
                          .SetDescription(description)
+                         .SetVersion($"v{ThisAssembly.Info.InformationalVersion}")
                          .Build()
                          .RunAsync();
         }

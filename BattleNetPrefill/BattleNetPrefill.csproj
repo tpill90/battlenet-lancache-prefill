@@ -58,6 +58,10 @@
 	  <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
 	  <PackageReference Include="Polly" Version="7.2.3" />
 	  <PackageReference Include="System.Text.Json" Version="6.0.5" />
+    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="1.2.14">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
 
     <!-- Debugging Packages -->
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
