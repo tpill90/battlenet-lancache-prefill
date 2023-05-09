@@ -29,6 +29,15 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(NullableBoolConverter))]
         public bool? ForcePrefill { get; init; }
 
+        [CommandOption("unit",
+            Description = "Specifies which unit to use to display download speed.  Can be either bits/bytes.",
+            Converter = typeof(TransferSpeedUnitConverter))]
+        public TransferSpeedUnit TransferSpeedUnit
+        {
+            get => AppConfig.TransferSpeedUnit;
+            init => AppConfig.TransferSpeedUnit = value ?? TransferSpeedUnit.Bits;
+        }
+
         [CommandOption("no-ansi",
             Description = "Application output will be in plain text.  " +
                           "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.",

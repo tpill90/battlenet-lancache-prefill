@@ -32,7 +32,10 @@
         /// Global retry policy that will wait increasingly longer periods after a failed request
         /// </summary>
         public static AsyncRetryPolicy RetryPolicy => Policy.Handle<Exception>()
-                                                 .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
+                                                            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
+
+
+        public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
     }
 
     //TODO this should be wrapped with a #if debug condition
