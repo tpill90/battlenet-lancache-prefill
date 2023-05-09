@@ -11,6 +11,9 @@
     {
         public static async Task<int> Main()
         {
+            // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
+            OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
+
             //TODO dedupe exception handling at the top level.  Migrate to custom CLIFX binary just like SteamPrefill
             var description = "Automatically fills a Lancache with games from Battle.net, so that subsequent downloads will be \n" +
                               "  served from the Lancache, improving speeds and reducing load on your internet connection.";
