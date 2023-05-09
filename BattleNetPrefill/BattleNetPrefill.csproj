@@ -36,6 +36,28 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!-- PDB won't be included in published package -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <!-- Includes Linux update script in publish package -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)'=='linux-x64'">
+    <Content Include="..\scripts\**\update.sh">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Includes Windows update script in publish package -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)'=='win-x64'">
+    <Content Include="..\scripts\**\update.ps1">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <!-- External Packages -->
 	  <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
