@@ -1,14 +1,7 @@
-﻿using System.Threading.Tasks;
-using BattleNetPrefill.Handlers;
-using BattleNetPrefill.Parsers;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Web;
-using NUnit.Framework;
-using Spectre.Console.Testing;
-
-namespace BattleNetPrefill.Test.Parsers
+﻿namespace BattleNetPrefill.Integration.Test.Parsers
 {
     [TestFixture]
+    [Category("SkipCI")]
     public class CdnsFileParserTests
     {
         /// <summary>

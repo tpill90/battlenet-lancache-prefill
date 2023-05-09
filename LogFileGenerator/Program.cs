@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net.Http;
 using BattleNetPrefill;
 using BattleNetPrefill.Handlers;
@@ -20,7 +19,7 @@ namespace LogFileGenerator
     {
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console));
 
-        private static string RootInstallDir = @"E:\BattleNet";
+        private static string RootInstallDir = @"D:\BattleNet";
         private static readonly string BnetInstallerPath = @"C:\Users\Tim\Dropbox\Programming\ThirdParty Repos\Battle.Net-Installer\BNetInstaller\bin\Release\net6.0\BNetInstaller.exe";
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
@@ -28,7 +27,8 @@ namespace LogFileGenerator
             TactProduct.Hearthstone, TactProduct.CodBOCW
         };
 
-        private static List<TactProduct> ProductsToCheck = TactProduct.AllEnumValues.Where(e => e.Name == "pro").ToList();
+        private static List<TactProduct> ProductsToCheck = new List<TactProduct> { TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2,
+                                                                                    TactProduct.WorldOfWarcraft, TactProduct.WowClassic };
 
         public static void Main()
         {
@@ -84,7 +84,7 @@ namespace LogFileGenerator
         {
             var info = new ProcessStartInfo("ssh")
             {
-                Arguments = "-t tim@192.168.1.222 pwsh -f ./scripts/Clear-LancacheLogs.ps1",
+                Arguments = "-t tim@192.168.1.222 pwsh -f ./scripts/lancache/Empty-Logs.ps1",
                 UseShellExecute = false
             };
             var process = Process.Start(info);
@@ -140,7 +140,7 @@ namespace LogFileGenerator
             VersionsEntry cdnVersion = ConfigFileHandler.GetLatestVersionEntryAsync(product).Result;
             var logFilePath = $@"{logFileFolder}\{cdnVersion.versionsName}.log";
             // Copying the logs down
-            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/nvme0n1/lancache/cache/logs/access.log ""{logFilePath}""")
+            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/nvme0n1/lancache/logs/access.log ""{logFilePath}""")
             {
                 UseShellExecute = false
             };

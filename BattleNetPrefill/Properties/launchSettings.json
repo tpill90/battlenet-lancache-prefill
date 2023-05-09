@@ -4,21 +4,17 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p s1 --force"
     },
-    "Prefill BOCW": {
+    "Prefill Overwatch": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p zeus --force"
+      "commandLineArgs": "prefill -p pro --force"
     },
     "Prefill WOW": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow --force"
     },
-    "Prefill Blizzard": {
+    "Prefill WOW Classic": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --blizzard"
-    },
-    "Prefill Blizzard - Force": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill --blizzard --force"
+      "commandLineArgs": "prefill -p wow_classic --force"
     },
     "Prefill All - Force": {
       "commandName": "Project",

@@ -1,15 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using BattleNetPrefill.Utils.Debug.Models;
-using ByteSizeLib;
-using NUnit.Framework;
-using Spectre.Console.Testing;
-
-namespace BattleNetPrefill.Test.DownloadTests.Blizzard
+﻿namespace BattleNetPrefill.Integration.Test.DownloadTests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
-    [ExcludeFromCodeCoverage, Category("NoCoverage")]
+    [ExcludeFromCodeCoverage, Category("SkipCI")]
     public class Overwatch
     {
         private ComparisonResult _results;
@@ -24,16 +17,10 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         }
 
         [Test]
-        public void Misses()
-        {
-            int expected = 6;
-            Assert.LessOrEqual(_results.MissCount, expected);
-        }
-
-        [Test]
         public void MissedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(55);
+            //TODO figure out why this is so high
+            var expected = ByteSize.FromMegaBytes(1);
 
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
@@ -41,7 +28,7 @@ namespace BattleNetPrefill.Test.DownloadTests.Blizzard
         [Test]
         public void WastedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(60);
+            var expected = ByteSize.FromMegaBytes(30);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }

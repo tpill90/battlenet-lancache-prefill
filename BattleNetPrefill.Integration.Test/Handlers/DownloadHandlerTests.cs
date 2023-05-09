@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
-using BattleNetPrefill.Handlers;
-using BattleNetPrefill.Structs;
-using NUnit.Framework;
 
-namespace BattleNetPrefill.Test.Handlers
+namespace BattleNetPrefill.Integration.Test.Handlers
 {
     [TestFixture]
     public class DownloadHandlerTests

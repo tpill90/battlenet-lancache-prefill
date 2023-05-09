@@ -23,7 +23,7 @@
             // Loading the pre-computed log file if it exists, speeds up subsequent runs
             if (latestFile.FullName.Contains("coalesced"))
             {
-                return JsonSerializer.Deserialize(File.ReadAllText(latestFile.FullName), Structs.Enums.SerializationContext.Default.ListRequest);
+                return JsonSerializer.Deserialize(File.ReadAllText(latestFile.FullName), SerializationContext.Default.ListRequest);
             }
             if (latestFile.Extension == ".zip")
             {
@@ -36,7 +36,7 @@
 
                 // Save the coalesced results to speed up future runs
                 var coalescedFileName = $"{logFolder}/{latestFile.Name.Replace(".zip", ".coalesced.log")}";
-                File.WriteAllText(coalescedFileName, JsonSerializer.Serialize(requestsToReplay, Structs.Enums.SerializationContext.Default.ListRequest));
+                File.WriteAllText(coalescedFileName, JsonSerializer.Serialize(requestsToReplay, SerializationContext.Default.ListRequest));
 
                 AnsiConsole.Console.LogMarkupLine("Parsed request logs", timer);
                 return requestsToReplay;

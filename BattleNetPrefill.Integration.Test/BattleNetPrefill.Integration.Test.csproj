@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
@@ -14,7 +14,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-    <PackageReference Include="Spectre.Console.Testing" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,11 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Custom Spectre.Console build, includes changes to display transfer speed in bits -->
     <Reference Include="Spectre.Console">
-      <HintPath>..\lib\Spectre.Console.dll</HintPath>
+      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.dll</HintPath>
     </Reference>
-    <Reference Include="Spectre.Console.Cli">
-      <HintPath>..\lib\Spectre.Console.Cli.dll</HintPath>
+    <Reference Include="Spectre.Console.Testing">
+      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.Testing.dll</HintPath>
     </Reference>
   </ItemGroup>
 

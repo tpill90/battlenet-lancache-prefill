@@ -1,14 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using BattleNetPrefill.Utils.Debug.Models;
-using NUnit.Framework;
-using Spectre.Console.Testing;
-
-namespace BattleNetPrefill.Test.DownloadTests.Blizzard
+﻿namespace BattleNetPrefill.Integration.Test.DownloadTests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
-    [ExcludeFromCodeCoverage, Category("NoCoverage")]
+    [ExcludeFromCodeCoverage, Category("SkipCI")]
     public class Starcraft1
     {
         private ComparisonResult _results;

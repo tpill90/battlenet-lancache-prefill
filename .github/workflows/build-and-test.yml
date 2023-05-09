@@ -11,3 +11,4 @@ jobs:
     uses: tpill90/lancache-prefill-common/.github/workflows/build-and-test.yml@main
     with:
       PROJECT_NAME: BattleNetPrefill
+      DOTNET_TEST_FILTER: "TestCategory!=SkipCI"

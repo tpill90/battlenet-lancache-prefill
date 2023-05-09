@@ -62,6 +62,7 @@ namespace BattleNetPrefill.CliCommands
                     await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
                 }
 
+                //TODO Timer is wrong when greater than 1 minute
                 ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
             }
             catch (Exception e)
