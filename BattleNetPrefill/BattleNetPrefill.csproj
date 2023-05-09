@@ -6,7 +6,6 @@
 
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
-    <StartupObject>BattleNetPrefill.Program</StartupObject>
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
     <VersionPrefix>1.5.0</VersionPrefix>
@@ -20,12 +19,14 @@
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
   </PropertyGroup>
 
-  <PropertyGroup Label="Trim Settings">
+  <!-- Trim Settings -->
+  <PropertyGroup>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <!-- Required to be enabled in order to run this application on Ubuntu Docker images. -->
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+<!--TODO is this needed?-->
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>BattleNetPrefill.Test</_Parameter1>
@@ -34,19 +35,6 @@
       <_Parameter1>BattleNetPrefill.Integration.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>2</WarningLevel>
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants />
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
 
   <ItemGroup>
     <!-- External Packages -->
