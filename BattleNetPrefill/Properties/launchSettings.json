@@ -16,9 +16,13 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow_classic --force"
     },
+    "Prefill Diablo 4": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p fenris --force"
+    },
     "Prefill All - Force": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all --force"
+      "commandLineArgs": "prefill --blizzard --force"
     },
     "Clear Cache - Accept": {
       "commandName": "Project",
