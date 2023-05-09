@@ -126,7 +126,7 @@
 
             var downloadTimer = Stopwatch.StartNew();
             var failedRequests = new ConcurrentBag<Request>();
-            await _ansiConsole.CreateSpectreProgress(TransferSpeedUnit.Bits).StartAsync(async ctx =>
+            await _ansiConsole.CreateSpectreProgress(AppConfig.TransferSpeedUnit).StartAsync(async ctx =>
             {
                 // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
