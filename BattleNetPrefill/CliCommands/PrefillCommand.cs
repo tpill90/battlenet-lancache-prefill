@@ -44,45 +44,59 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(NullableBoolConverter))]
         public bool? NoAnsiEscapeSequences { get; init; }
 
+        private IAnsiConsole _ansiConsole;
+
         public async ValueTask ExecuteAsync(IConsole console)
         {
-            var ansiConsole = console.CreateAnsiConsole();
+            _ansiConsole = console.CreateAnsiConsole();
             // Property must be set to false in order to disable ansi escape sequences
-            ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
+            _ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
+
+            await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.CacheDir);
+
+            ValidateUserHasSelectedApps();
 
             try
             {
                 var timer = Stopwatch.StartNew();
-
-                await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.CacheDir);
-
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
+                _ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
 
-                if (productsToProcess.Count == 0)
-                {
-                    throw new CommandException("At least one product is required!  Use '--products' to specify which products to load, " +
-                                               "or use bulk flags '--all', '--activision', or '--blizzard' to load predefined groups", 1, true);
-                }
-
-                ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
                 foreach (var code in productsToProcess.Distinct().ToList())
                 {
-                    var tactProductHandler = new TactProductHandler(code, ansiConsole, AppConfig.DebugConfig);
-                    await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+                    try
+                    {
+                        var tactProductHandler = new TactProductHandler(code, _ansiConsole, AppConfig.DebugConfig);
+                        await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+                    }
+                    catch (Exception e)
+                    {
+                        // Need to catch any exceptions that might happen during a single download, so that the other apps won't be affected
+                        _ansiConsole.LogMarkupLine(Red($"Unexpected download error : {e.Message}  Skipping app..."));
+                        _ansiConsole.MarkupLine("");
+                    }
+
                 }
 
                 //TODO Timer is wrong when greater than 1 minute
-                ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
+                _ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
+            }
+            //TODO will probably need to implement this so that clifx properly displays the help text
+            catch (CommandException)
+            {
+                throw;
             }
             catch (Exception e)
             {
-                ansiConsole.LogException(e);
+                _ansiConsole.LogException(e);
             }
         }
 
         private List<TactProduct> BuildProductListFromArgs()
         {
-            var productsToProcess = new List<TactProduct>();
+            // Start by loading any selected apps
+            var productsToProcess = TactProductHandler.LoadPreviouslySelectedApps();
+
             // -p flag
             if (ProductCodes != null)
             {
@@ -104,7 +118,24 @@ namespace BattleNetPrefill.CliCommands
                 productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsBlizzard));
             }
 
-            return productsToProcess;
+            return productsToProcess.Distinct().ToList();
+        }
+
+        // Validates that the user has selected at least 1 app
+        private void ValidateUserHasSelectedApps()
+        {
+            var userSelectedApps = TactProductHandler.LoadPreviouslySelectedApps();
+            if ((PrefillAllProducts ?? default(bool)) || (PrefillActivision ?? default(bool)) || (PrefillBlizzard ?? default(bool)) || userSelectedApps.Any())
+            {
+                return;
+            }
+
+            _ansiConsole.MarkupLine(Red("No apps have been selected for prefill! At least 1 app is required!"));
+            _ansiConsole.MarkupLine(Red($"Use the {Cyan("select-apps")} command to interactively choose which apps to prefill. "));
+            _ansiConsole.MarkupLine("");
+            _ansiConsole.Markup(Red($"Alternatively, the flag {LightYellow("--all")} can be specified to prefill all owned apps"));
+            _ansiConsole.Markup(Red($"or use {LightYellow("--activision")}, or {LightYellow("--blizzard")} to load predefined groups"));
+            throw new CommandException(".", 1, true);
         }
     }
 }

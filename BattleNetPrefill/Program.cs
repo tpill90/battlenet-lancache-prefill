@@ -7,6 +7,8 @@
     // TODO - Add summary table
     // TODO - Make sure that the prefill command has flag/option parity with steamprefill
     // TODO - Setup mkdocs and copy from SteamPrefill.  Update docs in general
+    // TODO - Dedupe codebase with other prefills as well
+    // TODO - warcraft 3 hangs for some reason
     public static class Program
     {
         public static async Task<int> Main()

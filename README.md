@@ -45,40 +45,29 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 ## Selecting what to prefill
 
 > **Warning**
-> This guide was written with Linux in mind.  If you are running **BattleNetPrefill** on Windows you will need to substitute `./BattleNetPrefill` with `.\BattleNetPrefill.exe` instead.
+> This guide was written with Linux in mind.  If you are running **BattlenetPrefill** on Windows you will need to substitute `./BattlenetPrefill` with `.\BattlenetPrefill.exe` instead.
 
-Prior to prefilling for the first time, you will have to decide which games should be prefilled.  
-A table of all currently downloadable games can be listed with the following command
+Prior to prefilling for the first time, you will have to decide which apps should be prefilled.  This will be done using an interactive menu, for selecting what to prefill from all of your currently owned apps. To display the interactive menu, run the following command
 ```powershell
-./BattleNetPrefill list-products
+./BattlenetPrefill select-apps
 ```
-<img src="docs/img/ListProducts.png" width="630" alt="List Products">
 
-This table will show a list of available games, and their corresponding **product code**.  
-These product codes will be used in subsequent commands, in order to specify which games to prefill.
+Once logged into Steam, all of your currently owned apps will be displayed for selection.  Navigating using the arrow keys, select any apps that you are interested in prefilling with **space**.  Once you are satisfied with your selections, save them with **enter**.
+
+<img src="docs/img/Interactive-App-Selection.png" height="350" alt="Interactive app selection">
+
+These selections will be saved permanently, and can be freely updated at any time by simply rerunning `select-apps` again at any time.
 
 ## Initial prefill
 
-Now that we've decided on some games that we'd like to prefill, we can move onto running the prefill.
-
-One or more games can be downloaded by specifying as many product codes as desired, in this example we will be prefilling 3 total games
+Now that a prefill app list has been created, we can now move onto our initial prefill run by using 
 ```powershell
-./BattleNetPrefill prefill --products s1 d3 zeus
+./BattlenetPrefill prefill
 ```
 
-Alternatively, optional flags can be used to bulk preload products, without having to specify each product code individually.  This can be useful when you are interested
-in installing most of the available games, as specifiying the individual product codes is not required.
-```powershell
-./BattleNetPrefill prefill --all
-./BattleNetPrefill prefill --blizzard 
-./BattleNetPrefill prefill --activision 
-```
+The `prefill` command will automatically pickup the prefill app list, and begin downloading each app.  During the initial run, it is likely that the Lancache is empty, so download speeds should be expected to be around your internet line speed (in the below example, a 300mbit/s connection was used).  Once the prefill has completed, the Lancache should be fully ready to serve clients cached data.
 
-During this initial run, it is likely that the Lancache is empty, 
-so download speeds should be expected to be around your internet line speed (in the below example, a 300megabit connection was used).  
-Once the prefill has completed, the Lancache should be fully ready to serve clients cached data.
-
-<img src="docs/img/Initial-Prefill.png" width="730" alt="Initial Prefill">
+<img src="docs/img/Initial-Prefill.png" width="720" alt="Initial Prefill">
 
 ## Updating previously prefilled games
 
@@ -114,11 +103,6 @@ For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force
 <img src="docs/img/AutoDns-ServerPerf.png" width="830" alt="Prefill running on Lancache Server in Docker">
 
 # Detailed Command Usage
-
-## list-products
-Displays a table of all currently supported Activision and Blizzard games.  Only currently supports retail products, and does not include any PTR or beta products. 
-
-These product IDs can then be used with the `prefill` command to specify which games to be prefilled.
 
 ## prefill
 Fills a Lancache by downloading the exact same files from Blizzard's CDN as the official Battle.Net client.  Expected initial download speeds should be the speed of your internet connection.
