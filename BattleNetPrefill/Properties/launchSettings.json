@@ -20,9 +20,17 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p fenris --force"
     },
-    "Prefill All - Force": {
+    "Prefill Blizzard": {
       "commandName": "Project",
       "commandLineArgs": "prefill --blizzard --force"
+    },
+    "Select Apps": {
+      "commandName": "Project",
+      "commandLineArgs": "select-apps"
+    },
+    "Prefill Selected": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill"
     },
     "Clear Cache - Accept": {
       "commandName": "Project",

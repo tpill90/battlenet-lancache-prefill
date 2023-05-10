@@ -5,6 +5,7 @@
         static AppConfig()
         {
             // Create required folders
+            Directory.CreateDirectory(ConfigDir);
             Directory.CreateDirectory(CacheDir);
         }
 
@@ -18,6 +19,13 @@
         /// All data in here should be able to be deleted safely.
         /// </summary>
         public static readonly string CacheDir = CacheDirUtils.GetCacheDirBaseDirectories("BattlenetPrefill", cacheDirVersion: "");
+
+        /// <summary>
+        /// Contains user configuration.  Should not be deleted, doing so will reset the app back to defaults.
+        /// </summary>
+        private static readonly string ConfigDir = Path.Combine(AppContext.BaseDirectory, "Config");
+
+        public static readonly string UserSelectedAppsPath = Path.Combine(ConfigDir, "selectedAppsToPrefill.json");
 
         public static readonly DebugConfig DebugConfig = new DebugConfig
         {

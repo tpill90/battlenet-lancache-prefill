@@ -1,6 +1,6 @@
 ﻿namespace BattleNetPrefill
 {
-    public class TactProductHandler
+    public sealed class TactProductHandler
     {
         private readonly TactProduct _product;
         private readonly IAnsiConsole _ansiConsole;
@@ -75,9 +75,8 @@
             var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync();
             if (downloadSuccess)
             {
-                SaveDownloadedProductVersion(cdnRequestManager, targetVersion.Value);
+                MarkDownloadAsSuccessful(targetVersion.Value);
             }
-
 
             if (!_debugConfig.CompareAgainstRealRequests)
             {
@@ -105,10 +104,39 @@
             return latestVersion.versionsName == lastPrefilledVersion;
         }
 
-        private void SaveDownloadedProductVersion(CdnRequestManager cdn, VersionsEntry latestVersion)
+        private void MarkDownloadAsSuccessful(VersionsEntry latestVersion)
         {
             var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
             File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }
+
+        #region Select Apps
+
+        //TODO don't like the static
+        //TODO don't like the ansiConsole being passed in
+        public static void SetAppsAsSelected(List<TuiAppInfo> tuiAppModels, IAnsiConsole ansiConsole)
+        {
+            List<string> selectedAppIds = tuiAppModels.Where(e => e.IsSelected)
+                                                    .Select(e => e.AppId)
+                                                    .ToList();
+            File.WriteAllText(AppConfig.UserSelectedAppsPath, JsonSerializer.Serialize(selectedAppIds, SerializationContext.Default.ListString));
+
+            ansiConsole.LogMarkupLine($"Selected {Magenta(selectedAppIds.Count)} apps to prefill!");
+        }
+
+        //TODO don't like the static
+        public static List<TactProduct> LoadPreviouslySelectedApps()
+        {
+            if (!File.Exists(AppConfig.UserSelectedAppsPath))
+            {
+                return new List<TactProduct>();
+            }
+
+            return JsonSerializer.Deserialize(File.ReadAllText(AppConfig.UserSelectedAppsPath), SerializationContext.Default.ListString)
+                                 .Select(e => TactProduct.Parse(e))
+                                 .ToList();
+        }
+
+        #endregion
     }
 }
