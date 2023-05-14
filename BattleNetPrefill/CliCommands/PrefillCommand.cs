@@ -66,7 +66,7 @@ namespace BattleNetPrefill.CliCommands
                 {
                     try
                     {
-                        var tactProductHandler = new TactProductHandler(code, _ansiConsole, AppConfig.DebugConfig);
+                        var tactProductHandler = new TactProductHandler(code, _ansiConsole);
                         await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
                     }
                     catch (Exception e)

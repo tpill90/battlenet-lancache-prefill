@@ -8,9 +8,9 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p pro --force"
     },
-    "Prefill WOW": {
+    "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p wow --force"
+      "commandLineArgs": "prefill -p wow --compare-requests --force"
     },
     "Prefill WOW Classic": {
       "commandName": "Project",

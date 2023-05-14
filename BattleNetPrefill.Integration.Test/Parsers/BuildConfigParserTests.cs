@@ -32,7 +32,8 @@
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
+            AppConfig.SkipDownloads = true;
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole());
             await cdnRequestManager.InitializeAsync(tactProduct);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);

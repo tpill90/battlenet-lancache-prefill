@@ -27,14 +27,8 @@
 
         public static readonly string UserSelectedAppsPath = Path.Combine(ConfigDir, "selectedAppsToPrefill.json");
 
-        public static readonly DebugConfig DebugConfig = new DebugConfig
-        {
-            //TODO turn this into a cli flag
-            UseCdnDebugMode = false,
-            CompareAgainstRealRequests = false
-        };
-
         public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
+        private static bool _compareAgainstRealRequests;
 
         /// <summary>
         /// Global retry policy that will wait increasingly longer periods after a failed request
@@ -44,23 +38,28 @@
 
 
         public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
-    }
 
-    //TODO this should be wrapped with a #if debug condition
-    public class DebugConfig
-    {
         /// <summary>
         /// If set to true, will skip making any non-required requests, and instead record them to later be compared against for accuracy.
         /// Dramatically speeds up debugging since bandwidth use is a small fraction of the full download size (ex. 100mb vs a possible 30gb download).
         /// </summary>
-        public bool UseCdnDebugMode { get; init; }
+        public static bool SkipDownloads { get; set; }
 
         /// <summary>
         /// When enabled, will compare the requests that this application made against the previously recorded requests that the real Battle.Net launcher makes.
         /// A comparison will be output to screen, giving feedback on how accurate our application is vs Battle.Net.
         ///
-        /// While not required, enabling <see cref="UseCdnDebugMode"/> will allow for significantly faster debugging.
+        /// While not required, enabling <see cref="SkipDownloads"/> will allow for significantly faster debugging.
         /// </summary>
-        public bool CompareAgainstRealRequests { get; init; }
+        public static bool CompareAgainstRealRequests
+        {
+            get => _compareAgainstRealRequests;
+            set
+            {
+                _compareAgainstRealRequests = value;
+                // Need to set this to true as well, otherwise you will still need to wait for the whole download to finish, which isn't useful for running the comparison
+                SkipDownloads = true;
+            }
+        }
     }
 }

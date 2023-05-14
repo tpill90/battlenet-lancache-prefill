@@ -11,8 +11,8 @@
         public async Task Setup()
         {
             // Run the download process only once
-            var debugConfig = new DebugConfig { UseCdnDebugMode = true, CompareAgainstRealRequests = true };
-            var tactProductHandler = new TactProductHandler(TactProduct.Starcraft2, new TestConsole(), debugConfig: debugConfig);
+            AppConfig.CompareAgainstRealRequests = true;
+            var tactProductHandler = new TactProductHandler(TactProduct.Starcraft2, new TestConsole());
             _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
         }
 

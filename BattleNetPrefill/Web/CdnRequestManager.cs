@@ -39,12 +39,6 @@
         #region Debugging
 
         /// <summary>
-        /// When set to true, will skip any requests where the response is not required.  This can be used to dramatically speed up debugging time, as
-        /// you won't need to wait for the full file transfer to complete.
-        /// </summary>
-        private bool DebugMode;
-
-        /// <summary>
         /// Used only for debugging purposes.  Records all requests made, so that they can be later compared against the expected requests made.
         ///
         /// Must always be a ConcurrentBag, otherwise odd issues with unit tests can pop up due to concurrency
@@ -53,12 +47,11 @@
 
         #endregion
 
-        public CdnRequestManager(Uri battleNetPatchUri, IAnsiConsole ansiConsole, bool useDebugMode = false, bool skipDiskCache = false)
+        public CdnRequestManager(Uri battleNetPatchUri, IAnsiConsole ansiConsole, bool skipDiskCache = false)
         {
             _battleNetPatchUri = battleNetPatchUri;
             SkipDiskCache = skipDiskCache;
             _ansiConsole = ansiConsole;
-            DebugMode = useDebugMode;
 
             _client = new HttpClient
             {
@@ -223,7 +216,7 @@
             allRequestsMade.Add(request);
 
             // When we are running in debug mode, we can skip any requests that will end up written to dev/null.  Will speed up debugging.
-            if (DebugMode && writeToDevNull)
+            if (AppConfig.SkipDownloads && writeToDevNull)
             {
                 return null;
             }

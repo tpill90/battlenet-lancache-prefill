@@ -32,7 +32,8 @@
             var tactProduct = TactProduct.Parse(productCode);
 
             // Setting up required classes
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole(), useDebugMode: true);
+            AppConfig.SkipDownloads = true;
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole());
 
             // Parsing the CDN file
             var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(cdnRequestManager, tactProduct);

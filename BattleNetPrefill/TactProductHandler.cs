@@ -4,7 +4,6 @@
     {
         private readonly TactProduct _product;
         private readonly IAnsiConsole _ansiConsole;
-        private readonly DebugConfig _debugConfig;
 
         /// <summary>
         /// Creates a new TactProductHandler for the specified product.
@@ -12,11 +11,10 @@
         /// <param name="product">The targeted game that should be downloaded</param>
         /// <param name="ansiConsole"></param>
         /// <param name="debugConfig"></param>
-        public TactProductHandler(TactProduct product, IAnsiConsole ansiConsole, DebugConfig debugConfig)
+        public TactProductHandler(TactProduct product, IAnsiConsole ansiConsole)
         {
             _product = product;
             _ansiConsole = ansiConsole;
-            _debugConfig = debugConfig;
         }
 
         /// <summary>
@@ -30,7 +28,7 @@
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, _debugConfig.UseCdnDebugMode, skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
@@ -78,7 +76,7 @@
                 MarkDownloadAsSuccessful(targetVersion.Value);
             }
 
-            if (!_debugConfig.CompareAgainstRealRequests)
+            if (!AppConfig.CompareAgainstRealRequests)
             {
                 return null;
             }
