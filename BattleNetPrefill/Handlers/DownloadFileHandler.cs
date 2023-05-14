@@ -131,7 +131,6 @@
                         uint endBytes = file.offset + file.size - 1;
                         if (targetProduct == TactProduct.Warcraft3Reforged)
                         {
-                            //TODO i might be able to remove the weird 4096 byte coalescing logic now that this is here
                             // Only Warcraft 3 does this weird logic, not entirely sure why no other products do it.
                             endBytes = Math.Max(endBytes, file.offset + 4095);
                         }

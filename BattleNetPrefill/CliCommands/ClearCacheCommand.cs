@@ -1,7 +1,6 @@
 ﻿// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
 namespace BattleNetPrefill.CliCommands
 {
-    //TODO description
     [UsedImplicitly]
     [Command("clear-cache", Description = "Empties out temporary cached data, to free up disk space")]
     public sealed class ClearCacheCommand : ICommand

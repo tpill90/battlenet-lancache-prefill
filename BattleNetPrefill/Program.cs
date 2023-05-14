@@ -14,13 +14,12 @@
             // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
             OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
 
-            //TODO dedupe exception handling at the top level.  Migrate to custom CLIFX binary just like SteamPrefill
+            //TODO dedupe exception handling at the top level. 
             var cliArgs = ParseHiddenFlags();
             return await new CliApplicationBuilder()
                          .AddCommandsFromThisAssembly()
                          .SetTitle("BattleNetPrefill")
-                         //TODO make this an extension method
-                         .SetExecutableName($"BattleNetPrefill{(IsWindows() ? ".exe" : "")}")
+                         .SetExecutableNamePlatformAware("BattleNetPrefill")
                          .SetDescription(Description)
                          .SetVersion($"v{ThisAssembly.Info.InformationalVersion}")
                          .Build()
@@ -54,8 +53,5 @@
 
             return args;
         }
-
-        //TODO make this an extension method
-        public static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     }
 }

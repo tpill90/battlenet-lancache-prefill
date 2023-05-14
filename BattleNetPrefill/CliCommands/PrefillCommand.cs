@@ -78,7 +78,6 @@ namespace BattleNetPrefill.CliCommands
 
                 }
 
-                //TODO Timer is wrong when greater than 1 minute
                 _ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
             }
             //TODO will probably need to implement this so that clifx properly displays the help text
