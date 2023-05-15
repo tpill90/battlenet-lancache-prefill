@@ -2,7 +2,6 @@
 {
     public readonly struct MD5Hash : IEquatable<MD5Hash>
     {
-
         //TODO figure out what to do here, and re-enable this warning
 #pragma warning disable SYSLIB1038
 

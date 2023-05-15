@@ -11,10 +11,10 @@ $latestVersion = $versions[0].name
 Write-Host "Found latest version : " -NoNewline
 Write-Host -ForegroundColor Cyan $latestVersion
 
-# Seeing if BattlenetPrefill is already installed and up to date
-if(Test-Path "BattlenetPrefill.exe")
+# Seeing if BattleNetPrefill is already installed and up to date
+if(Test-Path "BattleNetPrefill.exe")
 {
-    $currentVersion = (.\BattlenetPrefill.exe --version)
+    $currentVersion = (.\BattleNetPrefill.exe --version)
     $upToDate = $currentVersion -eq $latestVersion
 
     if($upToDate)
@@ -31,7 +31,7 @@ Invoke-WebRequest $windowsAsset.browser_download_url -OutFile $windowsAsset.name
 # Unzipping
 Write-Host -ForegroundColor Yellow "Unzipping..."
 Expand-Archive -Force $windowsAsset.name -DestinationPath .
-Copy-Item "$($windowsAsset.name.Replace('.zip', ''))\BattlenetPrefill.exe"
+Copy-Item "$($windowsAsset.name.Replace('.zip', ''))\BattleNetPrefill.exe"
 
 # Cleanup 
 Remove-Item $windowsAsset.name

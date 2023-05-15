@@ -5,8 +5,10 @@
     // TODO warcraft 3 hangs for some reason on retreiving uncached archive indexes
     public static class Program
     {
-        private const string Description = "Automatically fills a Lancache with games from Battle.net, so that subsequent downloads will be \n" +
-                                                     "  served from the Lancache, improving speeds and reducing load on your internet connection.";
+        private const string Description = "Automatically fills a Lancache with games from Battle.Net, so that subsequent downloads will be \n" +
+                                           "  served from the Lancache, improving speeds and reducing load on your internet connection. \n" +
+                                           "\n" +
+                                           "  Start by selecting apps for prefill with the 'select-apps' command, then start the prefill using 'prefill'";
 
         public static async Task<int> Main()
         {
@@ -14,7 +16,7 @@
             {
                 // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
                 OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
-
+                
                 var cliArgs = ParseHiddenFlags();
                 return await new CliApplicationBuilder()
                              .AddCommandsFromThisAssembly()
