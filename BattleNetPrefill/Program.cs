@@ -1,7 +1,6 @@
 ﻿namespace BattleNetPrefill
 {
     // TODO - Add publish build pipeline 
-    // TODO - Add summary table
     // TODO - Setup mkdocs and copy from SteamPrefill.  Update docs in general
     // TODO warcraft 3 hangs for some reason on retreiving uncached archive indexes
     public static class Program
@@ -11,19 +10,29 @@
 
         public static async Task<int> Main()
         {
-            // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
-            OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
+            try
+            {
+                // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
+                OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
 
-            //TODO dedupe exception handling at the top level. 
-            var cliArgs = ParseHiddenFlags();
-            return await new CliApplicationBuilder()
-                         .AddCommandsFromThisAssembly()
-                         .SetTitle("BattleNetPrefill")
-                         .SetExecutableNamePlatformAware("BattleNetPrefill")
-                         .SetDescription(Description)
-                         .SetVersion($"v{ThisAssembly.Info.InformationalVersion}")
-                         .Build()
-                         .RunAsync(cliArgs);
+                //TODO dedupe exception handling at the top level. 
+                var cliArgs = ParseHiddenFlags();
+                return await new CliApplicationBuilder()
+                             .AddCommandsFromThisAssembly()
+                             .SetTitle("BattleNetPrefill")
+                             .SetExecutableNamePlatformAware("BattleNetPrefill")
+                             .SetDescription(Description)
+                             .SetVersion($"v{ThisAssembly.Info.InformationalVersion}")
+                             .Build()
+                             .RunAsync(cliArgs);
+            }
+            catch (Exception e)
+            {
+                AnsiConsole.Console.LogException(e);
+            }
+
+            // Return failed status code, since you can only get to this line if an exception was handled
+            return 1;
         }
 
         /// <summary>
