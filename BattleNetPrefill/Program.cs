@@ -14,8 +14,7 @@
             {
                 // Checking to see if the user double clicked the exe in Windows, and display a message on how to use the app
                 OperatingSystemUtils.DetectDoubleClickOnWindows("BattleNetPrefill");
-
-                //TODO dedupe exception handling at the top level. 
+                
                 var cliArgs = ParseHiddenFlags();
                 return await new CliApplicationBuilder()
                              .AddCommandsFromThisAssembly()
