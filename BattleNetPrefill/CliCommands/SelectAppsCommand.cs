@@ -43,10 +43,12 @@ namespace BattleNetPrefill.CliCommands
                                                 .AddChoices(true, false)
                                                 .UseConverter(e => e == false ? "No" : "Yes"));
 
-            //TODO implement
             if (runPrefill)
             {
-                //await steamManager.DownloadMultipleAppsAsync(false, false, null);
+                var tactProductHandler = new TactProductHandler(ansiConsole);
+
+                var productsToProcess = TactProductHandler.LoadPreviouslySelectedApps();
+                await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
             }
         }
 

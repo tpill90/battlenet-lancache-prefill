@@ -12,8 +12,8 @@
         {
             // Run the download process only once
             AppConfig.CompareAgainstRealRequests = true;
-            var tactProductHandler = new TactProductHandler(TactProduct.Starcraft1, new TestConsole());
-            _results = await tactProductHandler.ProcessProductAsync(forcePrefill: true);
+            var tactProductHandler = new TactProductHandler(new TestConsole(), forcePrefill: true);
+            _results = await tactProductHandler.ProcessProductAsync(TactProduct.Starcraft1);
         }
 
         [Test]

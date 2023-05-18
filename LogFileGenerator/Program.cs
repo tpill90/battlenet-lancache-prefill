@@ -14,7 +14,6 @@ using static LancachePrefill.Common.SpectreFormatters;
 
 namespace LogFileGenerator
 {
-    //TODO make this uninstall rather than delete the folder
     public static class Program
     {
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console));

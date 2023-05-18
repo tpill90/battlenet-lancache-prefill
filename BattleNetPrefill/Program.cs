@@ -3,7 +3,7 @@
     // TODO - Add publish build pipeline 
     // TODO - Add summary table
     // TODO - Setup mkdocs and copy from SteamPrefill.  Update docs in general
-    // TODO - Dedupe codebase with other prefills as well
+    // TODO warcraft 3 hangs for some reason on retreiving uncached archive indexes
     public static class Program
     {
         private const string Description = "Automatically fills a Lancache with games from Battle.net, so that subsequent downloads will be \n" +
