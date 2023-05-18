@@ -58,27 +58,10 @@ namespace BattleNetPrefill.CliCommands
 
             try
             {
-                var timer = Stopwatch.StartNew();
+                var tactProductHandler = new TactProductHandler(_ansiConsole, NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+
                 List<TactProduct> productsToProcess = BuildProductListFromArgs();
-                _ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
-
-                foreach (var code in productsToProcess.Distinct().ToList())
-                {
-                    try
-                    {
-                        var tactProductHandler = new TactProductHandler(code, _ansiConsole);
-                        await tactProductHandler.ProcessProductAsync(NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
-                    }
-                    catch (Exception e)
-                    {
-                        // Need to catch any exceptions that might happen during a single download, so that the other apps won't be affected
-                        _ansiConsole.LogMarkupLine(Red($"Unexpected download error : {e.Message}  Skipping app..."));
-                        _ansiConsole.MarkupLine("");
-                    }
-
-                }
-
-                _ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(productsToProcess.Count)} apps", timer);
+                await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
             }
             //TODO will probably need to implement this so that clifx properly displays the help text
             catch (CommandException)

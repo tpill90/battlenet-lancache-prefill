@@ -2,19 +2,39 @@
 {
     public sealed class TactProductHandler
     {
-        private readonly TactProduct _product;
         private readonly IAnsiConsole _ansiConsole;
+        private readonly bool _skipDiskCache;
+        private readonly bool _forcePrefill;
 
-        /// <summary>
-        /// Creates a new TactProductHandler for the specified product.
-        /// </summary>
-        /// <param name="product">The targeted game that should be downloaded</param>
-        /// <param name="ansiConsole"></param>
-        /// <param name="debugConfig"></param>
-        public TactProductHandler(TactProduct product, IAnsiConsole ansiConsole)
+        public TactProductHandler(IAnsiConsole ansiConsole, bool skipDiskCache = false, bool forcePrefill = false)
         {
-            _product = product;
             _ansiConsole = ansiConsole;
+            _skipDiskCache = skipDiskCache;
+            _forcePrefill = forcePrefill;
+        }
+
+        public async Task ProcessMultipleProductsAsync(List<TactProduct> productsToProcess)
+        {
+            var timer = Stopwatch.StartNew();
+
+            var distinctProducts = productsToProcess.Distinct().ToList();
+            _ansiConsole.LogMarkupLine($"Prefilling {LightYellow(productsToProcess.Count)} products \n");
+            foreach (var productCode in distinctProducts)
+            {
+                try
+                {
+                    await ProcessProductAsync(productCode);
+                }
+                catch (Exception e)
+                {
+                    // Need to catch any exceptions that might happen during a single download, so that the other apps won't be affected
+                    _ansiConsole.LogMarkupLine(Red($"Unexpected download error : {e.Message}  Skipping app..."));
+                    _ansiConsole.MarkupLine("");
+                }
+
+            }
+
+            _ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(distinctProducts.Count)} apps", timer);
         }
 
         /// <summary>
@@ -23,26 +43,26 @@
         /// <param name="skipDiskCache">If set to true, then no cache files will be written to disk.  Every run will re-request the required files</param>
         /// <param name="forcePrefill">By default, a product will be skipped if it has already prefilled the latest product version.
         ///                             Setting this to true will force a prefill regardless of previous runs.</param>
-        public async Task<ComparisonResult> ProcessProductAsync(bool skipDiskCache = false, bool forcePrefill = false)
+        public async Task<ComparisonResult> ProcessProductAsync(TactProduct product)
         {
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, _skipDiskCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
-            var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, _product);
+            var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, product);
             var patchLoader = new PatchLoader(cdnRequestManager);
-            await cdnRequestManager.InitializeAsync(_product);
+            await cdnRequestManager.InitializeAsync(product);
 
-            _ansiConsole.LogMarkup($"Starting {Cyan(_product.DisplayName)}");
+            _ansiConsole.LogMarkup($"Starting {Cyan(product.DisplayName)}");
 
             // Finding the latest version of the game
-            VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(_product);
+            VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
 
             // Skip prefilling if we've already prefilled the latest version 
-            if (!forcePrefill && IsProductUpToDate(targetVersion.Value))
+            if (!_forcePrefill && IsProductUpToDate(product, targetVersion.Value))
             {
                 _ansiConsole.MarkupLine($"   {Green("Up to date!")}");
                 return null;
@@ -53,7 +73,7 @@
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
-                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, _product);
+                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, product);
                 CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");
@@ -63,8 +83,8 @@
                 // Start processing to determine which files need to be downloaded
                 ctx.Status("Determining files to download...");
                 await installFileHandler.HandleInstallFileAsync(buildConfig, archiveIndexHandler, cdnConfig);
-                await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, _product);
-                await patchLoader.HandlePatchesAsync(buildConfig, _product, cdnConfig);
+                await downloadFileHandler.HandleDownloadFileAsync(archiveIndexHandler, cdnConfig, product);
+                await patchLoader.HandlePatchesAsync(buildConfig, product, cdnConfig);
             });
 
             _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
@@ -73,7 +93,7 @@
             var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync();
             if (downloadSuccess)
             {
-                MarkDownloadAsSuccessful(targetVersion.Value);
+                MarkDownloadAsSuccessful(product, targetVersion.Value);
             }
 
             if (!AppConfig.CompareAgainstRealRequests)
@@ -82,16 +102,16 @@
             }
 
             var comparisonUtil = new ComparisonUtil();
-            return await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), _product);
+            return await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
         }
 
         /// <summary>
         /// Checks to see if the previously prefilled version is up to date with the latest version on the CDN
         /// </summary>
-        private bool IsProductUpToDate(VersionsEntry latestVersion)
+        private bool IsProductUpToDate(TactProduct product, VersionsEntry latestVersion)
         {
             // Checking to see if a file has been previously prefilled
-            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
             if (!File.Exists(versionFilePath))
             {
                 return false;
@@ -102,9 +122,9 @@
             return latestVersion.versionsName == lastPrefilledVersion;
         }
 
-        private void MarkDownloadAsSuccessful(VersionsEntry latestVersion)
+        private void MarkDownloadAsSuccessful(TactProduct product, VersionsEntry latestVersion)
         {
-            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{_product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
             File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }
 
