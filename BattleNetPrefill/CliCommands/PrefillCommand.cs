@@ -56,22 +56,10 @@ namespace BattleNetPrefill.CliCommands
 
             ValidateUserHasSelectedApps();
 
-            try
-            {
-                var tactProductHandler = new TactProductHandler(_ansiConsole, NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+            var tactProductHandler = new TactProductHandler(_ansiConsole, NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
 
-                List<TactProduct> productsToProcess = BuildProductListFromArgs();
-                await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
-            }
-            //TODO will probably need to implement this so that clifx properly displays the help text
-            catch (CommandException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                _ansiConsole.LogException(e);
-            }
+            List<TactProduct> productsToProcess = BuildProductListFromArgs();
+            await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
         }
 
         private List<TactProduct> BuildProductListFromArgs()
