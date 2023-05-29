@@ -2,7 +2,7 @@ Push-Location $PSScriptRoot
 clear
 
 # Getting current version
-[xml]$parsedCsproj = Get-Content .\SteamPrefill\SteamPrefill.csproj
+[xml]$parsedCsproj = Get-Content .\BattleNetPrefill\BattleNetPrefill.csproj
 $versionPrefix = $parsedCsproj.Project.PropertyGroup.VersionPrefix
 $currentVersion = "$versionPrefix".Trim();
 Write-Color "Current version: ", $currentVersion -Color White, Yellow
@@ -11,9 +11,9 @@ Write-Color "Current version: ", $currentVersion -Color White, Yellow
 $newVersion = Read-Host "Enter new version, with no leading 'v'.  Ex. '1.2.3'"
 
 # Updating csproj version
-$currentContent = Get-Content -Path .\SteamPrefill\SteamPrefill.csproj -Raw
+$currentContent = Get-Content -Path .\BattleNetPrefill\BattleNetPrefill.csproj -Raw
 $currentContent = $currentContent.Replace('<VersionPrefix>' + $currentVersion, '<VersionPrefix>' + $newVersion)
-Set-Content -Value $currentContent -Path .\SteamPrefill\SteamPrefill.csproj -NoNewline
+Set-Content -Value $currentContent -Path .\BattleNetPrefill\BattleNetPrefill.csproj -NoNewline
 
 # Committing + tag.  Pushing the tag is what creates the release.
 git commit -a -m "v$newVersion"
