@@ -18,6 +18,7 @@ namespace BattleNetPrefill.CliCommands
             // Property must be set to false in order to disable ansi escape sequences
             ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
 
+            var tactProductHandler = new TactProductHandler(ansiConsole);
             var tuiAppModels = BuildTuiAppModels();
 
             Application.UseSystemConsole = true;
@@ -31,7 +32,7 @@ namespace BattleNetPrefill.CliCommands
                 return;
             }
 
-            TactProductHandler.SetAppsAsSelected(tuiAppModels, ansiConsole);
+            tactProductHandler.SetAppsAsSelected(tuiAppModels);
 
             // This escape sequence is required when running on linux, otherwise will not be able to use the Spectre selection prompt
             // See : https://github.com/gui-cs/Terminal.Gui/issues/418
@@ -45,8 +46,6 @@ namespace BattleNetPrefill.CliCommands
 
             if (runPrefill)
             {
-                var tactProductHandler = new TactProductHandler(ansiConsole);
-
                 var productsToProcess = TactProductHandler.LoadPreviouslySelectedApps();
                 await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
             }

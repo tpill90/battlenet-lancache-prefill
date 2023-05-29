@@ -6,6 +6,8 @@
         private readonly bool _skipDiskCache;
         private readonly bool _forcePrefill;
 
+        private readonly PrefillSummaryResult _prefillSummaryResult = new PrefillSummaryResult();
+
         public TactProductHandler(IAnsiConsole ansiConsole, bool skipDiskCache = false, bool forcePrefill = false)
         {
             _ansiConsole = ansiConsole;
@@ -30,11 +32,12 @@
                     // Need to catch any exceptions that might happen during a single download, so that the other apps won't be affected
                     _ansiConsole.LogMarkupLine(Red($"Unexpected download error : {e.Message}  Skipping app..."));
                     _ansiConsole.MarkupLine("");
+                    _prefillSummaryResult.FailedApps++;
                 }
-
             }
 
             _ansiConsole.LogMarkupLine($"Prefill complete! Prefilled {Magenta(distinctProducts.Count)} apps", timer);
+            _prefillSummaryResult.RenderSummaryTable(_ansiConsole);
         }
 
         /// <summary>
@@ -45,6 +48,8 @@
         ///                             Setting this to true will force a prefill regardless of previous runs.</param>
         public async Task<ComparisonResult> ProcessProductAsync(TactProduct product)
         {
+            _ansiConsole.LogMarkupLine($"Starting {Cyan(product.DisplayName)}");
+
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
@@ -56,15 +61,13 @@
             var patchLoader = new PatchLoader(cdnRequestManager);
             await cdnRequestManager.InitializeAsync(product);
 
-            _ansiConsole.LogMarkup($"Starting {Cyan(product.DisplayName)}");
-
             // Finding the latest version of the game
             VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
 
             // Skip prefilling if we've already prefilled the latest version 
             if (!_forcePrefill && IsProductUpToDate(product, targetVersion.Value))
             {
-                _ansiConsole.MarkupLine($"   {Green("Up to date!")}");
+                _prefillSummaryResult.AlreadyUpToDate++;
                 return null;
             }
             _ansiConsole.Write("\n");
@@ -94,6 +97,7 @@
             if (downloadSuccess)
             {
                 MarkDownloadAsSuccessful(product, targetVersion.Value);
+                _prefillSummaryResult.Updated++;
             }
 
             if (!AppConfig.CompareAgainstRealRequests)
@@ -130,19 +134,16 @@
 
         #region Select Apps
 
-        //TODO don't like the static
-        //TODO don't like the ansiConsole being passed in
-        public static void SetAppsAsSelected(List<TuiAppInfo> tuiAppModels, IAnsiConsole ansiConsole)
+        public void SetAppsAsSelected(List<TuiAppInfo> tuiAppModels)
         {
             List<string> selectedAppIds = tuiAppModels.Where(e => e.IsSelected)
                                                     .Select(e => e.AppId)
                                                     .ToList();
             File.WriteAllText(AppConfig.UserSelectedAppsPath, JsonSerializer.Serialize(selectedAppIds, SerializationContext.Default.ListString));
 
-            ansiConsole.LogMarkupLine($"Selected {Magenta(selectedAppIds.Count)} apps to prefill!");
+            _ansiConsole.LogMarkupLine($"Selected {Magenta(selectedAppIds.Count)} apps to prefill!");
         }
-
-        //TODO don't like the static
+        
         public static List<TactProduct> LoadPreviouslySelectedApps()
         {
             if (!File.Exists(AppConfig.UserSelectedAppsPath))
