@@ -143,7 +143,7 @@
 
             _ansiConsole.LogMarkupLine($"Selected {Magenta(selectedAppIds.Count)} apps to prefill!");
         }
-        
+
         public static List<TactProduct> LoadPreviouslySelectedApps()
         {
             if (!File.Exists(AppConfig.UserSelectedAppsPath))
