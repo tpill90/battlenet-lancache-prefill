@@ -34,7 +34,7 @@ fi
 echo -e " Found latest version : ${Cyan} ${LATEST_TAG} ${NC}"
 
 # Checking to see if BattlenetPrefill is already up to date
-if [ -f /BattleNetPrefill ]; then
+if [ -f ./BattleNetPrefill ]; then
     CURRENT_VERSION=$(./BattleNetPrefill --version)
 
     if [ "${CURRENT_VERSION}" == "v${LATEST_TAG}" ]; then
