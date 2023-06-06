@@ -34,8 +34,8 @@ fi
 echo -e " Found latest version : ${Cyan} ${LATEST_TAG} ${NC}"
 
 # Checking to see if BattlenetPrefill is already up to date
-if [ -f /BattlenetPrefill ]; then
-    CURRENT_VERSION=$(./BattlenetPrefill --version)
+if [ -f /BattleNetPrefill ]; then
+    CURRENT_VERSION=$(./BattleNetPrefill --version)
 
     if [ "${CURRENT_VERSION}" == "v${LATEST_TAG}" ]; then
         echo -e "${Yellow} Already up to date !${NC}"
@@ -45,17 +45,17 @@ fi
 
 # Downloading latest version
 echo -e "${Yellow} Downloading... ${NC}"
-DOWNLOAD_URL="https://github.com/tpill90/battlenet-lancache-prefill/releases/download/v${LATEST_TAG}/BattlenetPrefill-${LATEST_TAG}-linux-x64.zip"
+DOWNLOAD_URL="https://github.com/tpill90/battlenet-lancache-prefill/releases/download/v${LATEST_TAG}/BattleNetPrefill-${LATEST_TAG}-linux-x64.zip"
 wget -q -nc --show-progress --progress=bar:force:noscroll $DOWNLOAD_URL
 
 # Unzip
 echo -e "${Yellow} Unzipping... ${NC}"
-unzip -q -j -o BattlenetPrefill-${LATEST_TAG}-linux-x64.zip
+unzip -q -j -o BattleNetPrefill-${LATEST_TAG}-linux-x64.zip
 
 # Required so executable permissions don't get overwritten by unzip
-chmod +x BattlenetPrefill update.sh
+chmod +x BattleNetPrefill update.sh
 
 # Cleanup
-rm BattlenetPrefill-${LATEST_TAG}-linux-x64.zip
+rm BattleNetPrefill-${LATEST_TAG}-linux-x64.zip
 
 echo -e " ${Cyan} Complete! ${NC}"
