@@ -8,7 +8,7 @@
 
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
-    <VersionPrefix>1.6.0</VersionPrefix>
+    <VersionPrefix>1.6.1</VersionPrefix>
     <Authors>tpill90</Authors>
 
     <!-- Code analysis settings -->
