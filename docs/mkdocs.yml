@@ -1,0 +1,69 @@
+site_name: battlenet-lancache-prefill wiki
+repo_url: https://github.com/tpill90/battlenet-lancache-prefill
+docs_dir: mkdocs
+site_url: https://tpill90.github.io/battlenet-lancache-prefill
+
+extra_css:
+  - assets/external/asciinema-player.css
+  - assets/language-picker.css
+  - assets/extra.css
+extra_javascript:
+  - assets/external/asciinema-player.min.js
+  - assets/extra.js
+# Defines global variables that can be used by templates
+extra:
+  prefillName: BattleNetPrefill
+  gamingServiceName: BattleNet
+
+theme:
+  name: readthedocs
+  # For defaults see : https://github.com/mkdocs/mkdocs/tree/master/mkdocs/themes/readthedocs
+  custom_dir: custom_theme/
+  highlightjs: true
+  hljs_languages:
+    - powershell
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - fenced_code
+  - meta
+  - nl2br
+  - sane_lists
+  - toc:
+      permalink: True
+  - tables
+
+# https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins
+plugins:
+  # https://github.com/lukasgeiter/mkdocs-awesome-pages-plugin
+  - awesome-pages:
+      strict: true
+      
+  # https://github.com/ultrabug/mkdocs-static-i18n
+  # Icons taken from - https://github.com/lipis/flag-icons
+  - i18n:
+      default_language: en
+      docs_structure: suffix
+      languages:
+        en:
+          name: English
+          build: true
+        gr:
+          name: Ελληνικά
+          build: true
+  # Allows global variables 
+  - macros
+  
+  # https://github.com/oprypin/mkdocs-section-index
+  #TODO look into this in the future - section-index
+
+nav:
+  - Welcome: index.md
+  - Install Guides: 
+    - ... | flat | install-guides/*.md
+  - Detailed Command Usage: 
+    - ... | flat | detailed-command-usage/*.md
+  - Dev Guides: 
+    - ... | flat | dev-guides/*.md
+  

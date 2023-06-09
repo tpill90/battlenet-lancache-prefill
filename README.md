@@ -2,6 +2,7 @@
 # battlenet-lancache-prefill
 
 [![](https://dcbadge.vercel.app/api/server/BKnBS4u?style=for-the-badge)](https://discord.com/invite/BKnBS4u)
+[![view - Documentation](https://img.shields.io/badge/view-Documentation-green?style=for-the-badge)](https://tpill90.github.io/battlenet-lancache-prefill/)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y5DWGZN)
 
 ![GitHub all releases](https://img.shields.io/github/downloads/tpill90/battlenet-lancache-prefill/total?color=red&style=for-the-badge)
@@ -11,8 +12,6 @@
 Automatically fills a [Lancache](https://lancache.net/) with games from Battle.net, so that subsequent downloads for the same content will be served from the Lancache, improving speeds and reducing load on your internet connection.
 
 ![Prefilling game](docs/img/HeaderImage.png)
-
-Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-autofill) project for Steam games.
 
 # Features
 * Downloads specific games by product ID
@@ -30,15 +29,25 @@ Inspired by the [lancache-autofill](https://github.com/zeropingheroes/lancache-a
 - [Need Help?](#need-help)
 
 # Initial Setup
-1.  Download the latest version for your OS from the [Releases](https://github.com/tpill90/battlenet-lancache-prefill/releases) page.
-2.  Unzip to a directory of your choice
-3.  (**Linux / OSX Only**)  Give the downloaded executable permissions to be run with `chmod +x ./BattleNetPrefill`
-4.  (**Windows Only - Optional**)  Configure your terminal to use Unicode, for much nicer looking UI output.
-    - <img src="docs/img/ConsoleWithUtf8.png" width="730" alt="Initial Prefill">
-    - As the default console in Windows does not support UTF8, Windows Terminal should be installed from the [App Store](https://apps.microsoft.com/store/detail/windows-terminal/9N0DX20HK701), or [Chocolatey](https://community.chocolatey.org/packages/microsoft-windows-terminal).
-    - Unicode on Windows is not enabled by default, however running the following will enable it if it hasn't already been enabled.
-    - `if(!(Test-Path $profile) -or !(gc $profile).Contains("OutputEncoding")) { ac $profile "[console]::InputEncoding = [console]::OutputEncoding = [System.Text.UTF8Encoding]::new()";  & $profile; }`
 
+**BattleNetPrefill** is flexible and portable, and supports multiple platforms and configurations.  It can be run on directly on the Lancache server itself,  or on your gaming machine as an alternative Battlenet client.  You should decide which one works better for your use case.
+
+Detailed setup guides are available for the following platforms:
+
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Linux-Setup-Guide/">
+    <img src="docs/img/platforms/linux.png" height="80px" title="Linux" alt="Linux" />
+</a> &nbsp; &nbsp; &nbsp;
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Docker-Setup-Guide/">
+    <img src="docs/img/platforms/docker.webp" height="80px" title="Docker" alt="Docker" />
+</a> &nbsp; &nbsp; &nbsp;
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Unraid-Setup-Guide/">
+    <img src="docs/img/platforms/unraid.png" height="80px" title="unRAID" alt="unRAID" />
+</a> &nbsp; &nbsp; &nbsp;
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Windows-Setup-Guide/">
+    <img src="docs/img/platforms/windows.png" height="60px" title="Windows" alt="Windows" />
+</a>
+
+</br>
 
 # Getting Started
 
@@ -52,7 +61,7 @@ Prior to prefilling for the first time, you will have to decide which apps shoul
 ./BattleNetPrefill select-apps
 ```
 
-Once logged into Steam, all of your currently owned apps will be displayed for selection.  Navigating using the arrow keys, select any apps that you are interested in prefilling with **space**.  Once you are satisfied with your selections, save them with **enter**.
+All of your currently owned apps will be now displayed for selection.  Navigating using the arrow keys, select any apps that you are interested in prefilling with **space**.  Once you are satisfied with your selections, save them with **enter**.
 
 <img src="docs/img/Interactive-App-Selection.png" height="350" alt="Interactive app selection">
 
@@ -89,7 +98,7 @@ Any data that was previously downloaded, will be retrieved from the Lancache, wh
 
 ### Can I run BattleNetPrefill on the Lancache server?
 
-You certainly can!  All you need to do is download **BattleNetPrefill** onto the server, and run it as you reguarly would!
+You certainly can!  All you need to do is download **BattleNetPrefill** onto the server, and run it as you regularly would!
 
 If everything works as expected, you should see a message saying it found the server at `127.0.0.1`
 <img src="docs/img/AutoDns-Server.png" width="830" alt="Prefill running on Lancache Server">
@@ -104,46 +113,8 @@ For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force
 
 # Detailed Command Usage
 
-## prefill
-Fills a Lancache by downloading the exact same files from Blizzard's CDN as the official Battle.Net client.  Expected initial download speeds should be the speed of your internet connection.
-
-Subsequent runs of this command should be hitting the Lancache, and as such should be dramatically faster than the initial run.  
-
-### -p|--products
-If a list of products is supplied, only these products will be downloaded.  This parameter is ideally used when only interested in a small number of games.
-
-### --all, --activision, --blizzard
-Downloads multiple products, useful for prefilling a completely empty cache.  Can be combined with `--products`.
-
-### --nocache
-By default, **BattleNetPrefill** will cache copies of certain files on disk, in order to dramatically speed up future runs (in some cases 3X faster).  
-These cache files will be stored in the `/Cache` directory in the same directory as **BattleNetPrefill**.
-However, in some scenarios this disk cache can potentially take up a non-trivial amount of storage (~1gb), which may not be ideal for all use cases.
-
-By running with the additional flag `--nocache`, **BattleNetPrefill** will no longer cache any files locally, at the expense of slower runtime.
-
-### -f|--force
-By default, **BattleNetPrefill** will keep track of the most recently prefilled product, and will only attempt to prefill if there it determines there a newer version available for download.  This default behavior will work best for most use cases, as no time will be wasted re-downloading files that have been previously prefilled.
-
-Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the specified product.  This flag may be useful for diagnostics, or benchmarking network performance.
-
-### --no-ansi 
-Application output will be in plain text, rather than using the visually appealing colors and progress bars.  Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.
-
-## clear-cache
-Deletes temporary cache files stored in the `/Cache` directory.  
-These files are cached in order to dramatically speed up future `prefill` runs (in some cases 3X faster),
-however in some cases this disk cache can potentially take up a non-trivial amount of storage (~1gb).  
-
-<img src="docs/img/Clear-Cache.png" width="630" alt="Clear cache command">
-
-These cache files will also build up over time, as newer versions of games are released, leaving unused cache data behind that will never be used again.
-
-In the case that you would like to save disk space without having to constantly clear the cache, 
-running `prefill` with the `--nocache` flag specified will prevent the cache files from being written in the first place.
-
-### -y|--yes
-Skips the prompt asking to clear the cache, and immediately begins clearing the cache.
+> **Note**
+> Detailed command documentation has been moved to the wiki : [Detailed Command Usage](https://tpill90.github.io/battlenet-lancache-prefill/detailed-command-usage/Prefill/)
 
 # Updating
 **BattleNetPrefill** will automatically check for updates, and notify you when an update is available :
@@ -164,7 +135,7 @@ If you are running into any issues, feel free to open up a Github issue on this 
 You can also find us at the [**LanCache.NET** Discord](https://discord.com/invite/BKnBS4u), in the `#battlenet-prefill` channel.
 
 # Additional Documentation
-* [Developer's guide](/docs/Development.md)
+*  Interested in compiling the project from source?  See [Development Setup Guide](https://tpill90.github.io/battlenet-lancache-prefill/dev-guides/Compiling-from-source/)
 
 # External Docs
 * https://wowdev.wiki/TACT

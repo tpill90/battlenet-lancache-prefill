@@ -1,0 +1,20 @@
+name: deploy-documentation
+run-name: "Deploy Documentation"
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: >
+          cd docs;
+          pip install mkdocs mkdocs-awesome-pages-plugin mkdocs-static-i18n mkdocs-macros-plugin;
+          mkdocs gh-deploy --force --strict;
