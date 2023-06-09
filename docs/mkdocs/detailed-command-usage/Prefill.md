@@ -1,5 +1,7 @@
 # prefill
 
+<!-- The cast still shows the text "logging into steam"  remove this. -->
+
 <div data-cli-player="../casts/prefill.cast" data-rows=13></div>
 <br>
 
