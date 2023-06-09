@@ -16,13 +16,13 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p wow_classic --force"
     },
-    "Prefill Diablo 4": {
+    "Prefill W3": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p fenris --force"
+      "commandLineArgs": "prefill -p w3 --force"
     },
     "Prefill Blizzard": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --blizzard --force"
+      "commandLineArgs": "prefill --blizzard "
     },
     "Select Apps": {
       "commandName": "Project",
