@@ -13,7 +13,9 @@ extra_javascript:
 # Defines global variables that can be used by templates
 extra:
   prefillName: BattleNetPrefill
-  gamingServiceName: BattleNet
+  gaming_service_name: BattleNet
+  repo_name: battlenet-lancache-prefill
+  cache_trigger_domain: level3.blizzard.com
 
 theme:
   name: readthedocs
