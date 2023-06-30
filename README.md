@@ -34,17 +34,17 @@ Automatically fills a [Lancache](https://lancache.net/) with games from Battle.n
 
 Detailed setup guides are available for the following platforms:
 
-<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Linux-Setup-Guide/">
-    <img src="docs/img/platforms/linux.png" height="80px" title="Linux" alt="Linux" />
-</a> &nbsp; &nbsp; &nbsp;
-<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Docker-Setup-Guide/">
-    <img src="docs/img/platforms/docker.webp" height="80px" title="Docker" alt="Docker" />
-</a> &nbsp; &nbsp; &nbsp;
-<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Unraid-Setup-Guide/">
-    <img src="docs/img/platforms/unraid.png" height="80px" title="unRAID" alt="unRAID" />
-</a> &nbsp; &nbsp; &nbsp;
-<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Windows-Setup-Guide/">
-    <img src="docs/img/platforms/windows.png" height="60px" title="Windows" alt="Windows" />
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Linux-Setup-Guide">
+    <img src="/docs/img/badges/linux-setup-badge.svg" height="32px" title="Linux" alt="Linux" />
+</a> &nbsp; 
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Docker-Setup-Guide">
+    <img src="/docs/img/badges/docker-setup-badge.svg" height="32px" title="Docker" alt="Docker" />
+</a> &nbsp; 
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Unraid-Setup-Guide">
+    <img src="/docs/img/badges/unraid-setup-badge.svg" height="32px" title="unRAID" alt="unRAID" />
+</a> &nbsp; 
+<a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Windows-Setup-Guide">
+    <img src="/docs/img/badges/windows-setup-badge.svg" height="32px" title="Windows" alt="Windows" />
 </a>
 
 </br>
