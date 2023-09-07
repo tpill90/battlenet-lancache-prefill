@@ -1,33 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http;
-using BattleNetPrefill;
-using BattleNetPrefill.Handlers;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Utils.Debug;
-using BattleNetPrefill.Web;
-using Spectre.Console;
-using static LancachePrefill.Common.SpectreFormatters;
-
-namespace LogFileGenerator
+﻿namespace LogFileGenerator
 {
+    //TODO battlenet needs to be running in order for this to work
     public static class Program
     {
-        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console));
+        private static readonly CdnRequestManager CdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console);
+        private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(CdnRequestManager);
 
-        private static string RootInstallDir = @"D:\BattleNet";
-        private static readonly string BnetInstallerPath = @"C:\Users\Tim\Dropbox\Programming\ThirdParty Repos\Battle.Net-Installer\BNetInstaller\bin\Release\net6.0\BNetInstaller.exe";
+        private static string RootInstallDir = @"C:\BattleNet";
+        private static readonly string BnetInstallerPath = Path.Combine(Path.GetTempPath(), "BattleNet-Installer.exe");
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.Hearthstone, TactProduct.CodBOCW
+            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };
 
-        private static List<TactProduct> ProductsToCheck = new List<TactProduct> { TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2,
-                                                                                    TactProduct.WorldOfWarcraft, TactProduct.WowClassic };
+        private static List<TactProduct> ProductsToCheck = new List<TactProduct> 
+        { 
+        };
 
         public static void Main()
         {
@@ -94,13 +83,15 @@ namespace LogFileGenerator
         {
             var downloadUrl = "https://github.com/barncastle/Battle.Net-Installer/releases/download/v1.6/BNetInstaller.exe";
 
-            if (!File.Exists(BnetInstallerPath))
+            if (File.Exists(BnetInstallerPath))
             {
-                var httpClient = new HttpClient();
-                var responseStream = httpClient.GetStreamAsync(downloadUrl).Result;
-                using var fileStream = new FileStream(BnetInstallerPath, FileMode.Create);
-                responseStream.CopyTo(fileStream);
+                return;
             }
+
+            using var httpClient = new HttpClient();
+            using var responseStream = httpClient.GetStreamAsync(downloadUrl).Result;
+            using var fileStream = new FileStream(BnetInstallerPath, FileMode.Create);
+            responseStream.CopyTo(fileStream);
         }
 
         private static void InstallProduct(TactProduct product)
@@ -139,7 +130,7 @@ namespace LogFileGenerator
             VersionsEntry cdnVersion = ConfigFileHandler.GetLatestVersionEntryAsync(product).Result;
             var logFilePath = $@"{logFileFolder}\{cdnVersion.versionsName}.log";
             // Copying the logs down
-            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/nvme0n1/lancache/logs/access.log ""{logFilePath}""")
+            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/cache/lancache/logs/access.log ""{logFilePath}""")
             {
                 UseShellExecute = false
             };

@@ -27,6 +27,7 @@
 
         public static readonly string UserSelectedAppsPath = Path.Combine(ConfigDir, "selectedAppsToPrefill.json");
 
+        //TODO refactor this
         public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
         private static bool _compareAgainstRealRequests;
 
@@ -38,6 +39,8 @@
 
 
         public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
+
+        #region Debugging Settings
 
         /// <summary>
         /// If set to true, will skip making any non-required requests, and instead record them to later be compared against for accuracy.
@@ -61,5 +64,7 @@
                 SkipDownloads = true;
             }
         }
+
+        #endregion
     }
 }

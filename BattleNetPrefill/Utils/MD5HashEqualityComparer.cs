@@ -1,12 +1,12 @@
 ﻿namespace BattleNetPrefill.Utils
 {
-    public class Md5HashEqualityComparer : IEqualityComparer<MD5Hash>
+    public sealed class Md5HashEqualityComparer : IEqualityComparer<MD5Hash>
     {
-        private static Md5HashEqualityComparer instance;
+        private static Md5HashEqualityComparer _instance;
 
         private Md5HashEqualityComparer() { }
 
-        public static Md5HashEqualityComparer Instance => instance ??= new Md5HashEqualityComparer();
+        public static Md5HashEqualityComparer Instance => _instance ??= new Md5HashEqualityComparer();
 
         public bool Equals(MD5Hash x, MD5Hash y)
         {

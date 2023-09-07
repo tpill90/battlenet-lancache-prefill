@@ -1,9 +1,10 @@
 ﻿namespace BattleNetPrefill.Utils.Debug.Models
 {
+    //TODO probably shouldnt be in debug namespace
     /// <summary>
     /// Model that represents a request that could be made to a CDN.  
     /// </summary>
-    public class Request
+    public sealed class Request
     {
         public Request()
         {
@@ -46,6 +47,7 @@
         public long LowerByteRange { get; set; }
         public long UpperByteRange { get; set; }
 
+        //TODO this name kind of sucks
         public bool WriteToDevNull { get; set; }
 
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes

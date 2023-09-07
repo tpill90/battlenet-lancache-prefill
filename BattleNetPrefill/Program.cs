@@ -44,7 +44,7 @@
             // Have to skip the first argument, since its the path to the executable
             var args = Environment.GetCommandLineArgs().Skip(1).ToList();
 
-            // Enables SteamKit2 debugging as well as SteamPrefill verbose logs
+            // TODO comment
             if (args.Any(e => e.Contains("--compare-requests")))
             {
                 AnsiConsole.Console.LogMarkupLine($"Using {LightYellow("--compare-requests")} flag.  Running comparison logic...");
@@ -53,12 +53,19 @@
                 args.Remove("--compare-requests");
             }
 
-            // Will skip over downloading logic.  Will only download manifests
+            // Will skip over downloading logic.  Will only download manifests and compute files to be downloaded
             if (args.Any(e => e.Contains("--no-download")))
             {
                 AnsiConsole.Console.LogMarkupLine($"Using {LightYellow("--no-download")} flag.  Will skip downloading chunks...");
                 AppConfig.SkipDownloads = true;
                 args.Remove("--no-download");
+            }
+
+            // Adding some formatting to logging to make it more readable + clear that these flags are enabled
+            if (AppConfig.CompareAgainstRealRequests || AppConfig.SkipDownloads)
+            {
+                AnsiConsole.Console.WriteLine();
+                AnsiConsole.Console.Write(new Rule());
             }
 
             return args;

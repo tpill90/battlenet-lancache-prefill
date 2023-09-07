@@ -1,6 +1,6 @@
 ﻿namespace BattleNetPrefill.Utils.Debug
 {
-    public class ComparisonUtil
+    public sealed class ComparisonUtil
     {
         string _blizzardCdnBaseUri = "http://level3.blizzard.com";
 

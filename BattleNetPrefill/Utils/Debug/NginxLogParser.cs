@@ -45,6 +45,7 @@
             throw new FileNotFoundException($"Unable to find replay logs for {product.DisplayName}");
         }
 
+        //TODO should write unit tests for some of this
         private static List<Request> ParseRequestLogs(string[] rawRequests)
         {
             var parsedRequests = new List<Request>();
@@ -61,6 +62,10 @@
                     continue;
                 }
                 if (rawRequest.Contains("tpr/catalogs"))
+                {
+                    continue;
+                }
+                if (rawRequest.Contains("heartbeat"))
                 {
                     continue;
                 }

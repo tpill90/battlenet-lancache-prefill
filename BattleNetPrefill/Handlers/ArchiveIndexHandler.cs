@@ -1,18 +1,19 @@
 ﻿namespace BattleNetPrefill.Handlers
 {
+    // TODO document what this class does
     /// <summary>
     /// https://wowdev.wiki/TACT#Archive_Indexes_.28.index.29
     /// </summary>
-    public class ArchiveIndexHandler
+    public sealed class ArchiveIndexHandler
     {
-        private readonly CdnRequestManager _cdnRequestManager;
-        private readonly TactProduct _targetProduct;
-
         private const int CHUNK_SIZE = 4096;
 
         // Archives are built out using multiple dictionaries, since in some cases the large number of entries (possibly 3 million) causes performance issues
         // with C#'s Dictionary class.  Building them out in parallel, then doing multiple lookups ends up being faster than having a single Dictionary.
         private readonly List<Dictionary<MD5Hash, ArchiveIndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, ArchiveIndexEntry>>();
+
+        private readonly CdnRequestManager _cdnRequestManager;
+        private readonly TactProduct _targetProduct;
 
         public ArchiveIndexHandler(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
@@ -58,6 +59,7 @@
 
             int sliceAmount = (int)Math.Ceiling((double)cdnConfig.archives.Length / maxTasks);
 
+            // TODO rewrite this
             for (int i = 0; i < maxTasks; i++)
             {
                 var lowerLimit = (i * sliceAmount);

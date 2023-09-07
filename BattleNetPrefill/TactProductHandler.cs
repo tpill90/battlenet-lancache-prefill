@@ -68,9 +68,10 @@
             if (!_forcePrefill && IsProductUpToDate(product, targetVersion.Value))
             {
                 _prefillSummaryResult.AlreadyUpToDate++;
+                _ansiConsole.Write("\n");
                 return null;
             }
-            _ansiConsole.Write("\n");
+            
 
             await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
