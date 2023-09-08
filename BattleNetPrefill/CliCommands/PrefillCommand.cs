@@ -24,6 +24,13 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(NullableBoolConverter))]
         public bool? NoLocalCache { get; init; }
 
+        [CommandOption("verbose", Description = "Produces more detailed log output. Will output logs for games are already up to date.", Converter = typeof(NullableBoolConverter))]
+        public bool? Verbose
+        {
+            get => AppConfig.VerboseLogs;
+            init => AppConfig.VerboseLogs = value ?? default(bool);
+        }
+
         [CommandOption("force", shortName: 'f',
             Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.",
             Converter = typeof(NullableBoolConverter))]

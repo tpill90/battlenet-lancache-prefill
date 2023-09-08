@@ -114,6 +114,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LancachePrefill.Common\LancachePrefill.Common.csproj" />
+    <ProjectReference Include="..\LancachePrefill.Common\dotnet\LancachePrefill.Common.csproj" />
   </ItemGroup>
 </Project>
