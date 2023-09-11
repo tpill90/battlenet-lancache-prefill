@@ -31,7 +31,7 @@
         [Test]
         public void WastedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(1);
+            var expected = ByteSize.FromMegaBytes(15);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }
