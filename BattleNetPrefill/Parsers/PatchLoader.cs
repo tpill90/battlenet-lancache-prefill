@@ -14,7 +14,7 @@
             // For whatever reason, these products do not actually make this request
             var patchConfigExclusions = new List<TactProduct>
             {
-                TactProduct.CodVanguard, TactProduct.CodWarzone, TactProduct.CodBOCW, TactProduct.Hearthstone,
+                TactProduct.CodVanguard, TactProduct.CodModernWarfare, TactProduct.CodBOCW, TactProduct.Hearthstone,
                 TactProduct.BlizzardArcadeCollection
             };
             if (buildConfig.patchConfig != null && !patchConfigExclusions.Contains(targetProduct))

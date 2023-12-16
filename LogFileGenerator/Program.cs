@@ -11,11 +11,12 @@
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
+            TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };
 
         private static List<TactProduct> ProductsToCheck = new List<TactProduct> 
-        { 
+        {
+            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };
 
         public static void Main()
@@ -72,7 +73,7 @@
         {
             var info = new ProcessStartInfo("ssh")
             {
-                Arguments = "-t tim@192.168.1.222 pwsh -f ./scripts/lancache/Empty-Logs.ps1",
+                Arguments = "-t tim@192.168.1.222 bash ./scripts/lancache/Empty-LancacheLogs.sh",
                 UseShellExecute = false
             };
             var process = Process.Start(info);

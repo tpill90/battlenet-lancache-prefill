@@ -12,11 +12,13 @@
         // with C#'s Dictionary class.  Building them out in parallel, then doing multiple lookups ends up being faster than having a single Dictionary.
         private readonly List<Dictionary<MD5Hash, ArchiveIndexEntry>> _indexDictionaries = new List<Dictionary<MD5Hash, ArchiveIndexEntry>>();
 
+        private readonly IAnsiConsole _ansiConsole;
         private readonly CdnRequestManager _cdnRequestManager;
         private readonly TactProduct _targetProduct;
 
-        public ArchiveIndexHandler(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
+        public ArchiveIndexHandler(IAnsiConsole ansiConsole, CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
+            _ansiConsole = ansiConsole;
             _cdnRequestManager = cdnRequestManager;
             _targetProduct = targetProduct;
         }
@@ -41,11 +43,17 @@
             return null;
         }
 
+        private int _processedArchivesCount;
+        private StatusContext _statusContext;
+
+
         /// <summary>
         /// Downloads all archive indexes, and builds the archive index lookup dictionary for the specified product.
         /// </summary>
-        public async Task BuildArchiveIndexesAsync(CDNConfigFile cdnConfig)
+        public async Task BuildArchiveIndexesAsync(CDNConfigFile cdnConfig, StatusContext ctx)
         {
+            _statusContext = ctx;
+
             // This default performs well for most TactProducts.
             int maxTasks = 3;
             // Overwatch's indexes parse significantly faster when increasing the concurrency.
@@ -53,6 +61,7 @@
             {
                 maxTasks = 6;
             }
+            _ansiConsole.LogMarkupVerbose($"Building archive indexes with {LightYellow(maxTasks)} parallel jobs");
 
             // Building the archive index dictionaries in parallel.  Slicing up the work across multiple tasks.
             var tasks = new List<Task<Dictionary<MD5Hash, ArchiveIndexEntry>>>();
@@ -114,6 +123,9 @@
                         stream.Position += remaining;
                     }
                 }
+
+                _processedArchivesCount++;
+                _statusContext.Status($"Building Archive Indexes...  ({_processedArchivesCount} of {cdnConfig.archives.Length})");
             }
 
             return indexDictionary;

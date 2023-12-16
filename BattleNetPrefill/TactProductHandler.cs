@@ -43,9 +43,6 @@
         /// <summary>
         /// Downloads a specified game, in the same manner that Battle.net does.  Should be used to pre-fill a LanCache with game data from Blizzard's CDN.
         /// </summary>
-        /// <param name="skipDiskCache">If set to true, then no cache files will be written to disk.  Every run will re-request the required files</param>
-        /// <param name="forcePrefill">By default, a product will be skipped if it has already prefilled the latest product version.
-        ///                             Setting this to true will force a prefill regardless of previous runs.</param>
         public async Task<ComparisonResult> ProcessProductAsync(TactProduct product)
         {
             _ansiConsole.LogMarkupLine($"Starting {Cyan(product.DisplayName)}");
@@ -57,7 +54,7 @@
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
-            var archiveIndexHandler = new ArchiveIndexHandler(cdnRequestManager, product);
+            var archiveIndexHandler = new ArchiveIndexHandler(_ansiConsole, cdnRequestManager, product);
             var patchLoader = new PatchLoader(cdnRequestManager);
             await cdnRequestManager.InitializeAsync(product);
 
@@ -72,7 +69,6 @@
                 return null;
             }
             
-
             await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
@@ -81,7 +77,7 @@
                 CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");
-                await Task.WhenAll(archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig),
+                await Task.WhenAll(archiveIndexHandler.BuildArchiveIndexesAsync(cdnConfig, ctx),
                                     downloadFileHandler.ParseDownloadFileAsync(buildConfig));
 
                 // Start processing to determine which files need to be downloaded

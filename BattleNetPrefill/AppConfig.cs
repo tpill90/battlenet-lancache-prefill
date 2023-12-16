@@ -27,20 +27,33 @@
 
         public static readonly string UserSelectedAppsPath = Path.Combine(ConfigDir, "selectedAppsToPrefill.json");
 
-        //TODO refactor this
-        public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
-        private static bool _compareAgainstRealRequests;
+        //TODO comment
+        private static bool _verboseLogs;
+        public static bool VerboseLogs
+        {
+            get => _verboseLogs;
+            set
+            {
+                _verboseLogs = value;
+                AnsiConsoleExtensions.WriteVerboseLogs = value;
+            }
+        }
 
         /// <summary>
         /// Global retry policy that will wait increasingly longer periods after a failed request
         /// </summary>
         public static AsyncRetryPolicy RetryPolicy => Policy.Handle<Exception>()
-                                                            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt));
+                                                            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(2 * (retryAttempt + 1)));
 
 
         public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
 
         #region Debugging Settings
+
+        private static bool _compareAgainstRealRequests;
+
+        //TODO comment
+        public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
 
         /// <summary>
         /// If set to true, will skip making any non-required requests, and instead record them to later be compared against for accuracy.

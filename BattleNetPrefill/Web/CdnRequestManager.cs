@@ -102,7 +102,6 @@
         /// In the case of any failed downloads, the failed downloads will be retried up to 3 times.  If the downloads fail 3 times, then
         /// false will be returned
         /// </summary>
-        /// <param name="ansiConsole"></param>
         /// <returns>True if all downloads succeeded.  False if downloads failed 3 times.</returns>
         public async Task<bool> DownloadQueuedRequestsAsync()
         {
@@ -121,6 +120,7 @@
             var failedRequests = new ConcurrentBag<Request>();
             await _ansiConsole.CreateSpectreProgress(AppConfig.TransferSpeedUnit).StartAsync(async ctx =>
             {
+                //TODO can probably cleanup this attempt 3 times logic since there is the polly stuff in place now.
                 // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
 
@@ -246,7 +246,7 @@
             responseMessage.EnsureSuccessStatusCode();
             if (writeToDevNull)
             {
-                byte[] buffer = ArrayPool<byte>.Shared.Rent(524_288);
+                byte[] buffer = new byte[4096];
                 var totalBytesRead = 0;
                 try
                 {
@@ -256,7 +256,6 @@
                         var read = await responseStream.ReadAsync(buffer, 0, buffer.Length);
                         if (read == 0)
                         {
-                            ArrayPool<byte>.Shared.Return(buffer);
                             return null;
                         }
                         task.Increment(read);
@@ -265,7 +264,6 @@
                 }
                 catch (Exception)
                 {
-                    ArrayPool<byte>.Shared.Return(buffer);
                     // Making sure that the current request is marked as "complete" in the progress bar, otherwise the progress bar will never hit 100%
                     task.Increment(request.TotalBytes - totalBytesRead);
                     throw;
