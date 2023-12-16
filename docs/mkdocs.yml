@@ -36,12 +36,17 @@ markdown_extensions:
       permalink: True
   - tables
 
-# https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins
+# https://github.com/mkdocs/catalog
 plugins:
+  # Fails the build if any of the external or internal links 404
+  # See for more info : https://github.com/manuzhang/mkdocs-htmlproofer-plugin
+  - htmlproofer:
+      enabled: !ENV [ENABLED_HTMLPROOFER, False]
+      validate_external_urls: True
+      raise_error: True
   # https://github.com/lukasgeiter/mkdocs-awesome-pages-plugin
   - awesome-pages:
       strict: true
-      
   # https://github.com/ultrabug/mkdocs-static-i18n
   # Icons taken from - https://github.com/lipis/flag-icons
   - i18n:
@@ -54,11 +59,8 @@ plugins:
         gr:
           name: Ελληνικά
           build: true
-  # Allows global variables 
+  # Allows global variables - https://github.com/fralau/mkdocs_macros_plugin
   - macros
-  
-  # https://github.com/oprypin/mkdocs-section-index
-  #TODO look into this in the future - section-index
 
 nav:
   - Welcome: index.md
