@@ -6,7 +6,7 @@
     ///
     /// A complete list can be found at : https://blizztrack.com/
     /// </summary>
-    public class TactProduct : EnumBase<TactProduct>
+    public sealed class TactProduct : EnumBase<TactProduct>
     {
         #region Blizzard
 
@@ -66,9 +66,9 @@
             DefaultTags = new[] { "enUS", "acct-DEU", "cp", "mp", "zm", "zm2" },
             IsActivision = true
         };
-        public static readonly TactProduct CodWarzone = new TactProduct("odin") { DisplayName = "Call of Duty: Warzone", IsActivision = true };
+        public static readonly TactProduct CodModernWarfare = new TactProduct("odin") { DisplayName = "Call of Duty: Modern Warfare 2019", IsActivision = true };
 
-        public static readonly TactProduct CodMW2 = new TactProduct("auks") { DisplayName = "Call of Duty: Modern Warfare 2", IsActivision = true };
+        public static readonly TactProduct CallOfDuty = new TactProduct("auks") { DisplayName = "Call of Duty", IsActivision = true };
         public static readonly TactProduct CodMW2Remastered = new TactProduct("lazr") { DisplayName = "Call of Duty: MW2 Remastered", IsActivision = true };
         public static readonly TactProduct CodVanguard = new TactProduct("fore") { DisplayName = "Call of Duty: Vanguard", IsActivision = true };
 
