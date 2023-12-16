@@ -3,6 +3,15 @@ root = true
 [*]
 end_of_line = lf
 
+[*.js]
+indent_style = tab
+tab_size = 4
+curly_bracket_next_line = true
+
+[*.py]
+indent_style = tab
+tab_size = 4
+
 # .NET formatting rules.  See https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules
 # Resharper Rules. See https://www.jetbrains.com/help/resharper/EditorConfig_Index.html
 [*.cs]
@@ -41,6 +50,7 @@ dotnet_diagnostic.CA1056.severity = none
 dotnet_diagnostic.CA1062.severity = none
 # CA1305: The behavior of 'int.Parse(string)' could vary based on the current user's locale settings.
 dotnet_diagnostic.CA1305.severity = none
+# CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1307.severity = none
 dotnet_diagnostic.CA1310.severity = none
 # CA1815: Override equals and operator equals on value types
@@ -48,6 +58,15 @@ dotnet_diagnostic.CA1815.severity = none
 # CA1822: Member does not access instance data and can be marked as static
 dotnet_diagnostic.CA1822.severity = none
 dotnet_diagnostic.CA1835.severity = none
+
+# CA1854: Prefer the IDictionary.TryGetValue(TKey, out TValue) method
+# - I'm not worried about performance in this application where ContainsKey() is being used, and I like the current syntax as far as readability
+dotnet_diagnostic.CA1854.severity = none
+
+# CA1860: Avoid using 'Enumerable.Any()' extension method, both for clarity and performance 
+# - I don't agree with this analyzer, using Any() is far more readable than comparing Count == 0, and has been a pattern in dotnet for more than a decade
+dotnet_diagnostic.CA1860.severity = none
+
 # CA2007: Consider calling ConfigureAwait on the awaited task
 dotnet_diagnostic.CA2007.severity = none
 # CA2201: Do not raise reserved exception types
@@ -66,3 +85,4 @@ dotnet_diagnostic.rs0030.severity = error
 
 # The method does not need to use async/await - Introduces annoying 'return' statements for async methods, that hurt code readability.
 dotnet_diagnostic.AsyncFixer01.severity = none
+

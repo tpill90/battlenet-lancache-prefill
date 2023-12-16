@@ -1,7 +1,9 @@
 ﻿namespace BattleNetPrefill.Parsers
 {
+    [SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments", Justification = "Performance isn't an issue here, and implementing this warning's suggestion will impact readability negatively.")]
     public static class CdnsFileParser
     {
+
         public static async Task<CdnsFile> ParseCdnsFileAsync(CdnRequestManager cdnRequestManager, TactProduct targetProduct)
         {
             string content = await cdnRequestManager.MakePatchRequestAsync(targetProduct, PatchRequest.cdns);

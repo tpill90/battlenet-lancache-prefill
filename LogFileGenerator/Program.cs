@@ -14,7 +14,7 @@
             TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };
 
-        private static List<TactProduct> ProductsToCheck = new List<TactProduct> 
+        private static List<TactProduct> ProductsToCheck = new List<TactProduct>
         {
             TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };

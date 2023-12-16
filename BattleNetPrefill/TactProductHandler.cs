@@ -68,7 +68,7 @@
                 _ansiConsole.Write("\n");
                 return null;
             }
-            
+
             await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
