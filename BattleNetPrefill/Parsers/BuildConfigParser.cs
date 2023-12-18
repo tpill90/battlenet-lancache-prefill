@@ -154,10 +154,12 @@
                     case "build-stream":
                     case "build-has-data":
                     case "build-target-platform":
+                    case "build-type":
+                    case "build-timestamp":
                         // Purposefully doing nothing with these.  Don't care about these values.
                         break;
                     default:
-                        AnsiConsole.WriteLine($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
+                        AnsiConsole.Console.LogMarkupVerbose($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
                         buildConfig.UnknownKeyPairs.Add(cols[0], cols[1]);
                         break;
                 }
