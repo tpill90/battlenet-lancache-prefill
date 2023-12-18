@@ -85,10 +85,7 @@
                         continue;
                     }
 
-                    if (!indexDict.ContainsKey(headerHash))
-                    {
-                        indexDict.Add(headerHash, indexEntry);
-                    }
+                    indexDict.TryAdd(headerHash, indexEntry);
                 }
 
                 bin.ReadBytes(blockPadding);

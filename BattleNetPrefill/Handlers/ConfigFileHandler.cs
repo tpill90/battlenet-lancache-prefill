@@ -14,12 +14,12 @@
             var cdnConfig = new CDNConfigFile();
 
             var content = Encoding.UTF8.GetString(await _cdnRequestManager.GetRequestAsBytesAsync(RootFolder.config, targetVersion.cdnConfig));
-            var cdnConfigLines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var cdnConfigLines = content.Split("\n", StringSplitOptions.RemoveEmptyEntries);
 
             for (var i = 0; i < cdnConfigLines.Length; i++)
             {
-                if (cdnConfigLines[i].StartsWith("#") || cdnConfigLines[i].Length == 0) { continue; }
-                var cols = cdnConfigLines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
+                if (cdnConfigLines[i].StartsWith('#') || cdnConfigLines[i].Length == 0) { continue; }
+                var cols = cdnConfigLines[i].Split(" = ", StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
                     case "archives":
@@ -91,8 +91,7 @@
             var versions = new VersionsFile();
             string content = await _cdnRequestManager.MakePatchRequestAsync(tactProduct, PatchRequest.versions);
 
-            var lines = content.Replace("\0", "")
-                               .Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = content.Replace("\0", "").Split("\n", StringSplitOptions.RemoveEmptyEntries);
 
             var lineList = new List<string>();
 

@@ -2,7 +2,7 @@
   "profiles": {
     "Prefill Blizzard - No Cache - No Download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 --force"
+      "commandLineArgs": "prefill --blizzard --no-download --force"
     },
     "Prefill Games used for testing": {
       "commandName": "Project",

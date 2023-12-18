@@ -13,15 +13,15 @@
                 throw new Exception("Error reading build config!");
             }
 
-            var lines = content.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = content.Split("\n", StringSplitOptions.RemoveEmptyEntries);
             for (var i = 0; i < lines.Length; i++)
             {
-                if (lines[i].StartsWith("#") || lines[i].Length == 0)
+                if (lines[i].StartsWith('#') || lines[i].Length == 0)
                 {
                     continue;
                 }
 
-                var cols = lines[i].Split(new string[] { " = " }, StringSplitOptions.RemoveEmptyEntries);
+                var cols = lines[i].Split(" = ", StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
                     case "root":
