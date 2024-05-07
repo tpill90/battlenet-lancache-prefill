@@ -80,7 +80,10 @@
             bin.ReadByte();
 
             install.hashSize = bin.ReadByte();
-            if (install.hashSize != 16) throw new Exception("Unsupported install hash size!");
+            if (install.hashSize != 16)
+            {
+                throw new Exception("Unsupported install hash size!");
+            }
 
             install.numTags = bin.ReadUInt16BigEndian();
             install.numEntries = bin.ReadUInt32BigEndian();
@@ -97,7 +100,9 @@
                 var filebits = bin.ReadBytes(bytesPerTag);
 
                 for (int j = 0; j < bytesPerTag; j++)
+                {
                     filebits[j] = (byte)((filebits[j] * 0x0202020202 & 0x010884422010) % 1023);
+                }
 
                 install.tags[i].files = new BitArray(filebits);
             }

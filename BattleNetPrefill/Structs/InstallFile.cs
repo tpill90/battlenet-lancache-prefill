@@ -9,17 +9,17 @@
     public struct InstallFile
     {
         /// <summary>
-        /// Size of hashes used for files (usually md5 -> 16) 
+        /// Size of hashes used for files (usually md5 -> 16)
         /// </summary>
         public byte hashSize;
 
         /// <summary>
-        /// Number of tags in header of file 
+        /// Number of tags in header of file
         /// </summary>
         public ushort numTags;
 
         /// <summary>
-        /// The number of entries in the body of the file 
+        /// The number of entries in the body of the file
         /// </summary>
         public uint numEntries;
 
@@ -33,7 +33,7 @@
         public ushort type;
 
         /// <summary>
-        /// A bitfield that lists which files are installed when the specified tag is installed. 
+        /// A bitfield that lists which files are installed when the specified tag is installed.
         /// </summary>
         public BitArray files;
     }

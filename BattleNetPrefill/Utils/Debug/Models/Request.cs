@@ -1,6 +1,6 @@
 ﻿namespace BattleNetPrefill.Utils.Debug.Models
 {
-    //TODO probably shouldnt be in debug namespace
+    //TODO probably shouldn't be in debug namespace
     /// <summary>
     /// Model that represents a request that could be made to a CDN.  
     /// </summary>

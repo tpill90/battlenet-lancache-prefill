@@ -11,21 +11,9 @@
             using BinaryReader bin = new BinaryReader(new MemoryStream(indexContent));
             bin.BaseStream.Position = bin.BaseStream.Length - 28;
 
-            var footer = new IndexFooter
-            {
-                tocHash = bin.ReadBytes(8),
-                version = bin.ReadByte(),
-                unk0 = bin.ReadByte(),
-                unk1 = bin.ReadByte(),
-                blockSizeKB = bin.ReadByte(),
-                offsetBytes = bin.ReadByte(),
-                sizeBytes = bin.ReadByte(),
-                keySizeInBytes = bin.ReadByte(),
-                checksumSize = bin.ReadByte(),
-                numElements = bin.ReadUInt32()
-            };
-
-            footer.footerChecksum = bin.ReadBytes(footer.checksumSize);
+            var footer = bin.Read<IndexFooter>();
+            // Skipping footer checksum
+            bin.ReadBytes(footer.checksumSize);
 
             if ((footer.numElements & 0xff000000) != 0)
             {
@@ -60,10 +48,6 @@
                     {
                         indexEntry.size = bin.ReadUInt32BigEndian();
                     }
-                    else
-                    {
-                        throw new NotImplementedException("Index size reading other than 4 is not implemented!");
-                    }
 
                     if (footer.offsetBytes == 4)
                     {
@@ -74,10 +58,6 @@
                     {
                         // Group index
                         throw new NotImplementedException("Group index reading is not implemented!");
-                    }
-                    else
-                    {
-                        // File index
                     }
 
                     if (indexEntry.size == 0)

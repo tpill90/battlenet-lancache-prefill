@@ -5,9 +5,6 @@
         public string hashId;
         public MD5Hash hashIdMd5;
 
-        // Not sure what this means right now
-        public int archiveIndexSize;
-
         public override string ToString()
         {
             return $"{hashId}";
@@ -32,6 +29,8 @@
         }
     }
 
+    // These fields are all "used" because we're reading the entire struct directly from the stream
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     public struct ArchiveIndexFooter
     {
         public byte version;

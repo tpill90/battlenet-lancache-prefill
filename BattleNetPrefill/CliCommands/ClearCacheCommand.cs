@@ -16,7 +16,7 @@ namespace BattleNetPrefill.CliCommands
 
             // Scanning the cache directory to see how much space could be saved
             List<FileInfo> cacheFolderContents = null;
-            ansiConsole.StatusSpinner().Start($"Scanning {Cyan("Cache")} directory...", ctx =>
+            ansiConsole.StatusSpinner().Start($"Scanning {Cyan("Cache")} directory...", _ =>
             {
                 var directoryInfo = new DirectoryInfo(AppConfig.CacheDir);
                 cacheFolderContents = directoryInfo.EnumerateFiles("*.*", SearchOption.AllDirectories).ToList();
@@ -45,7 +45,7 @@ namespace BattleNetPrefill.CliCommands
                 return default;
             }
 
-            ansiConsole.StatusSpinner().Start("Deleting cached files...", ctx =>
+            ansiConsole.StatusSpinner().Start("Deleting cached files...", _ =>
             {
                 Directory.Delete(AppConfig.CacheDir, true);
             });

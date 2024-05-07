@@ -39,6 +39,7 @@
             return other.lowPart == lowPart && other.highPart == highPart;
         }
 
+        // TODO benchmark this and see if it is actually faster.  Remove it otherwise
         public override string ToString()
         {
             return string.Create(32, (highPart, lowPart), static (dst, state) =>

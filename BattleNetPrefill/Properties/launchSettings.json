@@ -14,7 +14,7 @@
     },
     "Prefill Starcraft 1": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 --force"
+      "commandLineArgs": "prefill -p s1 s2 pro wow --no-download  --force"
     },
     "Prefill Overwatch": {
       "commandName": "Project",

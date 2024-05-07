@@ -2,7 +2,7 @@
 {
     public static class BuildConfigParser
     {
-        public static async Task<BuildConfigFile> GetBuildConfigAsync(VersionsEntry versionsEntry, CdnRequestManager cdnRequestManager, TactProduct targetProduct)
+        public static async Task<BuildConfigFile> GetBuildConfigAsync(VersionsEntry versionsEntry, CdnRequestManager cdnRequestManager)
         {
             var buildConfig = new BuildConfigFile();
 
@@ -14,19 +14,16 @@
             }
 
             var lines = content.Split("\n", StringSplitOptions.RemoveEmptyEntries);
-            for (var i = 0; i < lines.Length; i++)
+            foreach (var i in lines)
             {
-                if (lines[i].StartsWith('#') || lines[i].Length == 0)
+                if (i.StartsWith('#') || i.Length == 0)
                 {
                     continue;
                 }
 
-                var cols = lines[i].Split(" = ", StringSplitOptions.RemoveEmptyEntries);
+                var cols = i.Split(" = ", StringSplitOptions.RemoveEmptyEntries);
                 switch (cols[0])
                 {
-                    case "root":
-                        buildConfig.root = cols[1].ToMD5();
-                        break;
                     case "download":
                         buildConfig.download = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
                         break;
@@ -52,23 +49,8 @@
                             buildConfig.buildName = "UNKNOWN";
                         }
                         break;
-                    case "build-playbuild-installer":
-                        buildConfig.buildPlaybuildInstaller = cols[1];
-                        break;
-                    case "build-product":
-                        buildConfig.buildProduct = cols[1];
-                        break;
-                    case "build-token":
-                        buildConfig.buildToken = cols[1];
-                        break;
-                    case "build-uid":
-                        buildConfig.buildUid = cols[1];
-                        break;
                     case "patch":
                         buildConfig.patch = cols[1].ToMD5();
-                        break;
-                    case "patch-size":
-                        buildConfig.patchSize = cols[1];
                         break;
                     case "patch-config":
                         buildConfig.patchConfig = cols[1].ToMD5();
@@ -79,44 +61,13 @@
                     case "patch-index-size":
                         buildConfig.patchIndexSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
-                    case "build-branch": // Overwatch
-                        buildConfig.buildBranch = cols[1];
-                        break;
-                    case "build-num": // Agent
-                    case "build-number": // Overwatch
-                    case "build-version": // Catalog
-                        buildConfig.buildNumber = cols[1];
-                        break;
-                    case "build-attributes": // Agent
-                        buildConfig.buildAttributes = cols[1];
-                        break;
-                    case "build-comments": // D3
-                        buildConfig.buildComments = cols[1];
-                        break;
-                    case "build-creator": // D3
-                        buildConfig.buildCreator = cols[1];
-                        break;
-                    case "build-fixed-hash": // S2
-                        buildConfig.buildFixedHash = cols[1];
-                        break;
-                    case "build-replay-hash": // S2
-                        buildConfig.buildReplayHash = cols[1];
-                        break;
-                    case "build-t1-manifest-version":
-                        buildConfig.buildManifestVersion = cols[1];
-                        break;
                     case "install-size":
                         buildConfig.installSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
-                    case "download-size":
-                        buildConfig.downloadSize = cols[1].Split(' ');
-                        break;
                     case "build-partial-priority":
                     case "partial-priority":
-                        buildConfig.partialPriority = cols[1];
-                        break;
                     case "partial-priority-size":
-                        buildConfig.partialPrioritySize = cols[1];
+                        // Purposefully doing nothing with these.  Don't care about these values.
                         break;
                     case "vfs-root":
                         buildConfig.vfsRoot = cols[1].Split(' ').Select(e => e.ToMD5()).ToArray();
@@ -124,27 +75,27 @@
                     case "vfs-root-size":
                         buildConfig.vfsRootSize = cols[1].Split(' ').Select(e => Int32.Parse(e)).ToArray();
                         break;
+                    case "build-branch":
+                    case "build-num":
+                    case "build-number":
+                    case "build-version":
+                    case "build-attributes":
+                    case "build-comments":
+                    case "build-creator":
+                    case "build-fixed-hash":
+                    case "build-replay-hash":
+                    case "build-t1-manifest-version":
+                    case "build-playbuild-installer":
+                    case "build-product":
+                    case "build-token":
+                    case "build-uid":
                     case "build-base-content-release-manifest-file-id":
-                        buildConfig.buildBaseContentReleaseManifestFileId = cols[1];
-                        break;
                     case "build-base-content-release-manifest-hash":
-                        buildConfig.buildBaseContentReleaseManifestHash = cols[1];
-                        break;
                     case "build-content-release-manifest-file-id":
-                        buildConfig.buildContentReleaseManifestFileId = cols[1];
-                        break;
                     case "build-content-release-manifest-hash":
-                        buildConfig.buildContentReleaseManifestHash = cols[1];
-                        break;
                     case "build-release-name":
-                        buildConfig.buildReleaseName = cols[1];
-                        break;
                     case string a when Regex.IsMatch(a, "vfs-(\\d*)$"):
-                        buildConfig.vfs.Add(cols[0], cols[1]);
-                        break;
-                    case string a when Regex.IsMatch(a, "vfs-(\\d*)-size$"):
-                        buildConfig.vfsSize.Add(cols[0], cols[1]);
-                        break;
+                    case string b when Regex.IsMatch(b, "vfs-(\\d*)-size$"):
                     case "build-changelist":
                     case "build-data-branch":
                     case "build-data-revision":
@@ -156,7 +107,10 @@
                     case "build-target-platform":
                     case "build-type":
                     case "build-timestamp":
-                        // Purposefully doing nothing with these.  Don't care about these values.
+                    case "download-size":
+                    case "root":
+                    case "patch-size":
+                        // We don't use these fields anywhere, so we're purposefully doing nothing with these.
                         break;
                     default:
                         AnsiConsole.Console.LogMarkupVerbose($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");

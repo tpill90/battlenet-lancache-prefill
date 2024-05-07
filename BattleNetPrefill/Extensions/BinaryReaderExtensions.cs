@@ -32,17 +32,6 @@
             return BinaryPrimitives.ReadUInt32BigEndian(buffer);
         }
 
-        public static ulong ReadUInt40BigEndian(this BinaryReader reader)
-        {
-            ulong b1 = reader.ReadByte();
-            ulong b2 = reader.ReadByte();
-            ulong b3 = reader.ReadByte();
-            ulong b4 = reader.ReadByte();
-            ulong b5 = reader.ReadByte();
-
-            return b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5;
-        }
-
         /// <summary>
         /// Reads an <seealso cref="MD5Hash"/> using a shared buffer, to reduce required allocations.
         /// Caller is required to pass a buffer of the correct size, using <seealso cref="AllocateBuffer{T}"/>

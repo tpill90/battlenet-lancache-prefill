@@ -7,13 +7,9 @@
         /// </summary>
         public Archive[] archives;
 
-        public string archiveGroup;
 
         public MD5Hash[] patchArchives;
         public int[] patchArchivesIndexSize;
-        public string patchArchiveGroup;
-
-        public string[] builds;
 
         /// <summary>
         /// CDN Key for the "file" index.  Can be requested and parsed.
@@ -22,7 +18,6 @@
         /// used to download the file.
         /// </summary>
         public MD5Hash fileIndex;
-        public string fileIndexSize;
 
         public MD5Hash? patchFileIndex;
         public int patchFileIndexSize;

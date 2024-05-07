@@ -1,5 +1,8 @@
 ﻿namespace BattleNetPrefill.EncryptDecrypt
 {
+    /// <summary>
+    /// https://wowdev.wiki/BLTE
+    /// </summary>
     public static class BLTE
     {
         public static MemoryStream Parse(byte[] content)
@@ -13,50 +16,37 @@
                 throw new Exception("Not a BLTE file");
             }
 
-            BLTEChunkInfo[] chunkInfos;
+            uint blteSize = bin.ReadUInt32BigEndian();
+            byte[] bytes = bin.ReadBytes(4);
+            int chunkCount = bytes[1] << 16 | bytes[2] << 8 | bytes[3] << 0;
 
-            var blteSize = bin.ReadUInt32BigEndian();
-            if (blteSize == 0)
+            int supposedHeaderSize = 24 * chunkCount + 12;
+            if (supposedHeaderSize != blteSize)
             {
-                // These are always uncompressed
-                chunkInfos = new BLTEChunkInfo[1];
-                chunkInfos[0].isFullChunk = false;
-                chunkInfos[0].compSize = Convert.ToInt32(bin.BaseStream.Length - 8);
-                chunkInfos[0].decompSize = Convert.ToInt32(bin.BaseStream.Length - 8 - 1);
-                chunkInfos[0].checkSum = new byte[16];
+                throw new Exception("Invalid header size!");
             }
-            else
+            if (supposedHeaderSize > bin.BaseStream.Length)
             {
-                var bytes = bin.ReadBytes(4);
-                var chunkCount = bytes[1] << 16 | bytes[2] << 8 | bytes[3] << 0;
-
-                var supposedHeaderSize = 24 * chunkCount + 12;
-                if (supposedHeaderSize != blteSize)
-                {
-                    throw new Exception("Invalid header size!");
-                }
-                if (supposedHeaderSize > bin.BaseStream.Length)
-                {
-                    throw new Exception("Not enough data");
-                }
-
-                chunkInfos = new BLTEChunkInfo[chunkCount];
-                for (int i = 0; i < chunkCount; i++)
-                {
-                    chunkInfos[i].isFullChunk = true;
-                    chunkInfos[i].compSize = bin.ReadInt32BigEndian();
-                    chunkInfos[i].decompSize = bin.ReadInt32BigEndian();
-                    chunkInfos[i].checkSum = bin.ReadBytes(16);
-                }
+                throw new Exception("Not enough data");
             }
 
-            foreach (var chunk in chunkInfos)
+            var chunkCompressedSizes = new int[chunkCount];
+            for (int i = 0; i < chunkCount; i++)
             {
-                if (chunk.compSize > (bin.BaseStream.Length - bin.BaseStream.Position))
+                chunkCompressedSizes[i] = bin.ReadInt32BigEndian();
+                // Skipping decompressed size
+                bin.ReadInt32BigEndian();
+                // Skipping checksum
+                bin.ReadBytes(16);
+            }
+
+            foreach (var compressedSize in chunkCompressedSizes)
+            {
+                if (compressedSize > (bin.BaseStream.Length - bin.BaseStream.Position))
                 {
                     throw new Exception("Trying to read more than is available!");
                 }
-                HandleDataBlock(bin, chunk, resultStream);
+                HandleDataBlock(bin, compressedSize, resultStream);
             }
 
             // Reset the result stream, and hand it back to the caller
@@ -64,24 +54,24 @@
             return resultStream;
         }
 
-        private static void HandleDataBlock(BinaryReader bin, BLTEChunkInfo chunk, MemoryStream result)
+        private static void HandleDataBlock(BinaryReader bin, int compressedSize, MemoryStream result)
         {
             var chunkType = bin.ReadByte();
             switch (chunkType)
             {
                 case 0x4E: // N (no compression)
-                    bin.BaseStream.CopyStream(result, chunk.compSize - 1);
+                    bin.BaseStream.CopyStream(result, compressedSize - 1);
                     break;
                 case 0x5A: // Z (zlib, compressed)
-                    var buffer = bin.ReadBytes(chunk.compSize - 1);
-                    using (var stream = new MemoryStream(buffer, 3 - 1, chunk.compSize - 3 - 1))
+                    var buffer = bin.ReadBytes(compressedSize - 1);
+                    using (var stream = new MemoryStream(buffer, 3 - 1, compressedSize - 3 - 1))
                     using (var ds = new DeflateStream(stream, CompressionMode.Decompress))
                     {
                         ds.CopyTo(result);
                     }
                     break;
                 case 0x45: // E (encrypted)
-                    // Removed encryption from implementation, as it is not used by TACT alone.  
+                    // Removed encryption from implementation, as it is not used by TACT alone.
                     throw new NotImplementedException("BLTE decryption not supported!");
                 case 0x46: // F (frame)
                     throw new NotImplementedException("BLTE frame not supported!");

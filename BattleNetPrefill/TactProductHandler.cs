@@ -71,7 +71,7 @@
             {
                 // Getting other configuration files for this version, that detail where we can download the required files from.
                 ctx.Status("Getting latest config files...");
-                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager, product);
+                BuildConfigFile buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion.Value, cdnRequestManager);
                 CDNConfigFile cdnConfig = await configFileHandler.GetCdnConfigAsync(targetVersion.Value);
 
                 ctx.Status("Building Archive Indexes...");

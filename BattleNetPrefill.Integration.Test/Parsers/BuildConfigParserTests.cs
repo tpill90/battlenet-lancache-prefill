@@ -39,7 +39,7 @@
             VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);
 
             // Parsing the build config
-            var buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdnRequestManager, tactProduct);
+            var buildConfig = await BuildConfigParser.GetBuildConfigAsync(targetVersion, cdnRequestManager);
 
             // Expecting that there are no unknown keypairs left after parsing.
             Assert.AreEqual(0, buildConfig.UnknownKeyPairs.Count);

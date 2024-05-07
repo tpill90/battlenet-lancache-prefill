@@ -31,7 +31,7 @@
             }
             if (File.Exists(CachedFileName))
             {
-                _cachedContentLengths = JsonSerializer.Deserialize(File.ReadAllText(CachedFileName), Structs.Enums.SerializationContext.Default.ConcurrentDictionaryStringInt64);
+                _cachedContentLengths = JsonSerializer.Deserialize(File.ReadAllText(CachedFileName), SerializationContext.Default.ConcurrentDictionaryStringInt64);
                 return;
             }
 
@@ -46,7 +46,7 @@
             lock (_cacheFileLock)
             {
                 _cacheMisses = 0;
-                File.WriteAllText(CachedFileName, JsonSerializer.Serialize(_cachedContentLengths, Structs.Enums.SerializationContext.Default.ConcurrentDictionaryStringInt64));
+                File.WriteAllText(CachedFileName, JsonSerializer.Serialize(_cachedContentLengths, SerializationContext.Default.ConcurrentDictionaryStringInt64));
             }
         }
 

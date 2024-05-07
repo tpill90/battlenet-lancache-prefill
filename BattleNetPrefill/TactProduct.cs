@@ -6,6 +6,7 @@
     ///
     /// A complete list can be found at : https://blizztrack.com/
     /// </summary>
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     public sealed class TactProduct : EnumBase<TactProduct>
     {
         #region Blizzard

@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// Handles the "DownloadFile", which is in essence a "download manifest" listing all files that will need to be downloaded, for a complete installation.
-    /// 
+    ///
     /// Handles parsing the raw "DownloadFile".  Additionally, handles determining which files that need to be downloaded based on the download manifest.
     ///
     /// See also:
@@ -54,7 +54,6 @@
                 DownloadTag tag = new DownloadTag();
                 tag.Name = bin.ReadCString();
                 tag.Type = bin.ReadInt16BigEndian();
-
                 tag.Mask = bin.ReadBytes(numMaskBytes);
 
                 for (int j = 0; j < numMaskBytes; j++)
@@ -76,7 +75,8 @@
             }
 
             byte version = bin.ReadByte();
-            byte hash_size_ekey = bin.ReadByte();
+            // Skipping hash_size_ekey
+            bin.ReadByte();
             byte hasChecksumInEntry = bin.ReadByte();
             _downloadFile.numEntries = bin.ReadUInt32BigEndian();
             _downloadFile.numTags = bin.ReadUInt16BigEndian();

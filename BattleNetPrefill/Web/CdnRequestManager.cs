@@ -62,10 +62,10 @@
         public async Task InitializeAsync(TactProduct currentProduct)
         {
             // Loading current CDNs
-            var cdnsFile = await CdnsFileParser.ParseCdnsFileAsync(this, currentProduct);
+            var entries = await CdnsFileParser.ParseCdnsFileAsync(this, currentProduct);
 
             // Adds any missing CDN hosts
-            foreach (var host in cdnsFile.entries.SelectMany(e => e.hosts))
+            foreach (var host in entries.SelectMany(e => e.hosts))
             {
                 if (!_cdnList.Contains(host))
                 {
@@ -73,7 +73,7 @@
                 }
             }
 
-            _productBasePath = cdnsFile.entries[0].path;
+            _productBasePath = entries[0].path;
             _lancacheAddress = await LancacheIpResolver.ResolveLancacheIpAsync(_ansiConsole, _currentCdn);
         }
 
@@ -83,8 +83,7 @@
         {
             Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
 
-            List<Request> requests;
-            _queuedRequests.TryGetValue(hash, out requests);
+            _queuedRequests.TryGetValue(hash, out List<Request> requests);
             if (requests == null)
             {
                 requests = new List<Request>();
