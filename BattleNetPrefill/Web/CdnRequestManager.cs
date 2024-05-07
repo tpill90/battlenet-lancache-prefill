@@ -53,10 +53,7 @@
             SkipDiskCache = skipDiskCache;
             _ansiConsole = ansiConsole;
 
-            _client = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(60)
-            };
+            _client = new HttpClient();
         }
 
         /// <summary>
@@ -154,8 +151,9 @@
         /// <summary>
         /// Attempts to download the specified requests.  Returns a list of any requests that have failed.
         /// </summary>
+        /// <param name="forceRecache">When specified, will cause the cache to delete the existing cached data for a request, and re-download it again.</param>
         /// <returns>A list of failed requests</returns>
-        private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requests)
+        private async Task<ConcurrentBag<Request>> AttemptDownloadAsync(ProgressContext ctx, string taskTitle, List<Request> requests, bool forceRecache = false)
         {
             var progressTask = ctx.AddTask(taskTitle, new ProgressTaskSettings { MaxValue = requests.SumTotalBytes().Bytes });
 
@@ -164,7 +162,7 @@
             {
                 try
                 {
-                    await GetRequestAsBytesAsync(request, progressTask);
+                    await GetRequestAsBytesAsync(request, progressTask, forceRecache);
                 }
                 catch
                 {
@@ -207,7 +205,8 @@
             });
         }
 
-        public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null)
+
+        public async Task<byte[]> GetRequestAsBytesAsync(Request request, ProgressTask task = null, bool forceRecache = false)
         {
             var writeToDevNull = request.WriteToDevNull;
             var startBytes = request.LowerByteRange;
@@ -222,6 +221,10 @@
             }
 
             var uri = new Uri($"http://{_lancacheAddress}/{request.Uri}");
+            if (forceRecache)
+            {
+                uri = new Uri($"http://{_lancacheAddress}/{request.Uri}?nocache=1");
+            }
 
             // Try to return a cached copy from the disk first, before making an actual request
             if (!writeToDevNull && !SkipDiskCache)

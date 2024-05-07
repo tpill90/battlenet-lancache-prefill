@@ -1,3 +1,4 @@
+#TODO move this to lancache common
 root = true
 
 [*]
@@ -18,7 +19,7 @@ tab_size = 4
 indent_style = space
 indent_size = 4
 
-# -----  Resharper Rules ----- 
+# -----  Resharper Rules -----
 # https://www.jetbrains.com/help/resharper/EditorConfig_CSHARP_CSharpIndentStylePageSchema.html#resharper_csharp_align_linq_query
 align_linq_query = true
 align_multiline_calls_chain = true
@@ -32,7 +33,8 @@ space_between_attribute_sections = false
 
 # CA1002: Do not expose generic lists
 dotnet_diagnostic.CA1002.severity = none
-# CA1008: Enums should have zero value - The enums in this case are modeling Steam enums.
+# CA1008: Enums should have zero value
+# - The enums in this case are modeling Steam enums, so I have to match them exactly.
 dotnet_diagnostic.CA1008.severity = none
 # CA1014: Mark assemblies with CLSCompliant
 dotnet_diagnostic.CA1014.severity = none
@@ -40,6 +42,7 @@ dotnet_diagnostic.CA1014.severity = none
 dotnet_diagnostic.CA1031.severity = none
 # CA1034: Nested types should not be visible
 dotnet_diagnostic.CA1034.severity = none
+
 # CA1051: Do not declare visible instance fields
 dotnet_diagnostic.CA1051.severity = none
 # CA1054: URI parameters should not be strings
@@ -57,13 +60,12 @@ dotnet_diagnostic.CA1310.severity = none
 dotnet_diagnostic.CA1815.severity = none
 # CA1822: Member does not access instance data and can be marked as static
 dotnet_diagnostic.CA1822.severity = none
-dotnet_diagnostic.CA1835.severity = none
 
 # CA1854: Prefer the IDictionary.TryGetValue(TKey, out TValue) method
 # - I'm not worried about performance in this application where ContainsKey() is being used, and I like the current syntax as far as readability
 dotnet_diagnostic.CA1854.severity = none
 
-# CA1860: Avoid using 'Enumerable.Any()' extension method, both for clarity and performance 
+# CA1860: Avoid using 'Enumerable.Any()' extension method, both for clarity and performance
 # - I don't agree with this analyzer, using Any() is far more readable than comparing Count == 0, and has been a pattern in dotnet for more than a decade
 dotnet_diagnostic.CA1860.severity = none
 
@@ -72,10 +74,14 @@ dotnet_diagnostic.CA2007.severity = none
 # CA2201: Do not raise reserved exception types
 dotnet_diagnostic.CA2201.severity = none
 
-# CS1998: Async method lacks 'await' operators and will run synchronously 
+# CS1998: Async method lacks 'await' operators and will run synchronously
 dotnet_diagnostic.cs1998.severity = error
 # CS4014: Because this call is not awaited, execution of the current method continues before the call is completed
 dotnet_diagnostic.cs4014.severity = error
+
+# IDE0028: Simplify collection initialization
+# - Not a fan of the syntax, feels a little bit too terse
+dotnet_style_prefer_collection_expression = false
 
 # IDE0090 : 'new' expression can be simplified
 csharp_style_implicit_object_creation_when_type_is_apparent = false
@@ -85,4 +91,3 @@ dotnet_diagnostic.rs0030.severity = error
 
 # The method does not need to use async/await - Introduces annoying 'return' statements for async methods, that hurt code readability.
 dotnet_diagnostic.AsyncFixer01.severity = none
-
