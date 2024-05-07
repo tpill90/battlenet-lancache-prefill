@@ -19,11 +19,6 @@ namespace BattleNetPrefill.CliCommands
         [CommandOption("blizzard", Description = "Prefills all Blizzard products.", Converter = typeof(NullableBoolConverter))]
         public bool? PrefillBlizzard { get; init; }
 
-        [CommandOption("nocache",
-            Description = "Skips using locally cached files.  Saves disk space, at the expense of slower subsequent runs.",
-            Converter = typeof(NullableBoolConverter))]
-        public bool? NoLocalCache { get; init; }
-
         [CommandOption("verbose", Description = "Produces more detailed log output. Will output logs for games are already up to date.", Converter = typeof(NullableBoolConverter))]
         public bool? Verbose
         {
@@ -63,7 +58,7 @@ namespace BattleNetPrefill.CliCommands
 
             ValidateUserHasSelectedApps();
 
-            var tactProductHandler = new TactProductHandler(_ansiConsole, NoLocalCache ?? default(bool), ForcePrefill ?? default(bool));
+            var tactProductHandler = new TactProductHandler(_ansiConsole, forcePrefill: ForcePrefill ?? default(bool));
 
             List<TactProduct> productsToProcess = BuildProductListFromArgs();
             await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);

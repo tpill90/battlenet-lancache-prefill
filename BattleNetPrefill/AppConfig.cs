@@ -56,6 +56,13 @@
         public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
 
         /// <summary>
+        /// /// When enabled, will skip using any locally cached index files from disk.
+        /// The disk cache can speed up repeated runs, however it can use up a non-trivial amount
+        /// of storage in some cases (Wow uses several hundred mb of index files). Intended for debugging.
+        /// </summary>
+        public static bool NoLocalCache { get; set; }
+
+        /// <summary>
         /// If set to true, will skip making any non-required requests, and instead record them to later be compared against for accuracy.
         /// Dramatically speeds up debugging since bandwidth use is a small fraction of the full download size (ex. 100mb vs a possible 30gb download).
         /// </summary>

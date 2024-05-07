@@ -1,8 +1,16 @@
 {
   "profiles": {
+    "Prefill All": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill --all --force"
+    },
     "Prefill All - No Download": {
       "commandName": "Project",
       "commandLineArgs": "prefill --all --no-download --force"
+    },
+    "Prefill All - No Download - No Cache": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill --all --no-download --nocache --force"
     },
     "Prefill Starcraft 1": {
       "commandName": "Project",

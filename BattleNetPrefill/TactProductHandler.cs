@@ -3,15 +3,13 @@
     public sealed class TactProductHandler
     {
         private readonly IAnsiConsole _ansiConsole;
-        private readonly bool _skipDiskCache;
         private readonly bool _forcePrefill;
 
         private readonly PrefillSummaryResult _prefillSummaryResult = new PrefillSummaryResult();
 
-        public TactProductHandler(IAnsiConsole ansiConsole, bool skipDiskCache = false, bool forcePrefill = false)
+        public TactProductHandler(IAnsiConsole ansiConsole, bool forcePrefill = false)
         {
             _ansiConsole = ansiConsole;
-            _skipDiskCache = skipDiskCache;
             _forcePrefill = forcePrefill;
         }
 
@@ -50,7 +48,7 @@
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, _skipDiskCache);
+            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, AppConfig.NoLocalCache);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
@@ -61,7 +59,7 @@
             // Finding the latest version of the game
             VersionsEntry? targetVersion = await configFileHandler.GetLatestVersionEntryAsync(product);
 
-            // Skip prefilling if we've already prefilled the latest version 
+            // Skip prefilling if we've already prefilled the latest version
             if (!_forcePrefill && IsProductUpToDate(product, targetVersion.Value))
             {
                 _prefillSummaryResult.AlreadyUpToDate++;

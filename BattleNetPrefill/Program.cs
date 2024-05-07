@@ -62,8 +62,18 @@
                 args.Remove("--no-download");
             }
 
+            // Skips using locally cached indexes. Saves disk space, at the expense of slower subsequent runs.
+            // Useful for debugging since the indexes will always be re-downloaded.
+            if (args.Any(e => e.Contains("--nocache")) || args.Any(e => e.Contains("--no-cache")))
+            {
+                AnsiConsole.Console.LogMarkupLine($"Using {LightYellow("--nocache")} flag.  Will always re-download indexes...");
+                AppConfig.NoLocalCache = true;
+                args.Remove("--nocache");
+                args.Remove("--no-cache");
+            }
+
             // Adding some formatting to logging to make it more readable + clear that these flags are enabled
-            if (AppConfig.CompareAgainstRealRequests || AppConfig.SkipDownloads)
+            if (AppConfig.CompareAgainstRealRequests || AppConfig.SkipDownloads || AppConfig.NoLocalCache)
             {
                 AnsiConsole.Console.WriteLine();
                 AnsiConsole.Console.Write(new Rule());
