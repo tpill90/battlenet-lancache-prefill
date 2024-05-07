@@ -1,8 +1,9 @@
 ﻿namespace BattleNetPrefill
 {
-    // TODO - Add publish build pipeline 
+    // TODO - Add publish build pipeline
     // TODO - Setup mkdocs and copy from SteamPrefill.  Update docs in general
     // TODO warcraft 3 hangs for some reason on retreiving uncached archive indexes
+    //TODO add total download size to summary
     public static class Program
     {
         private const string Description = "Automatically fills a Lancache with games from Battle.Net, so that subsequent downloads will be \n" +

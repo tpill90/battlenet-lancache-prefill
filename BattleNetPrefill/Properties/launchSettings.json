@@ -1,12 +1,8 @@
 {
   "profiles": {
-    "Prefill Blizzard - No Cache - No Download": {
+    "Prefill All - No Download": {
       "commandName": "Project",
       "commandLineArgs": "prefill --all --no-download --force"
-    },
-    "Prefill Games used for testing": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p zeus  --nocache"
     },
     "Prefill Starcraft 1": {
       "commandName": "Project",
@@ -18,15 +14,15 @@
     },
     "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p wow_classic --compare-requests --no-download --force"
+      "commandLineArgs": "prefill -p s1 --compare-requests --no-download --force"
     },
     "Select Apps": {
       "commandName": "Project",
       "commandLineArgs": "select-apps"
     },
-    "Prefill Selected": {
+    "Prefill Selected - No download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill"
+      "commandLineArgs": "prefill --no-download --force"
     },
     "Clear Cache - Accept": {
       "commandName": "Project",

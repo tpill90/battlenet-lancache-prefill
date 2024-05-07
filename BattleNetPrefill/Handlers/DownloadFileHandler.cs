@@ -99,6 +99,7 @@
             return entryExtra;
         }
 
+        //TODO this name is awful, maybe change it to something like BuildDownloadList or similar
         /// <summary>
         /// Determines which files need to be downloaded, and queues them for download.
         /// </summary>
