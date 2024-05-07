@@ -88,11 +88,15 @@
             _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
 
             // Actually start the download of any deferred requests
-            var downloadSuccess = await cdnRequestManager.DownloadQueuedRequestsAsync();
-            if (downloadSuccess)
+            var downloadSuccessful = await cdnRequestManager.DownloadQueuedRequestsAsync(_prefillSummaryResult);
+            if (downloadSuccessful)
             {
                 MarkDownloadAsSuccessful(product, targetVersion.Value);
                 _prefillSummaryResult.Updated++;
+            }
+            else
+            {
+                _prefillSummaryResult.FailedApps++;
             }
 
             if (!AppConfig.CompareAgainstRealRequests)

@@ -100,7 +100,7 @@
         /// false will be returned
         /// </summary>
         /// <returns>True if all downloads succeeded.  False if downloads failed 3 times.</returns>
-        public async Task<bool> DownloadQueuedRequestsAsync()
+        public async Task<bool> DownloadQueuedRequestsAsync(PrefillSummaryResult prefillSummaryResult)
         {
             // Combining requests to improve download performance
             var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
@@ -144,6 +144,8 @@
             // Logging some metrics about the download
             _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.CalculateBitrate(downloadTimer))}");
             _ansiConsole.WriteLine();
+            //TODO I don't like the fact that I'm passing this down into this method
+            prefillSummaryResult.TotalBytesTransferred += totalDownloadSize;
 
             return true;
         }
