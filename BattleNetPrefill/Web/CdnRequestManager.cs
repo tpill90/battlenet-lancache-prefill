@@ -243,8 +243,9 @@
                 requestMessage.Headers.Range = new RangeHeaderValue(startBytes, endBytes);
             }
 
-            using var responseMessage = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
-            await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
+            using var cts = new CancellationTokenSource();
+            using var responseMessage = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            await using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync(cts.Token);
 
             responseMessage.EnsureSuccessStatusCode();
             if (writeToDevNull)
@@ -256,7 +257,7 @@
                     while (true)
                     {
                         // Dump the received data, so we don't have to waste time writing it to disk.
-                        var read = await responseStream.ReadAsync(buffer, 0, buffer.Length);
+                        var read = await responseStream.ReadAsync(buffer, cts.Token);
                         if (read == 0)
                         {
                             return null;
@@ -274,7 +275,7 @@
             }
 
             await using var memoryStream = new MemoryStream();
-            await responseStream.CopyToAsync(memoryStream);
+            await responseStream.CopyToAsync(memoryStream, cts.Token);
 
             var byteArray = memoryStream.ToArray();
             if (SkipDiskCache)
@@ -285,7 +286,7 @@
             // Cache to disk
             FileInfo file = new FileInfo(Path.Combine(AppConfig.CacheDir + uri.AbsolutePath));
             file.Directory.Create();
-            await File.WriteAllBytesAsync(file.FullName, byteArray);
+            await File.WriteAllBytesAsync(file.FullName, byteArray, cts.Token);
 
             return await Task.FromResult(byteArray);
         }
