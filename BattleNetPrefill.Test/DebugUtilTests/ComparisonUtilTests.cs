@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using BattleNetPrefill.Structs;
-using BattleNetPrefill.Structs.Enums;
-using BattleNetPrefill.Utils.Debug;
-using BattleNetPrefill.Utils.Debug.Models;
-using NUnit.Framework;
-
-namespace BattleNetPrefill.Test.DebugUtilTests
+﻿namespace BattleNetPrefill.Test.DebugUtilTests
 {
     [TestFixture]
     public class ComparisonUtilTests

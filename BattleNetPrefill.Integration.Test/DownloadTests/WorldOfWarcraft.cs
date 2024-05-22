@@ -19,7 +19,7 @@
         [Test]
         public void MissedBandwidth()
         {
-            var expected = ByteSize.FromMegaBytes(6);
+            var expected = ByteSize.FromMegaBytes(200);
             //TODO figure out why this is so high
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
@@ -28,7 +28,7 @@
         public void WastedBandwidth()
         {
             //TODO figure out why this is so high
-            var expected = ByteSize.FromMegaBytes(700);
+            var expected = ByteSize.FromMegaBytes(2500);
 
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }

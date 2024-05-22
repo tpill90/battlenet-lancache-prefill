@@ -1,7 +1,4 @@
-﻿using BattleNetPrefill.Utils.Debug.Models;
-using NUnit.Framework;
-
-namespace BattleNetPrefill.Test.DebugUtilTests
+﻿namespace BattleNetPrefill.Test.DebugUtilTests
 {
     [TestFixture]
     public class RequestTests

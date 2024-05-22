@@ -55,8 +55,6 @@
                     Directory.Delete(dir, true);
                 }
             }
-
-            DeleteGameFiles();
         }
 
         private static bool IsLogFileUpToDate(TactProduct product)
@@ -168,23 +166,6 @@
                 linesToKeep.Add(line);
             }
             File.WriteAllLines(logFilePath, linesToKeep);
-        }
-
-        private static void DeleteGameFiles()
-        {
-            AnsiConsole.WriteLine("Removing installed game files...");
-
-            foreach (var dir in Directory.GetDirectories(RootInstallDir))
-            {
-                AnsiConsole.Markup($"   Deleting {LightYellow(dir)}...\n");
-                Directory.Delete(dir, true);
-            }
-
-            foreach (var file in Directory.GetFiles(RootInstallDir))
-            {
-                AnsiConsole.Markup($"   Deleting {LightYellow(file)}...\n");
-                File.Delete(file);
-            }
         }
     }
 }

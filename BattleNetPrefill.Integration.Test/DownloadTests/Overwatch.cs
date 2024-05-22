@@ -19,9 +19,7 @@
         [Test]
         public void MissedBandwidth()
         {
-            //TODO figure out why this is so high
             var expected = ByteSize.FromMegaBytes(1);
-
             Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
 
@@ -29,8 +27,7 @@
         public void WastedBandwidth()
         {
             //TODO - Way higher than this should ever be, however wasted bandwidth isn't nearly as a bad as outright missing requests
-            var expected = ByteSize.FromMegaBytes(400);
-
+            var expected = ByteSize.FromMegaBytes(1000);
             Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }
     }

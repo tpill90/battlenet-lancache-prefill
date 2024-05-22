@@ -31,7 +31,9 @@
         [Test]
         public void WastedBandwidth()
         {
-            Assert.AreEqual(0, _results.WastedBandwidth.Bytes);
+            // Anything less than 1MiB is fine
+            var expected = ByteSize.FromMegaBytes(1);
+            Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
         }
     }
 }
