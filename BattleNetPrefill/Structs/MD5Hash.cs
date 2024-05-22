@@ -1,4 +1,6 @@
-﻿namespace BattleNetPrefill.Structs
+﻿using HexMate;
+
+namespace BattleNetPrefill.Structs
 {
     public readonly struct MD5Hash : IEquatable<MD5Hash>
     {
@@ -12,7 +14,6 @@
         public readonly ulong lowPart;
 
         [JsonInclude]
-
         public readonly ulong highPart;
 #pragma warning restore SYSLIB1038
 
@@ -28,6 +29,7 @@
             return Md5HashEqualityComparer.Instance.GetHashCode(this);
         }
 
+        //TODO benchmark equality again
         public bool Equals(MD5Hash other)
         {
             return other.lowPart == lowPart && other.highPart == highPart;
@@ -39,63 +41,20 @@
             return other.lowPart == lowPart && other.highPart == highPart;
         }
 
-        // TODO benchmark this and see if it is actually faster.  Remove it otherwise
         public override string ToString()
         {
-            return string.Create(32, (highPart, lowPart), static (dst, state) =>
-            {
-                ulong highPartTemp = state.highPart;
-                ulong lowPartTemp = state.lowPart;
-
-                ulong lowMask = (ulong)15;
-                ulong highMask = 15 << 4;
-                int i = 0;
-
-                while (i != 16)
-                {
-                    dst[i] = HexConverter.ToCharUpper((uint)((lowPartTemp & highMask) >> 4));
-                    dst[i + 1] = HexConverter.ToCharUpper((uint)(lowPartTemp & lowMask));
-                    i += 2;
-                    lowPartTemp >>= 8;
-                }
-
-                while (i != 32)
-                {
-                    dst[i] = HexConverter.ToCharUpper((uint)((highPartTemp & highMask) >> 4));
-                    dst[i + 1] = HexConverter.ToCharUpper((uint)(highPartTemp & lowMask));
-                    i += 2;
-                    highPartTemp >>= 8;
-                }
-            });
+            var bytes = new byte[16];
+            BitConverter.TryWriteBytes(bytes.AsSpan(0, 8), lowPart);
+            BitConverter.TryWriteBytes(bytes.AsSpan(8, 8), highPart);
+            return HexMate.Convert.ToHexString(bytes);
         }
 
         public string ToStringLower()
         {
-            return string.Create(32, (highPart, lowPart), static (dst, state) =>
-            {
-                ulong highPartTemp = state.highPart;
-                ulong lowPartTemp = state.lowPart;
-
-                ulong lowMask = (ulong)15;
-                ulong highMask = 15 << 4;
-                int i = 0;
-
-                while (i != 16)
-                {
-                    dst[i] = HexConverter.ToCharLower((uint)((lowPartTemp & highMask) >> 4));
-                    dst[i + 1] = HexConverter.ToCharLower((uint)(lowPartTemp & lowMask));
-                    i += 2;
-                    lowPartTemp >>= 8;
-                }
-
-                while (i != 32)
-                {
-                    dst[i] = HexConverter.ToCharLower((uint)((highPartTemp & highMask) >> 4));
-                    dst[i + 1] = HexConverter.ToCharLower((uint)(highPartTemp & lowMask));
-                    i += 2;
-                    highPartTemp >>= 8;
-                }
-            });
+            var bytes = new byte[16];
+            BitConverter.TryWriteBytes(bytes.AsSpan(0, 8), lowPart);
+            BitConverter.TryWriteBytes(bytes.AsSpan(8, 8), highPart);
+            return HexMate.Convert.ToHexString(bytes, HexFormattingOptions.Lowercase);
         }
 
         public static bool operator ==(MD5Hash obj1, MD5Hash obj2)

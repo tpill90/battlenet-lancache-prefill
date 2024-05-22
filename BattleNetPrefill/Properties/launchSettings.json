@@ -22,7 +22,7 @@
     },
     "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 --compare-requests --no-download --force"
+      "commandLineArgs": "prefill -p wow_classic --compare-requests --no-download --force"
     },
     "Select Apps": {
       "commandName": "Project",

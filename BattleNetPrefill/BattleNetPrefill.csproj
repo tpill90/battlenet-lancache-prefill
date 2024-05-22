@@ -75,6 +75,7 @@
 
   <ItemGroup>
     <!-- External Packages -->
+    <PackageReference Include="HexMate" Version="0.0.3" />
 	  <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
 	  <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
