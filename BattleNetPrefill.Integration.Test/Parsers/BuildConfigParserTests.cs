@@ -33,7 +33,7 @@
 
             // Setting up required classes
             AppConfig.SkipDownloads = true;
-            CdnRequestManager cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, new TestConsole());
+            CdnRequestManager cdnRequestManager = new CdnRequestManager(new TestConsole());
             await cdnRequestManager.InitializeAsync(tactProduct);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             VersionsEntry targetVersion = await configFileHandler.GetLatestVersionEntryAsync(tactProduct);

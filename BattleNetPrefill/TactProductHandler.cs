@@ -43,12 +43,13 @@
         /// </summary>
         public async Task<ComparisonResult> ProcessProductAsync(TactProduct product)
         {
+            //TODO it would be nice if this was only displayed when there is something to download
             _ansiConsole.LogMarkupLine($"Starting {Cyan(product.DisplayName)}");
 
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
-            using var cdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, _ansiConsole, AppConfig.NoLocalCache);
+            using var cdnRequestManager = new CdnRequestManager(_ansiConsole);
             var downloadFileHandler = new DownloadFileHandler(cdnRequestManager);
             var configFileHandler = new ConfigFileHandler(cdnRequestManager);
             var installFileHandler = new InstallFileHandler(cdnRequestManager);
@@ -86,6 +87,13 @@
             });
 
             _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
+
+            //TODO this breaks things so that it no longer correctly shows the total amount of bytes downloaded
+            if (AppConfig.SkipDownloads)
+            {
+                _ansiConsole.MarkupLine("");
+                return new ComparisonResult();
+            }
 
             // Actually start the download of any deferred requests
             var downloadSuccessful = await cdnRequestManager.DownloadQueuedRequestsAsync(_prefillSummaryResult);

@@ -4,9 +4,9 @@
       "commandName": "Project",
       "commandLineArgs": "prefill --all --force"
     },
-    "Prefill All - No Download": {
+    "Prefill Test Products - No Download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all --no-download --force"
+      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic --no-download --force"
     },
     "Prefill All - No Download - No Cache": {
       "commandName": "Project",
@@ -14,7 +14,7 @@
     },
     "Prefill Starcraft 1": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 s2 pro wow --no-download  --force"
+      "commandLineArgs": "prefill -p s1 --force"
     },
     "Prefill Overwatch": {
       "commandName": "Project",
@@ -22,7 +22,7 @@
     },
     "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p wow_classic --compare-requests --no-download --force"
+      "commandLineArgs": "prefill -p wow --compare-requests --no-download --force"
     },
     "Select Apps": {
       "commandName": "Project",

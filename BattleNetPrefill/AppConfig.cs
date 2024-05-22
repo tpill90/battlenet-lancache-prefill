@@ -27,16 +27,10 @@
 
         public static readonly string UserSelectedAppsPath = Path.Combine(ConfigDir, "selectedAppsToPrefill.json");
 
-        //TODO comment
-        private static bool _verboseLogs;
         public static bool VerboseLogs
         {
-            get => _verboseLogs;
-            set
-            {
-                _verboseLogs = value;
-                AnsiConsoleExtensions.WriteVerboseLogs = value;
-            }
+            get => AnsiConsoleExtensions.WriteVerboseLogs;
+            set => AnsiConsoleExtensions.WriteVerboseLogs = value;
         }
 
         /// <summary>
@@ -56,7 +50,7 @@
         public static readonly string LogFileBasePath = @$"{DirectorySearch.TryGetSolutionDirectory()}/Logs";
 
         /// <summary>
-        /// /// When enabled, will skip using any locally cached index files from disk.
+        /// When enabled, will skip using any locally cached index files from disk.
         /// The disk cache can speed up repeated runs, however it can use up a non-trivial amount
         /// of storage in some cases (Wow uses several hundred mb of index files). Intended for debugging.
         /// </summary>

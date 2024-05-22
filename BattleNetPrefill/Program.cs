@@ -43,7 +43,6 @@
             // Have to skip the first argument, since its the path to the executable
             var args = Environment.GetCommandLineArgs().Skip(1).ToList();
 
-            // TODO comment
             if (args.Any(e => e.Contains("--compare-requests")))
             {
                 AnsiConsole.Console.LogMarkupLine($"Using {LightYellow("--compare-requests")} flag.  Running comparison logic...");

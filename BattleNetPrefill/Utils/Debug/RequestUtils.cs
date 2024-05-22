@@ -14,7 +14,7 @@
         {
             var coalesced = new List<Request>();
 
-            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
+            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.
             var requestsGroupedByUri = initialRequests.GroupBy(e => new { e.RootFolder, e.CdnKey, e.IsIndex }).ToList();
             foreach (var grouping in requestsGroupedByUri)
             {
@@ -32,7 +32,7 @@
         {
             var coalesced = new List<Request>();
 
-            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.  
+            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.
             foreach (var grouping in initialRequests.Values)
             {
                 grouping.Sort((x, y) => x.LowerByteRange.CompareTo(y.LowerByteRange));

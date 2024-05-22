@@ -3,7 +3,7 @@
     //TODO battlenet needs to be running in order for this to work
     public static class Program
     {
-        private static readonly CdnRequestManager CdnRequestManager = new CdnRequestManager(AppConfig.BattleNetPatchUri, AnsiConsole.Console);
+        private static readonly CdnRequestManager CdnRequestManager = new CdnRequestManager(AnsiConsole.Console);
         private static readonly ConfigFileHandler ConfigFileHandler = new ConfigFileHandler(CdnRequestManager);
 
         private static string RootInstallDir = @"C:\BattleNet";
