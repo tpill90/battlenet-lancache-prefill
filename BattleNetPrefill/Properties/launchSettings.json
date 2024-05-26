@@ -6,7 +6,7 @@
     },
     "Prefill Test Products - No Download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic --no-download --force"
+      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic --no-download --force --verbose"
     },
     "Prefill All - No Download - No Cache": {
       "commandName": "Project",

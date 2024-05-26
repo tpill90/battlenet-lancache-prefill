@@ -25,7 +25,6 @@
         /// </summary>
         private string _productBasePath;
 
-        //TODO why is this a dictionary of requests?
         private readonly List<Request> _queuedRequests = new List<Request>();
 
         #region Debugging
