@@ -10,7 +10,7 @@
         /// <param name="initialRequests">Requests that should be combined</param>
         /// <param name="isBattleNetClient">Should only be set to true if simulating the real Battle.Net client.  Combines requests in 4kb chunks.</param>
         /// <returns></returns>
-        public static List<Request> CoalesceRequests(List<Request> initialRequests, bool isBattleNetClient = false)
+        public static List<Request> CoalesceRequests(this List<Request> initialRequests, bool isBattleNetClient = false)
         {
             var coalesced = new List<Request>();
 
@@ -23,20 +23,6 @@
                                      .ToList();
 
                 coalesced.AddRange(merged);
-            }
-
-            return coalesced;
-        }
-
-        public static List<Request> CoalesceRequests(Dictionary<MD5Hash, List<Request>> initialRequests, bool isBattleNetClient = false)
-        {
-            var coalesced = new List<Request>();
-
-            // Coalescing any requests to the same URI that have sequential/overlapping byte ranges.
-            foreach (var grouping in initialRequests.Values)
-            {
-                grouping.Sort((x, y) => x.LowerByteRange.CompareTo(y.LowerByteRange));
-                coalesced.AddRange(grouping.MergeOverlapping(isBattleNetClient));
             }
 
             return coalesced;

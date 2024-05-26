@@ -26,7 +26,7 @@
         private string _productBasePath;
 
         //TODO why is this a dictionary of requests?
-        private readonly Dictionary<MD5Hash, List<Request>> _queuedRequests = new Dictionary<MD5Hash, List<Request>>();
+        private readonly List<Request> _queuedRequests = new List<Request>();
 
         #region Debugging
 
@@ -70,17 +70,8 @@
 
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
-            Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
-
-            //TODO why is this a dictionary?
-            _queuedRequests.TryGetValue(hash, out List<Request> requests);
-            if (requests == null)
-            {
-                requests = new List<Request>();
-                _queuedRequests.Add(hash, requests);
-            }
-
-            requests.Add(request);
+            var request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
+            _queuedRequests.Add(request);
         }
 
         /// <summary>
@@ -92,21 +83,29 @@
         public async Task<bool> DownloadQueuedRequestsAsync(PrefillSummaryResult prefillSummaryResult)
         {
             // Combining requests to improve download performance
-            var coalescedRequests = RequestUtils.CoalesceRequests(_queuedRequests, true);
-            ByteSize totalDownloadSize = coalescedRequests.SumTotalBytes();
+            List<Request> coalescedRequests = _queuedRequests.CoalesceRequests(true);
             _queuedRequests.Clear();
+
+            ByteSize totalDownloadSize = coalescedRequests.SumTotalBytes();
+            prefillSummaryResult.TotalBytesTransferred += totalDownloadSize;
 
             _ansiConsole.LogMarkupVerbose($"Downloading {Magenta(totalDownloadSize.ToDecimalString())} from {LightYellow(coalescedRequests.Count)} queued requests");
 
+            if (AppConfig.SkipDownloads)
+            {
+                //TODO not a fan of writing it like this just so that the comparison logic keeps working
+                foreach (var request in coalescedRequests)
+                {
+                    allRequestsMade.Add(request);
+                }
+                _ansiConsole.WriteLine();
+                return true;
+            }
 
             var downloadTimer = Stopwatch.StartNew();
             var failedRequests = new ConcurrentBag<Request>();
             await _ansiConsole.CreateSpectreProgress(AppConfig.TransferSpeedUnit).StartAsync(async ctx =>
             {
-                if (AppConfig.SkipDownloads)
-                {
-                    return;
-                }
                 //TODO can probably cleanup this attempt 3 times logic since there is the polly stuff in place now.
                 // Run the initial download
                 failedRequests = await AttemptDownloadAsync(ctx, "Downloading..", coalescedRequests);
@@ -134,8 +133,7 @@
             // Logging some metrics about the download
             _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.CalculateBitrate(downloadTimer))}");
             _ansiConsole.WriteLine();
-            //TODO I don't like the fact that I'm passing this down into this method
-            prefillSummaryResult.TotalBytesTransferred += totalDownloadSize;
+
 
             return true;
         }

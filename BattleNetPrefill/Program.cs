@@ -1,7 +1,5 @@
 ﻿namespace BattleNetPrefill
 {
-    // TODO - Add publish build pipeline
-    // TODO - Setup mkdocs and copy from SteamPrefill.  Update docs in general
     public static class Program
     {
         private const string Description = "Automatically fills a Lancache with games from Battle.Net, so that subsequent downloads will be \n" +

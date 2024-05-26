@@ -88,15 +88,13 @@
 
             _ansiConsole.LogMarkupLine("Retrieved product metadata", metadataTimer);
 
-            //TODO this breaks things so that it no longer correctly shows the total amount of bytes downloaded
-            if (AppConfig.SkipDownloads)
-            {
-                _ansiConsole.MarkupLine("");
-                return new ComparisonResult();
-            }
-
             // Actually start the download of any deferred requests
             var downloadSuccessful = await cdnRequestManager.DownloadQueuedRequestsAsync(_prefillSummaryResult);
+
+            if (AppConfig.SkipDownloads)
+            {
+                return new ComparisonResult();
+            }
             if (downloadSuccessful)
             {
                 MarkDownloadAsSuccessful(product, targetVersion.Value);
