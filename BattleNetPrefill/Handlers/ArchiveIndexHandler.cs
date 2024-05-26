@@ -1,6 +1,5 @@
 ﻿namespace BattleNetPrefill.Handlers
 {
-    // TODO document what this class does
     /// <summary>
     /// https://wowdev.wiki/TACT#Archive_Indexes_.28.index.29
     /// </summary>
