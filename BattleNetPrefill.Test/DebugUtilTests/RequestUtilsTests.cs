@@ -1,3 +1,5 @@
+using BattleNetPrefill.Utils;
+
 namespace BattleNetPrefill.Test.DebugUtilTests
 {
     [TestFixture]

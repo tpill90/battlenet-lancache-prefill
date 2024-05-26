@@ -1,6 +1,5 @@
-﻿namespace BattleNetPrefill.Utils.Debug
+﻿namespace BattleNetPrefill.Utils
 {
-    //TODO should this be in debug?
     public static class RequestUtils
     {
         /// <summary>

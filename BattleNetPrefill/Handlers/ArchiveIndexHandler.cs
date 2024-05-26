@@ -67,7 +67,7 @@
 
             int sliceAmount = (int)Math.Ceiling((double)cdnConfig.archives.Length / maxTasks);
 
-            // TODO rewrite this
+            // TODO rewrite this, difficult to understand
             for (int i = 0; i < maxTasks; i++)
             {
                 var lowerLimit = (i * sliceAmount);

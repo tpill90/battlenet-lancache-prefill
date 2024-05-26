@@ -6,7 +6,6 @@ global using BattleNetPrefill.Structs;
 global using BattleNetPrefill.Structs.Enums;
 global using BattleNetPrefill.Utils;
 global using BattleNetPrefill.Utils.Debug;
-global using BattleNetPrefill.Utils.Debug.Models;
 global using BattleNetPrefill.Web;
 global using ByteSizeLib;
 global using CliFx;

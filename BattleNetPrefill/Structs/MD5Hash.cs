@@ -4,9 +4,6 @@ namespace BattleNetPrefill.Structs
 {
     public readonly struct MD5Hash : IEquatable<MD5Hash>
     {
-        //TODO figure out what to do here, and re-enable this warning
-#pragma warning disable SYSLIB1038
-
         /// <summary>
         /// This is actually the "higher" part of the hash.  Left most chunk of data.
         /// </summary>
@@ -15,7 +12,6 @@ namespace BattleNetPrefill.Structs
 
         [JsonInclude]
         public readonly ulong highPart;
-#pragma warning restore SYSLIB1038
 
         [JsonConstructor]
         public MD5Hash(ulong lowPart, ulong highPart)

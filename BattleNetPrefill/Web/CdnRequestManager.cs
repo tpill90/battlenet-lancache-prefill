@@ -69,7 +69,7 @@
 
         public void QueueRequest(RootFolder rootPath, in MD5Hash hash, in long? startBytes = null, in long? endBytes = null, bool isIndex = false)
         {
-            var request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull: true, isIndex);
+            var request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, isIndex);
             _queuedRequests.Add(request);
         }
 
@@ -191,7 +191,7 @@
         public async Task<byte[]> GetRequestAsBytesAsync(RootFolder rootPath, MD5Hash hash, bool isIndex = false,
             bool writeToDevNull = false, long? startBytes = null, long? endBytes = null)
         {
-            Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, writeToDevNull, isIndex);
+            Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, isIndex);
             return await AppConfig.RetryPolicy.ExecuteAsync(async () =>
             {
                 return await GetRequestAsBytesAsync(request);

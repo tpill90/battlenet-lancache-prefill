@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Utils.Debug.Models
+﻿namespace BattleNetPrefill.Utils.Debug
 {
     public class ComparisonResult
     {

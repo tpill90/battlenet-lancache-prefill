@@ -1,4 +1,4 @@
-﻿namespace BattleNetPrefill.Utils
+﻿namespace BattleNetPrefill.Utils.Debug
 {
     public static class DirectorySearch
     {

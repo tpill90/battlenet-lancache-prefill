@@ -1,6 +1,5 @@
-﻿namespace BattleNetPrefill.Utils.Debug.Models
+﻿namespace BattleNetPrefill.Structs
 {
-    //TODO probably shouldn't be in debug namespace
     /// <summary>
     /// Model that represents a request that could be made to a CDN.
     /// </summary>
@@ -11,8 +10,7 @@
 
         }
 
-        public Request(string productRootUri, RootFolder rootFolder, MD5Hash cdnKey, long? startBytes = null, long? endBytes = null,
-                        bool writeToDevNull = false, bool isIndex = false)
+        public Request(string productRootUri, RootFolder rootFolder, MD5Hash cdnKey, long? startBytes = null, long? endBytes = null, bool isIndex = false)
         {
             ProductRootUri = productRootUri;
             RootFolder = rootFolder;
@@ -47,7 +45,7 @@
         public long UpperByteRange { get; set; }
 
         // Bytes are an inclusive range.  Ex bytes 0->9 == 10 bytes
-        public long TotalBytes => (UpperByteRange - LowerByteRange) + 1;
+        public long TotalBytes => UpperByteRange - LowerByteRange + 1;
 
         /// <summary>
         /// Request path, without a host name.  Agnostic towards host name, since we will combine with it later if needed to make a real request.
@@ -76,7 +74,7 @@
                 return $"{Uri} - -";
             }
 
-            var size = ByteSize.FromBytes((double)TotalBytes);
+            var size = ByteSize.FromBytes(TotalBytes);
             return $"{Uri} {LowerByteRange}-{UpperByteRange} {size}";
         }
 
