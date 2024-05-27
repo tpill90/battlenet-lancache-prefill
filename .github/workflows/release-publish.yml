@@ -12,6 +12,7 @@ permissions:
 jobs:
   release-publish:
     uses: tpill90/lancache-prefill-common/.github/workflows/release-publish-template.yml@main
+    secrets: inherit
     with:
       PROJECT_NAME: BattleNetPrefill
       DOCKERHUB_NAME: battlenet-lancache-prefill
