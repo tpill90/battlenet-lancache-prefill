@@ -21,7 +21,17 @@ namespace BattleNetPrefill.CliCommands
             var tactProductHandler = new TactProductHandler(ansiConsole);
             var tuiAppModels = BuildTuiAppModels();
 
-            Application.UseSystemConsole = true;
+            // Initialize the tui
+            if (OperatingSystem.IsLinux())
+            {
+                // This is required to be enabled otherwise some Linux distros/shells won't display color correctly.
+                Application.UseSystemConsole = true;
+            }
+            if (OperatingSystem.IsWindows())
+            {
+                // Must be set to false on Windows otherwise navigation will not work in Windows Terminal
+                Application.UseSystemConsole = false;
+            }
             Application.Init();
             using var tui2 = new SelectAppsTui(tuiAppModels, showReleaseDate: false, showPlaytime: false);
             Key userKeyPress = tui2.Run();
