@@ -1,51 +1,57 @@
-﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<!-- Inspection Severities -->
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ArrangeObjectCreationWhenTypeEvident/@EntryIndexedValue">DO_NOT_SHOW</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ClassCanBeSealed_002EGlobal/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ClassCanBeSealed_002ELocal/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceForeachStatementBraces/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceForStatementBraces/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceIfStatementBraces/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=LoopCanBePartlyConvertedToQuery/@EntryIndexedValue">WARNING</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ParameterTypeCanBeEnumerable_002EGlobal/@EntryIndexedValue">DO_NOT_SHOW</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ParameterTypeCanBeEnumerable_002ELocal/@EntryIndexedValue">DO_NOT_SHOW</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FDeconstructionDeclarations/@EntryIndexedValue">DO_NOT_SHOW</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FElsewhere/@EntryIndexedValue">DO_NOT_SHOW</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FSimpleTypes/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+﻿<wpf:ResourceDictionary xml:space="preserve"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:s="clr-namespace:System;assembly=mscorlib"
+    xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml"
+    xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+    <!-- Inspection Severities -->
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ArrangeObjectCreationWhenTypeEvident/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ClassCanBeSealed_002EGlobal/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ClassCanBeSealed_002ELocal/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ConvertToPrimaryConstructor/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceForeachStatementBraces/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceForStatementBraces/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=EnforceIfStatementBraces/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=LoopCanBePartlyConvertedToQuery/@EntryIndexedValue">WARNING</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ParameterTypeCanBeEnumerable_002EGlobal/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ParameterTypeCanBeEnumerable_002ELocal/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ReplaceWithPrimaryConstructorParameter/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FDeconstructionDeclarations/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FElsewhere/@EntryIndexedValue">DO_NOT_SHOW</s:String>
+    <s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=SuggestVarOrType_005FSimpleTypes/@EntryIndexedValue">DO_NOT_SHOW</s:String>
 
-	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/SPACE_WITHIN_SINGLE_LINE_ARRAY_INITIALIZER_BRACES/@EntryValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/WRAP_LINES/@EntryValue">False</s:Boolean>
+    <s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/SPACE_WITHIN_SINGLE_LINE_ARRAY_INITIALIZER_BRACES/@EntryValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/WRAP_LINES/@EntryValue">False</s:Boolean>
 
-	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpKeepExistingMigration/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpPlaceEmbeddedOnSameLineMigration/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpUseContinuousIndentInsideBracesMigration/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ESettingsUpgrade_002EMigrateBlankLinesAroundFieldToBlankLinesAroundProperty/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpKeepExistingMigration/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpPlaceEmbeddedOnSameLineMigration/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpUseContinuousIndentInsideBracesMigration/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ESettingsUpgrade_002EMigrateBlankLinesAroundFieldToBlankLinesAroundProperty/@EntryIndexedValue">True</s:Boolean>
 
-	<!-- Custom spell check dictionary entries -->
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Activision/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Bandicoot/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Battlenet/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=BLTE/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=cdns/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=CliFx/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=deduped/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Diablo/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=downloader/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Dropbox/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Endian/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Hexmate/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Lancache/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=mkdocs/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Multiplayer/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Nginx/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Overwatch/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Overwatch_0027s/@EntryIndexedValue">False</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=prefilled/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Prefilling/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Prefills/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Replayer/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=spectre/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Starcraft/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Warcraft/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=Warzone/@EntryIndexedValue">True</s:Boolean>
-	</wpf:ResourceDictionary>
+    <!-- Custom spell check dictionary entries -->
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Activision/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Bandicoot/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Battlenet/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=BLTE/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=cdns/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=CliFx/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=deduped/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Diablo/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=downloader/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Dropbox/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Endian/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Hexmate/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Lancache/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=mkdocs/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Multiplayer/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Nginx/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Overwatch/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Overwatch_0027s/@EntryIndexedValue">False</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=prefilled/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Prefilling/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Prefills/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Replayer/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=spectre/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Starcraft/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Warcraft/@EntryIndexedValue">True</s:Boolean>
+    <s:Boolean x:Key="/Default/UserDictionary/Words/=Warzone/@EntryIndexedValue">True</s:Boolean>
+</wpf:ResourceDictionary>

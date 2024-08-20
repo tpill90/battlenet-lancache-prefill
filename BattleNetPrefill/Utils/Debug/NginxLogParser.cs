@@ -65,13 +65,14 @@
                 {
                     continue;
                 }
+                // Filter out lancache heartbeat
                 if (rawRequest.Contains("heartbeat"))
                 {
                     continue;
                 }
 
-                // Find all matches between double quotes.  This will be the only info that we care about in the request logs.
-                // Uri example : /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708.
+                // Gets the requested URL from the request log.
+                // URL example : /tpr/sc1live/data/b5/20/b520b25e5d4b5627025aeba235d60708.
                 var requestUrlMatches = Regex.Matches(rawRequest, @"(tpr/.*/\w*/[a-z0-9]{2}/[a-z0-9]{2}/[a-z0-9]+)(.index)?");
                 var requestUrl = requestUrlMatches[0].Value;
 

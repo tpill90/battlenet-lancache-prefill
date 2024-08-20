@@ -33,7 +33,7 @@
         {
             // Anything less than 1MiB is fine
             var expected = ByteSize.FromMegaBytes(1);
-            Assert.Less(_results.MissedBandwidth.Bytes, expected.Bytes);
+            Assert.Less(_results.WastedBandwidth.Bytes, expected.Bytes);
         }
     }
 }

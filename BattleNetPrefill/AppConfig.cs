@@ -33,11 +33,12 @@
             set => AnsiConsoleExtensions.WriteVerboseLogs = value;
         }
 
+        //TODO I'm not sure I actually like using polly in this project
         /// <summary>
         /// Global retry policy that will wait increasingly longer periods after a failed request
         /// </summary>
         public static AsyncRetryPolicy RetryPolicy => Policy.Handle<Exception>()
-                                                            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(2 * (retryAttempt + 1)));
+                                                            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(1));
 
 
         public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
