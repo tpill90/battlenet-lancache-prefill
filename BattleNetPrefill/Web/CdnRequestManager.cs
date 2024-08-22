@@ -194,12 +194,12 @@
             Request request = new Request(_productBasePath, rootPath, hash, startBytes, endBytes, isIndex);
             return await AppConfig.RetryPolicy.ExecuteAsync(async () =>
             {
-                return await GetRequestAsBytesAsync(request);
+                return await GetRequestAsBytes_SingleRequestAsync(request);
             });
         }
 
         //TODO not a fan of how many times forceRecache is passed down
-        private async Task<byte[]> GetRequestAsBytesAsync(Request request, bool forceRecache = false)
+        private async Task<byte[]> GetRequestAsBytes_SingleRequestAsync(Request request, bool forceRecache = false)
         {
             allRequestsMade.Add(request);
 
