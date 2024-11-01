@@ -30,7 +30,7 @@ Automatically fills a [Lancache](https://lancache.net/) with games from Battle.n
 
 # Initial Setup
 
-**BattleNetPrefill** is flexible and portable, and supports multiple platforms and configurations.  It can be run on directly on the Lancache server itself,  or on your gaming machine as an alternative Battlenet client.  You should decide which one works better for your use case.
+**BattleNetPrefill** is flexible and portable, and supports multiple platforms and configurations.  It can be run directly on the Lancache server itself,  or on your gaming machine as an alternative Battlenet client.  You should decide which one works better for your use case.
 
 Detailed setup guides are available for the following platforms:
 
