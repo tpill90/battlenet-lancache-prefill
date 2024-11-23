@@ -18,7 +18,7 @@
         /// Downloaded archive indexes, as well as other metadata, are saved into this directory to speedup future prefill runs.
         /// All data in here should be able to be deleted safely.
         /// </summary>
-        public static readonly string CacheDir = CacheDirUtils.GetCacheDirBaseDirectories("BattlenetPrefill", cacheDirVersion: "");
+        public static readonly string CacheDir = TempDirUtils.GetTempDirBaseDirectories("BattlenetPrefill", tempDirVersion: "");
 
         /// <summary>
         /// Contains user configuration.  Should not be deleted, doing so will reset the app back to defaults.

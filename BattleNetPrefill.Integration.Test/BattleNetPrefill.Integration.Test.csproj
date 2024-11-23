@@ -12,6 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.67" />
+    <PackageReference Include="Spectre.Console.Testing" Version="0.49.2-preview.0.67" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
   </ItemGroup>
@@ -20,14 +22,5 @@
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Custom Spectre.Console build, includes changes to display transfer speed in bits -->
-    <Reference Include="Spectre.Console">
-      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="Spectre.Console.Testing">
-      <HintPath>..\LancachePrefill.Common\lib\Spectre.Console.Testing.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
 </Project>
