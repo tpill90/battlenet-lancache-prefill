@@ -6,7 +6,7 @@
 
     <AssemblyName>BattleNetPrefill</AssemblyName>
     <RootNamespace>BattleNetPrefill</RootNamespace>
-    <VersionPrefix>2.0.0</VersionPrefix>
+    <VersionPrefix>2.1.0</VersionPrefix>
     <Authors>tpill90</Authors>
 
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
