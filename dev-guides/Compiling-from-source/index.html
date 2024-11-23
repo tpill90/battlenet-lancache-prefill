@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://tpill90.github.io/battlenet-lancache-prefill/dev-guides/Compiling-from-source/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Compiling From Source - battlenet-lancache-prefill wiki</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../../assets/external/asciinema-player.css" rel="stylesheet" />
+        <link href="../../assets/language-picker.css" rel="stylesheet" />
+        <link href="../../assets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Compiling From Source";
+        var mkdocs_page_input_path = "dev-guides/Compiling-from-source.md";
+        var mkdocs_page_url = "/battlenet-lancache-prefill/dev-guides/Compiling-from-source/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/languages/powershell.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> battlenet-lancache-prefill wiki
+        </a>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Welcome</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Install Guides</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../install-guides/Docker-Setup-Guide/">Docker Setup Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../install-guides/Linux-Setup-Guide/">Linux Setup Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../install-guides/Scheduled-Job/">Configuring a Nightly Job</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../install-guides/Unraid-Setup-Guide/">Unraid Setup Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../install-guides/Windows-Setup-Guide/">Windows Setup Guide</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Detailed Command Usage</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../detailed-command-usage/Clear-Cache/">clear-cache</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../detailed-command-usage/Prefill/">prefill</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../detailed-command-usage/Select-Apps/">select-apps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Dev Guides</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Compiling From Source</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#installing-prerequisites">Installing Prerequisites</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#using-chocolatey">Using Chocolatey</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#manually">Manually</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fixing-nugets-default-config">Fixing Nuget's Default Config</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cloning-the-repo-and-submodules">Cloning the repo and submodules</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#compiling">Compiling</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#running-the-project">Running the project</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#executing-unit-tests">Executing Unit Tests</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#where-should-i-get-started">Where should I get started?</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../mkdocs-setup/">Working With Project Documentation</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">battlenet-lancache-prefill wiki</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+    <ul class="wy-breadcrumbs">
+        <!-- Navigation breadcrumbs on the left hand side of the header -->
+        <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+                <li>Dev Guides &raquo;</li>
+            <li>Compiling From Source</li>
+
+        <!-- Language picker -->
+        <li class="wy-breadcrumbs-aside">
+            <div class="dropdown-container">
+                <!-- Button for the language drop down selector  -->
+                <button>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="flagIcon">
+                        <path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24z"></path>
+                    </svg>
+                </button>
+
+                <!-- Dropdown entries that are hidden by default -->
+                <div class="dropdown-content">
+                    <a href="../../en">
+                            <img src="../../assets/flags/en.svg" class="flagIcon"> English
+                        </a>
+                    <a href="../../gr">
+                            <img src="../../assets/flags/gr.svg" class="flagIcon"> Ελληνικά
+                        </a>
+                    
+                </div>
+            </div>
+        </li>
+    </ul>
+    <hr/>
+  </div>
+  
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="compiling-from-source">Compiling From Source<a class="headerlink" href="#compiling-from-source" title="Permanent link">&para;</a></h1>
+<h2 id="installing-prerequisites">Installing Prerequisites<a class="headerlink" href="#installing-prerequisites" title="Permanent link">&para;</a></h2>
+<p>Only the .NET 6 SDK is required to compile the project.  This can be installed through one of the following methods</p>
+<h3 id="using-chocolatey">Using Chocolatey<a class="headerlink" href="#using-chocolatey" title="Permanent link">&para;</a></h3>
+<pre><code class="language-powershell">choco install dotnet-6.0-sdk
+</code></pre>
+<h3 id="manually">Manually<a class="headerlink" href="#manually" title="Permanent link">&para;</a></h3>
+<p>The latest .NET 6.0 SDK can be found here  <a href="https://download.visualstudio.microsoft.com/download/pr/deb4711b-7bbc-4afa-8884-9f2b964797f2/fb603c451b2a6e0a2cb5372d33ed68b9/dotnet-sdk-6.0.300-win-x64.exe">.NET 6.0 SDK - Windows x64 Installer</a></p>
+<h2 id="fixing-nugets-default-config">Fixing Nuget's Default Config<a class="headerlink" href="#fixing-nugets-default-config" title="Permanent link">&para;</a></h2>
+<pre><code class="language-powershell"># Needs to be removed, in order to resolve issue with Nuget being preconfigured wrong.  
+# Will auto-regenerate on first run.
+Remove-Item &quot;C:\Users\$Env:USERNAME\AppData\Roaming\NuGet\nuget.config&quot;
+</code></pre>
+<h2 id="cloning-the-repo-and-submodules">Cloning the repo and submodules<a class="headerlink" href="#cloning-the-repo-and-submodules" title="Permanent link">&para;</a></h2>
+<pre><code class="language-powershell">git clone --recurse-submodules -j8 https://github.com/tpill90/battlenet-lancache-prefill.git
+</code></pre>
+<p>If you've already cloned the repository without the submodules, use this command to include the submodules:</p>
+<pre><code>git submodule update --init --recursive
+</code></pre>
+<h2 id="compiling">Compiling<a class="headerlink" href="#compiling" title="Permanent link">&para;</a></h2>
+<p>The project can be compiled by running the following in the repository root (the directory with the .sln file).  This will generate an .exe that can be run locally.  Subsequent <code>dotnet build</code> commands will perform incremental compilation.</p>
+<pre><code class="language-powershell">dotnet build
+</code></pre>
+<h2 id="running-the-project">Running the project<a class="headerlink" href="#running-the-project" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These steps assume that the working directory is <code>/BattleNetPrefill</code>.  All commands assume that they can find <code>BattleNetPrefill.csproj</code> in the working dir.</p>
+</div>
+<p>Typically, for development you will want to run the project in <code>Debug</code> mode.  This mode will run dramatically slower than <code>Release</code>, however it will leave useful debugging information in the compiled assembly.  Running the following will detect and compile any changes, and then execute the project:</p>
+<pre><code class="language-powershell">dotnet run
+</code></pre>
+<p>The above is analogous to running <code>./BattleNetPrefill.exe</code> without any parameters.  To instead supply parameters :</p>
+<pre><code class="language-powershell">dotnet run -- prefill --all
+</code></pre>
+<p>Alternatively, to run the project at full speed with all compilation optimizations enabled, add the additional <code>--configuration Release</code> flag:</p>
+<pre><code class="language-powershell">dotnet run --configuration Release
+</code></pre>
+<h2 id="executing-unit-tests">Executing Unit Tests<a class="headerlink" href="#executing-unit-tests" title="Permanent link">&para;</a></h2>
+<p>To compile and run all tests in the entire repo, run the following command:</p>
+<pre><code class="language-powershell">dotnet test
+</code></pre>
+<h2 id="where-should-i-get-started">Where should I get started?<a class="headerlink" href="#where-should-i-get-started" title="Permanent link">&para;</a></h2>
+<p>A good place to start poking around the project would be the <a href="https://github.com/tpill90/battlenet-lancache-prefill/tree/master/BattleNetPrefill/CliCommands">CliCommands folder</a>.  This folder contains the implementations for each of the individual commands that can be run, such as <code>prefill</code> or <code>select-apps</code>.  </p>
+              
+            </div>
+          </div><footer>
+      <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+          <a href="../../detailed-command-usage/Select-Apps/" class="btn btn-neutral float-left" title="select-apps"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+          <a href="../mkdocs-setup/" class="btn btn-neutral float-right" title="Working With Project Documentation">Next <span class="icon icon-circle-arrow-right"></span></a>
+      </div>
+  
+    <hr/>
+
+    <div role="contentinfo">
+      <!-- Copyright etc -->
+    </div>
+  </footer>
+  
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/tpill90/battlenet-lancache-prefill" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../../detailed-command-usage/Select-Apps/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../mkdocs-setup/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../assets/external/asciinema-player.min.js" defer></script>
+      <script src="../../assets/extra.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
