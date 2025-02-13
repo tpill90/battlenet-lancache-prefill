@@ -1,3 +1,4 @@
+# TODO go through and rerecord all of the ascii casts so that there are no more references to steam in them
 site_name: battlenet-lancache-prefill wiki
 repo_url: https://github.com/tpill90/battlenet-lancache-prefill
 docs_dir: mkdocs
@@ -64,10 +65,9 @@ plugins:
 
 nav:
   - Welcome: index.md
-  - Install Guides: 
-    - ... | flat | install-guides/*.md
-  - Detailed Command Usage: 
-    - ... | flat | detailed-command-usage/*.md
-  - Dev Guides: 
-    - ... | flat | dev-guides/*.md
-  
+  - Install Guides:
+      - ... | flat | install-guides/*.md
+  - Detailed Command Usage:
+      - ... | flat | detailed-command-usage/*.md
+  - Dev Guides:
+      - ... | flat | dev-guides/*.md
