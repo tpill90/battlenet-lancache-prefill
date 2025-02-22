@@ -83,6 +83,12 @@
 
         #endregion
 
+        #region Microsoft
+
+        public static readonly TactProduct Avowed = new TactProduct("aqua") { DisplayName = "Avowed", IsMicrosoft = true };
+
+        #endregion
+
         /// <summary>
         /// Official name of the game.
         /// </summary>
@@ -99,6 +105,7 @@
 
         public bool IsActivision { get; private init; }
         public bool IsBlizzard { get; private init; }
+        public bool IsMicrosoft { get; private init; }
 
         private TactProduct(string name) : base(name)
         {
