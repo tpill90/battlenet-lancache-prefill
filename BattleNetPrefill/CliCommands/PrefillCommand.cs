@@ -115,7 +115,7 @@ namespace BattleNetPrefill.CliCommands
             _ansiConsole.MarkupLine(Red($"Use the {Cyan("select-apps")} command to interactively choose which apps to prefill. "));
             _ansiConsole.MarkupLine("");
             _ansiConsole.Markup(Red($"Alternatively, the flag {LightYellow("--all")} can be specified to prefill all owned apps"));
-            _ansiConsole.Markup(Red($"or use {LightYellow("--activision")}, {LightYellow("--blizzard")}, or {LightYellow("--microsoft") to load predefined groups"));
+            _ansiConsole.Markup(Red($"or use {LightYellow("--activision")}, {LightYellow("--blizzard")}, or {LightYellow("--microsoft")} to load predefined groups"));
             throw new CommandException(".", 1, true);
         }
     }
