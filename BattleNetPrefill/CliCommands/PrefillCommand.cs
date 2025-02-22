@@ -10,7 +10,7 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(TactProductConverter))]
         public IReadOnlyList<TactProduct> ProductCodes { get; init; }
 
-        [CommandOption("all", Description = "Prefills all available products.  Includes all Activision and Blizzard games", Converter = typeof(NullableBoolConverter))]
+        [CommandOption("all", Description = "Prefills all available products.  Includes all Activision, Blizzard and Microsoft games", Converter = typeof(NullableBoolConverter))]
         public bool? PrefillAllProducts { get; init; }
 
         [CommandOption("activision", Description = "Prefills all Activision products.", Converter = typeof(NullableBoolConverter))]
@@ -18,6 +18,9 @@ namespace BattleNetPrefill.CliCommands
 
         [CommandOption("blizzard", Description = "Prefills all Blizzard products.", Converter = typeof(NullableBoolConverter))]
         public bool? PrefillBlizzard { get; init; }
+
+        [CommandOption("microsoft", Description = "Prefills all Microsoft products.", Converter = typeof(NullableBoolConverter))]
+        public bool? PrefillMicrosoft { get; init; }
 
         [CommandOption("verbose", Description = "Produces more detailed log output. Will output logs for games are already up to date.", Converter = typeof(NullableBoolConverter))]
         public bool? Verbose
@@ -89,6 +92,11 @@ namespace BattleNetPrefill.CliCommands
             {
                 productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsBlizzard));
             }
+            // --microsoft flag
+            if (PrefillMicrosoft ?? default(bool))
+            {
+                productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsMicrosoft));
+            }
 
             return productsToProcess.Distinct().ToList();
         }
@@ -97,7 +105,7 @@ namespace BattleNetPrefill.CliCommands
         private void ValidateUserHasSelectedApps()
         {
             var userSelectedApps = TactProductHandler.LoadPreviouslySelectedApps();
-            if ((PrefillAllProducts ?? default(bool)) || (PrefillActivision ?? default(bool)) || (PrefillBlizzard ?? default(bool))
+            if ((PrefillAllProducts ?? default(bool)) || (PrefillActivision ?? default(bool)) || (PrefillBlizzard ?? default(bool)) || (PrefillMicrosoft ?? default(bool))
                     || (ProductCodes != null && ProductCodes.Any()) || userSelectedApps.Any())
             {
                 return;
@@ -107,7 +115,7 @@ namespace BattleNetPrefill.CliCommands
             _ansiConsole.MarkupLine(Red($"Use the {Cyan("select-apps")} command to interactively choose which apps to prefill. "));
             _ansiConsole.MarkupLine("");
             _ansiConsole.Markup(Red($"Alternatively, the flag {LightYellow("--all")} can be specified to prefill all owned apps"));
-            _ansiConsole.Markup(Red($"or use {LightYellow("--activision")}, or {LightYellow("--blizzard")} to load predefined groups"));
+            _ansiConsole.Markup(Red($"or use {LightYellow("--activision")}, {LightYellow("--blizzard")}, or {LightYellow("--microsoft")} to load predefined groups"));
             throw new CommandException(".", 1, true);
         }
     }
