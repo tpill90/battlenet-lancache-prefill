@@ -2,15 +2,15 @@
 
 ## Installing Prerequisites
 
-Only the .NET 6 SDK is required to compile the project.  This can be installed through one of the following methods
+Only the .NET 8 SDK is required to compile the project.  This can be installed through one of the following methods
 
 ### Using Chocolatey
 ```powershell
-choco install dotnet-6.0-sdk
+choco install dotnet-8.0-sdk
 ```
 
 ### Manually
-The latest .NET 6.0 SDK can be found here  [.NET 6.0 SDK - Windows x64 Installer](https://download.visualstudio.microsoft.com/download/pr/deb4711b-7bbc-4afa-8884-9f2b964797f2/fb603c451b2a6e0a2cb5372d33ed68b9/dotnet-sdk-6.0.300-win-x64.exe)
+The latest .NET 8.0 SDK can be found here  [.NET 8.0 SDK - Windows x64 Installer](https://download.visualstudio.microsoft.com/download/pr/bd44cdb8-dcac-4f1f-8246-1ee392c68dac/ba818a6e513c305d4438c7da45c2b085/dotnet-sdk-8.0.406-win-x64.exe)
 
 ## Fixing Nuget's Default Config 
 
