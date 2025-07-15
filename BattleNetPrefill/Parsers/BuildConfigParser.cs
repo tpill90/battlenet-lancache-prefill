@@ -107,13 +107,17 @@
                     case "build-target-platform":
                     case "build-type":
                     case "build-timestamp":
+                    case "build-file-db":
+                    case "build-file-db-size":
+                    case "client-version":
+                    case "no-frame-encoding":
                     case "download-size":
                     case "root":
                     case "patch-size":
                         // We don't use these fields anywhere, so we're purposefully doing nothing with these.
                         break;
                     default:
-                        AnsiConsole.Console.LogMarkupVerbose($"!!!!!!!! Unknown buildconfig variable '{cols[0]}'");
+                        AnsiConsole.Console.LogMarkupVerbose($"Unknown buildconfig variable '{LightYellow(cols[0])}'");
                         buildConfig.UnknownKeyPairs.Add(cols[0], cols[1]);
                         break;
                 }

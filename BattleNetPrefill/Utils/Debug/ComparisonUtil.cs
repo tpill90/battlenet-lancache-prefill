@@ -1,10 +1,10 @@
 ﻿namespace BattleNetPrefill.Utils.Debug
 {
-    public sealed class ComparisonUtil
+    public static class ComparisonUtil
     {
-        string _blizzardCdnBaseUri = "http://level3.blizzard.com";
+        private const string BlizzardCdnBaseUri = "http://level3.blizzard.com";
 
-        public async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)
+        public static async Task<ComparisonResult> CompareAgainstRealRequestsAsync(List<Request> generatedRequests, TactProduct product)
         {
             AnsiConsole.WriteLine("Comparing requests against real request logs...");
             var timer = Stopwatch.StartNew();
@@ -23,7 +23,7 @@
             };
 
             // Populating the response size for any "whole file" requests
-            using var fileSizeProvider = new FileSizeProvider(product, _blizzardCdnBaseUri);
+            using var fileSizeProvider = new FileSizeProvider(product, BlizzardCdnBaseUri);
             await fileSizeProvider.PopulateRequestSizesAsync(generatedRequests);
             await fileSizeProvider.PopulateRequestSizesAsync(realRequests);
             fileSizeProvider.Save();
@@ -41,7 +41,7 @@
             return comparisonResult;
         }
 
-        public void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
+        public static void CompareRequests(List<Request> generatedRequests, List<Request> originalRequests)
         {
             CompareExactMatches(generatedRequests, originalRequests);
             CompareRangeMatches(generatedRequests, originalRequests);
@@ -108,7 +108,7 @@
             }
         }
 
-        private void CompareExactMatches(List<Request> generatedRequests, List<Request> originalRequests)
+        private static void CompareExactMatches(List<Request> generatedRequests, List<Request> originalRequests)
         {
             // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
             var requestsToProcess = new List<Request>(originalRequests.Count);
@@ -169,7 +169,7 @@
             generatedRequests.AddRange(generatedGrouped.SelectMany(e => e.Value).ToList());
         }
 
-        private void CompareRangeMatches(List<Request> generatedRequests, List<Request> originalRequests)
+        private static void CompareRangeMatches(List<Request> generatedRequests, List<Request> originalRequests)
         {
             // Copying the original requests to a temporary list, so that we can remove entries without modifying the enumeration
             var requestsToProcess = new List<Request>(originalRequests.Count);
@@ -219,7 +219,7 @@
             generatedRequests.AddRange(generatedGrouped.SelectMany(e => e.Value).ToList());
         }
 
-        private List<Request> SplitRequests(Request match, Request current)
+        private static List<Request> SplitRequests(Request match, Request current)
         {
             var results = new List<Request>();
             if (match.LowerByteRange != current.LowerByteRange)

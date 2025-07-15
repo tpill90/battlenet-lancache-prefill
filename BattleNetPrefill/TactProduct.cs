@@ -43,6 +43,9 @@
             IsBlizzard = true
         };
 
+
+        public static readonly TactProduct Warcraft1Remastered = new TactProduct("w1r") { DisplayName = "Warcraft 1: Remastered", IsBlizzard = true };
+        public static readonly TactProduct Warcraft2Remastered = new TactProduct("w2r") { DisplayName = "WarCraft II: Remastered", IsBlizzard = true };
         public static readonly TactProduct Warcraft3Reforged = new TactProduct("w3") { DisplayName = "Warcraft 3: Reforged", IsBlizzard = true };
         public static readonly TactProduct WorldOfWarcraft = new TactProduct("wow")
         {
@@ -51,6 +54,13 @@
             IsBlizzard = true
         };
         public static readonly TactProduct WowClassic = new TactProduct("wow_classic")
+        {
+            DisplayName = "WoW Cataclysm Classic",
+            DefaultTags = new[] { "Windows", "enUS", "x86_64", "US" },
+            IsBlizzard = true
+        };
+
+        public static readonly TactProduct WowClassicEra = new TactProduct("wow_classic_era")
         {
             DisplayName = "WoW Classic",
             DefaultTags = new[] { "Windows", "enUS", "x86_64", "US" },
@@ -86,6 +96,7 @@
         #region Microsoft
 
         public static readonly TactProduct Avowed = new TactProduct("aqua") { DisplayName = "Avowed", IsMicrosoft = true };
+        public static readonly TactProduct SeaOfThieves = new TactProduct("scor") { DisplayName = "Sea of Thieves", IsMicrosoft = true };
 
         #endregion
 

@@ -43,9 +43,6 @@
         /// </summary>
         public async Task<ComparisonResult> ProcessProductAsync(TactProduct product)
         {
-            //TODO it would be nice if this was only displayed when there is something to download
-            _ansiConsole.LogMarkupLine($"Starting {Cyan(product.DisplayName)}");
-
             var metadataTimer = Stopwatch.StartNew();
 
             // Initializing classes, now that we have our CDN info loaded
@@ -67,6 +64,8 @@
                 _ansiConsole.Write("\n");
                 return null;
             }
+
+            _ansiConsole.LogMarkupLine($"Starting {Cyan(product.DisplayName)}");
 
             await _ansiConsole.StatusSpinner().StartAsync("Start", async ctx =>
             {
@@ -91,10 +90,16 @@
             // Actually start the download of any deferred requests
             var downloadSuccessful = await cdnRequestManager.DownloadQueuedRequestsAsync(_prefillSummaryResult);
 
+            // TODO I don't like the way that this has to be written just to get the debug output working.
+            if (AppConfig.CompareAgainstRealRequests)
+            {
+                return await ComparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
+            }
             if (AppConfig.SkipDownloads)
             {
-                return new ComparisonResult();
+                return null;
             }
+
             if (downloadSuccessful)
             {
                 MarkDownloadAsSuccessful(product, targetVersion.Value);
@@ -105,14 +110,9 @@
                 _prefillSummaryResult.FailedApps++;
             }
 
-            if (!AppConfig.CompareAgainstRealRequests)
-            {
-                return null;
-            }
-
-            var comparisonUtil = new ComparisonUtil();
-            return await comparisonUtil.CompareAgainstRealRequestsAsync(cdnRequestManager.allRequestsMade.ToList(), product);
+            return null;
         }
+
 
         /// <summary>
         /// Checks to see if the previously prefilled version is up to date with the latest version on the CDN
