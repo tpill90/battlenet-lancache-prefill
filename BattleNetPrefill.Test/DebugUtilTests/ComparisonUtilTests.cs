@@ -16,8 +16,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(0, 555), LowerByteRange = 0, UpperByteRange = 10}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // Since there were no matches found, we should expect the two lists to have their original contents
             Assert.AreEqual(1, generatedRequests.Count);
@@ -37,8 +36,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), LowerByteRange = 0, UpperByteRange = 10}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // Because there is an exact match between the requests, the requests should be removed from each array.
             Assert.IsEmpty(generatedRequests);
@@ -58,8 +56,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
             Assert.AreEqual(2, generatedRequests.Count);
@@ -80,8 +77,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 50, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
             Assert.AreEqual(1, generatedRequests.Count);
@@ -102,8 +98,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // Since this matched fully, should be completely removed
             Assert.IsEmpty(generatedRequests);
@@ -127,8 +122,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 50}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // There is a partial match, so the remaining request byte ranges should be split into two.
             Assert.AreEqual(1, generatedRequests.Count);
@@ -149,8 +143,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 0, UpperByteRange = 100}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
 
             // Since this matched fully, should be completely removed
@@ -174,8 +167,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(1, generatedRequests.Count);
             // Should only have the remainder left
@@ -199,8 +191,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 25, UpperByteRange = 75 }
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(1, generatedRequests.Count);
             // Should only have the remainder left
@@ -225,8 +216,7 @@
                 new Request { RootFolder = RootFolder.data, CdnKey = new MD5Hash(100, 0), ProductRootUri = "/example", LowerByteRange = 16997, UpperByteRange = 64327 }
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             Assert.AreEqual(0, generatedRequests.Count);
 
@@ -247,8 +237,7 @@
                 new Request { ProductRootUri = "/sample.index", IsIndex = true, LowerByteRange = 0, UpperByteRange = 102400000 , RootFolder = RootFolder.data, CdnKey = new MD5Hash(0,0)}
             };
 
-            var comparisonUtil = new ComparisonUtil();
-            comparisonUtil.CompareRequests(generatedRequests, expectedRequests);
+            ComparisonUtil.CompareRequests(generatedRequests, expectedRequests);
 
             // When an index is matched, it should only consider the Uri.  Battle.net for whatever reason chooses to request the wrong byte range
             Assert.AreEqual(0, generatedRequests.Count);

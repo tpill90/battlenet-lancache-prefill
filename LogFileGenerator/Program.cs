@@ -11,12 +11,12 @@
 
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
+            TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
         };
 
         private static List<TactProduct> ProductsToCheck = new List<TactProduct>
         {
-            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
+            TactProduct.WowClassicEra, TactProduct.WowClassic
         };
 
         public static void Main()
@@ -129,7 +129,7 @@
             VersionsEntry cdnVersion = ConfigFileHandler.GetLatestVersionEntryAsync(product).Result;
             var logFilePath = $@"{logFileFolder}\{cdnVersion.versionsName}.log";
             // Copying the logs down
-            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/cache/lancache/logs/access.log ""{logFilePath}""")
+            var info = new ProcessStartInfo("scp", $@"tim@192.168.1.222:/mnt/temp/lancache/logs/access.log ""{logFilePath}""")
             {
                 UseShellExecute = false
             };
