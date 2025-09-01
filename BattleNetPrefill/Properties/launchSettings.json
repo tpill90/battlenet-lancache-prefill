@@ -1,28 +1,16 @@
 {
   "profiles": {
-    "Prefill All": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill --all --force"
-    },
     "Prefill Test Products - No Download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic --no-download --force --verbose"
+      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --verbose"
     },
     "Prefill All - No Download - No Cache": {
       "commandName": "Project",
       "commandLineArgs": "prefill --all --no-download --nocache --force"
     },
-    "Prefill Starcraft 1": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 --force"
-    },
-    "Prefill Overwatch": {
-      "commandName": "Project",
-      "commandLineArgs": "prefill -p pro --force"
-    },
     "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p wow --compare-requests --no-download --force"
+      "commandLineArgs": "prefill -p pro --compare-requests --no-download --force"
     },
     "Select Apps": {
       "commandName": "Project",

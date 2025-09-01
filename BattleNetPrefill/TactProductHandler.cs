@@ -61,7 +61,6 @@
             if (!_forcePrefill && IsProductUpToDate(product, targetVersion.Value))
             {
                 _prefillSummaryResult.AlreadyUpToDate++;
-                _ansiConsole.Write("\n");
                 return null;
             }
 

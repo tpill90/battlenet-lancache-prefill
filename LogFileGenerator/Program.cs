@@ -1,6 +1,6 @@
 ﻿namespace LogFileGenerator
 {
-    //TODO battlenet needs to be running in order for this to work
+    //TODO BnetInstaller doesn't seem to work anymore.  Check out https://github.com/redact7/bnetinstaller or update https://github.com/barncastle/Battle.Net-Installer
     public static class Program
     {
         private static readonly CdnRequestManager CdnRequestManager = new CdnRequestManager(AnsiConsole.Console);
@@ -9,18 +9,28 @@
         private static string RootInstallDir = @"C:\BattleNet";
         private static readonly string BnetInstallerPath = Path.Combine(Path.GetTempPath(), "BattleNet-Installer.exe");
 
+        // These need to be manually installed via Battle.Net because they have multiple options for their install
         private static readonly List<TactProduct> ManualInstallProducts = new List<TactProduct>
         {
-            TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WorldOfWarcraft, TactProduct.WowClassic
+            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic, TactProduct.WowClassicEra
         };
 
+        // These are the products that we'll make sure are up to date
         private static List<TactProduct> ProductsToCheck = new List<TactProduct>
         {
-            TactProduct.WowClassicEra, TactProduct.WowClassic
+            TactProduct.Starcraft1, TactProduct.Starcraft2, TactProduct.Overwatch2, TactProduct.WorldOfWarcraft, TactProduct.WowClassic, TactProduct.WowClassicEra
         };
 
         public static void Main()
         {
+            // Battle.Net is required to be running for this to work.
+            if (!Process.GetProcessesByName("Battle.net").Any())
+            {
+                AnsiConsole.MarkupLine("Starting Battle.Net");
+                Process.Start(@"C:\Program Files (x86)\Battle.net\Battle.net Launcher.exe");
+                Thread.Sleep(10_000);
+            }
+
             EnsureBnetInstallerIsDownloaded();
             if (!Directory.Exists(RootInstallDir))
             {
