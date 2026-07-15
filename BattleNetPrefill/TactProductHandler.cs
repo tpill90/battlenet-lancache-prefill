@@ -119,7 +119,7 @@
         private bool IsProductUpToDate(TactProduct product, VersionsEntry latestVersion)
         {
             // Checking to see if a file has been previously prefilled
-            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.TempDir}/prefilledVersion-{product.ProductCode}.txt";
             if (!File.Exists(versionFilePath))
             {
                 return false;
@@ -132,7 +132,7 @@
 
         private void MarkDownloadAsSuccessful(TactProduct product, VersionsEntry latestVersion)
         {
-            var versionFilePath = $"{AppConfig.CacheDir}/prefilledVersion-{product.ProductCode}.txt";
+            var versionFilePath = $"{AppConfig.TempDir}/prefilledVersion-{product.ProductCode}.txt";
             File.WriteAllText(versionFilePath, latestVersion.versionsName);
         }
 

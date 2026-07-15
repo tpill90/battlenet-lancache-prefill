@@ -6,7 +6,7 @@
         {
             // Create required folders
             Directory.CreateDirectory(ConfigDir);
-            Directory.CreateDirectory(CacheDir);
+            Directory.CreateDirectory(TempDir);
         }
 
         /// <summary>
@@ -18,7 +18,7 @@
         /// Downloaded archive indexes, as well as other metadata, are saved into this directory to speedup future prefill runs.
         /// All data in here should be able to be deleted safely.
         /// </summary>
-        public static readonly string CacheDir = TempDirUtils.GetTempDirBaseDirectories("BattlenetPrefill", tempDirVersion: "");
+        public static readonly string TempDir = TempDirUtils.GetTempDirBaseDirectories("BattlenetPrefill", tempDirVersion: "v1");
 
         /// <summary>
         /// Contains user configuration.  Should not be deleted, doing so will reset the app back to defaults.
