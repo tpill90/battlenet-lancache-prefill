@@ -2,7 +2,7 @@
   "profiles": {
     "Prefill Test Products - No Download": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --verbose"
+      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --no-download --verbose"
     },
     "Prefill Single - No Download": {
       "commandName": "Project",
@@ -28,9 +28,9 @@
       "commandName": "Project",
       "commandLineArgs": "prefill --no-download --force"
     },
-    "Clear Cache - Accept": {
+    "Clear Temp - Accept": {
       "commandName": "Project",
-      "commandLineArgs": "clear-cache -y"
+      "commandLineArgs": "clear-temp -y"
     }
   }
 }

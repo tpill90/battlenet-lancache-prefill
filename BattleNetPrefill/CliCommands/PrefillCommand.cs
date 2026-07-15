@@ -57,7 +57,7 @@ namespace BattleNetPrefill.CliCommands
             // Property must be set to false in order to disable ansi escape sequences
             _ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
 
-            await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.CacheDir);
+            await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.TempDir);
 
             ValidateUserHasSelectedApps();
 

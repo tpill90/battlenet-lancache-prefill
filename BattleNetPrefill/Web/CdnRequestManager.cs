@@ -212,7 +212,7 @@
             // Try to return a cached copy from the disk first, before making an actual request
             if (!AppConfig.NoLocalCache)
             {
-                string outputFilePath = AppConfig.CacheDir + uri.AbsolutePath;
+                string outputFilePath = AppConfig.TempDir + uri.AbsolutePath;
                 if (File.Exists(outputFilePath))
                 {
                     return await File.ReadAllBytesAsync(outputFilePath);
@@ -242,7 +242,7 @@
             }
 
             // Cache to disk
-            FileInfo file = new FileInfo(AppConfig.CacheDir + uri.AbsolutePath);
+            FileInfo file = new FileInfo(AppConfig.TempDir + uri.AbsolutePath);
             file.Directory.Create();
             await File.WriteAllBytesAsync(file.FullName, byteArray, cts.Token);
 
@@ -287,7 +287,7 @@
         /// <returns></returns>
         public async Task<string> MakePatchRequestAsync(TactProduct tactProduct, PatchRequest endpoint)
         {
-            var cacheFile = $"{AppConfig.CacheDir}/{endpoint.Name}-{tactProduct.ProductCode}.txt";
+            var cacheFile = $"{AppConfig.TempDir}/{endpoint.Name}-{tactProduct.ProductCode}.txt";
 
             // Load cached version, only valid for 30 minutes so that updated versions don't get accidentally ignored
             if (!AppConfig.NoLocalCache && File.Exists(cacheFile) && DateTime.Now < File.GetLastWriteTime(cacheFile).AddMinutes(30))
