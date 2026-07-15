@@ -4,13 +4,21 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --verbose"
     },
+    "Prefill Single - No Download": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p auks --no-download --force --verbose"
+    },
+    "Prefill All - No Download": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill --all --no-download --force --verbose"
+    },
     "Prefill All - No Download - No Cache": {
       "commandName": "Project",
-      "commandLineArgs": "prefill --all --no-download --nocache --force"
+      "commandLineArgs": "prefill --all --no-download --nocache --force --verbose"
     },
     "Prefill WOW - Compare Requests": {
       "commandName": "Project",
-      "commandLineArgs": "prefill -p pro --compare-requests --no-download --force"
+      "commandLineArgs": "prefill -p wow --compare-requests --no-download --force"
     },
     "Select Apps": {
       "commandName": "Project",

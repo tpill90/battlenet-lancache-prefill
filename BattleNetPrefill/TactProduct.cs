@@ -12,58 +12,61 @@
     {
         #region Blizzard
 
-        public static readonly TactProduct BlizzardArcadeCollection = new TactProduct("rtro") { DisplayName = "Blizzard Arcade Collection", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
+        public static readonly TactProduct BlizzardArcadeCollection = new TactProduct("rtro") { DisplayName = "Blizzard Arcade Collection", DefaultTags = ["dummy"], IsBlizzard = true };
 
-        public static readonly TactProduct DiabloImmortal = new TactProduct("anbs") { DisplayName = "Diablo: Immortal", DefaultTags = new[] { "dummy" }, IsBlizzard = true };
+        public static readonly TactProduct Diablo1 = new TactProduct("drtl") { DisplayName = "Diablo", DefaultTags = ["dummy"], IsBlizzard = true };
+        public static readonly TactProduct DiabloImmortal = new TactProduct("anbs") { DisplayName = "Diablo: Immortal", DefaultTags = ["dummy"], IsBlizzard = true };
         public static readonly TactProduct Diablo2Resurrected = new TactProduct("osi") { DisplayName = "Diablo 2: Resurrected", IsBlizzard = true };
         public static readonly TactProduct Diablo3 = new TactProduct("d3") { DisplayName = "Diablo 3", IsBlizzard = true };
         public static readonly TactProduct Diablo4 = new TactProduct("fenris") { DisplayName = "Diablo 4", IsBlizzard = true };
 
-        public static readonly TactProduct Hearthstone = new TactProduct("hsb") { DisplayName = "Hearthstone", DefaultTags = new[] { "Windows", "enUS" }, IsBlizzard = true };
+        public static readonly TactProduct Hearthstone = new TactProduct("hsb") { DisplayName = "Hearthstone", DefaultTags = ["Windows", "enUS"], IsBlizzard = true };
         public static readonly TactProduct HeroesOfTheStorm = new TactProduct("hero") { DisplayName = "Heroes of the Storm", IsBlizzard = true };
 
         public static readonly TactProduct Starcraft1 = new TactProduct("s1")
         {
             DisplayName = "Starcraft Remastered",
-            DefaultTags = new[] { "Windows", "enUS", "x86", "noigr" },
+            DefaultTags = ["Windows", "enUS", "x86", "noigr"],
             IsBlizzard = true
         };
 
         public static readonly TactProduct Starcraft2 = new TactProduct("s2")
         {
             DisplayName = "Starcraft 2",
-            DefaultTags = new[] { "Windows", "enUS" },
+            DefaultTags = ["Windows", "enUS"],
             IsBlizzard = true
         };
 
         public static readonly TactProduct Overwatch2 = new TactProduct("pro")
         {
             DisplayName = "Overwatch 2",
-            DefaultTags = new[] { "DevReg", "enUS" },
+            DefaultTags = ["DevReg", "enUS"],
             IsBlizzard = true
         };
 
 
         public static readonly TactProduct Warcraft1Remastered = new TactProduct("w1r") { DisplayName = "Warcraft 1: Remastered", IsBlizzard = true };
+        public static readonly TactProduct Warcraft2BattlenetEdition = new TactProduct("w2bn") { DisplayName = "WarCraft II: Battle.net Edition ", DefaultTags = ["dummy"], IsBlizzard = true };
         public static readonly TactProduct Warcraft2Remastered = new TactProduct("w2r") { DisplayName = "WarCraft II: Remastered", IsBlizzard = true };
         public static readonly TactProduct Warcraft3Reforged = new TactProduct("w3") { DisplayName = "Warcraft 3: Reforged", IsBlizzard = true };
+        public static readonly TactProduct WarcraftRumble = new TactProduct("gryphon") { DisplayName = "Warcraft Rumble", IsBlizzard = true };
         public static readonly TactProduct WorldOfWarcraft = new TactProduct("wow")
         {
             DisplayName = "World Of Warcraft",
-            DefaultTags = new[] { "Windows", "enUS", "x86" },
+            DefaultTags = ["Windows", "enUS", "x86"],
             IsBlizzard = true
         };
         public static readonly TactProduct WowClassic = new TactProduct("wow_classic")
         {
             DisplayName = "WoW Cataclysm Classic",
-            DefaultTags = new[] { "Windows", "enUS", "x86_64", "US" },
+            DefaultTags = ["Windows", "enUS", "x86_64", "US"],
             IsBlizzard = true
         };
 
         public static readonly TactProduct WowClassicEra = new TactProduct("wow_classic_era")
         {
             DisplayName = "WoW Classic",
-            DefaultTags = new[] { "Windows", "enUS", "x86_64", "US" },
+            DefaultTags = ["Windows", "enUS", "x86_64", "US"],
             IsBlizzard = true
         };
 
@@ -72,13 +75,16 @@
         #region Activision
 
         public static readonly TactProduct CodBO4 = new TactProduct("viper") { DisplayName = "Call of Duty: Black Ops 4", IsActivision = true };
+        public static readonly TactProduct CodBO6 = new TactProduct("btlr") { DisplayName = "Call of Duty: Black Ops 6", IsActivision = true };
         public static readonly TactProduct CodBOCW = new TactProduct("zeus")
         {
             DisplayName = "Call of Duty: Black Ops Cold War",
-            DefaultTags = new[] { "enUS", "acct-DEU", "cp", "mp", "zm", "zm2" },
+            DefaultTags = ["enUS", "acct-DEU", "cp", "mp", "zm", "zm2"],
             IsActivision = true
         };
         public static readonly TactProduct CodModernWarfare = new TactProduct("odin") { DisplayName = "Call of Duty: Modern Warfare 2019", IsActivision = true };
+        public static readonly TactProduct CodModernWarfare2 = new TactProduct("nina") { DisplayName = "Call of Duty: Modern Warfare II", IsActivision = true };
+        public static readonly TactProduct CodModernWarfare3 = new TactProduct("pinta") { DisplayName = "Call of Duty: Modern Warfare III", IsActivision = true };
 
         public static readonly TactProduct CallOfDuty = new TactProduct("auks") { DisplayName = "Call of Duty", IsActivision = true };
         public static readonly TactProduct CodMW2Remastered = new TactProduct("lazr") { DisplayName = "Call of Duty: MW2 Remastered", IsActivision = true };
@@ -87,7 +93,7 @@
         public static readonly TactProduct CrashBandicoot4 = new TactProduct("wlby")
         {
             DisplayName = "Crash Bandicoot 4: It's About Time",
-            DefaultTags = new[] { "dummy" },
+            DefaultTags = ["dummy"],
             IsActivision = true
         };
 

@@ -36,13 +36,13 @@ Detailed setup guides are available for the following platforms:
 
 <a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Linux-Setup-Guide">
     <img src="/docs/img/badges/linux-setup-badge.svg" height="32px" title="Linux" alt="Linux" />
-</a> &nbsp; 
+</a> &nbsp;
 <a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Docker-Setup-Guide">
     <img src="/docs/img/badges/docker-setup-badge.svg" height="32px" title="Docker" alt="Docker" />
-</a> &nbsp; 
+</a> &nbsp;
 <a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Unraid-Setup-Guide">
     <img src="/docs/img/badges/unraid-setup-badge.svg" height="32px" title="unRAID" alt="unRAID" />
-</a> &nbsp; 
+</a> &nbsp;
 <a target="_blank" href="https://tpill90.github.io/battlenet-lancache-prefill/install-guides/Windows-Setup-Guide">
     <img src="/docs/img/badges/windows-setup-badge.svg" height="32px" title="Windows" alt="Windows" />
 </a>
@@ -69,7 +69,7 @@ These selections will be saved permanently, and can be freely updated at any tim
 
 ## Initial prefill
 
-Now that a prefill app list has been created, we can now move onto our initial prefill run by using 
+Now that a prefill app list has been created, we can now move onto our initial prefill run by using
 ```powershell
 ./BattleNetPrefill prefill
 ```
@@ -82,13 +82,13 @@ The `prefill` command will automatically pickup the prefill app list, and begin 
 
 Updating any previously prefilled games can be done by simply re-running the `prefill` command, with the same games specified as before.
 
-**BattleNetPrefill** keeps track of which version of each game was previously prefilled, and will only re-download if there is a newer version of the game available.  
+**BattleNetPrefill** keeps track of which version of each game was previously prefilled, and will only re-download if there is a newer version of the game available.
 Any games that are currently up to date, will simply be skipped.
 
 <img src="docs/img/Prefill-UpToDate.png" width="630" alt="Prefilled game up to date">
 
 
-However, if there is a newer version of a game that is available, then **BattleNetPrefill** will re-download the game.  
+However, if there is a newer version of a game that is available, then **BattleNetPrefill** will re-download the game.
 Due to how Lancache works, this subsequent run should complete much faster than the initial prefill (example below used a 10gbit connection).
 Any data that was previously downloaded, will be retrieved from the Lancache, while any new data from the update will be retrieved from the internet.
 
@@ -106,9 +106,9 @@ If everything works as expected, you should see a message saying it found the se
 Running from a Docker container on the Lancache server is also supported!  You should instead see a message saying the server was found at `172.17.0.1`
 <img src="docs/img/AutoDns-Docker.png" width="830" alt="Prefill running on Lancache Server in Docker">
 
-Running on the Lancache server itself can give you some advantages over running **BattleNetPrefill** on a client machine, primarily the speed at which you can prefill apps.  
-Since there is no network transfer happening, the `prefill` should only be limited by disk I/O and CPU throughput.  
-For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force` on previously cached game yields the following performance 
+Running on the Lancache server itself can give you some advantages over running **BattleNetPrefill** on a client machine, primarily the speed at which you can prefill apps.
+Since there is no network transfer happening, the `prefill` should only be limited by disk I/O and CPU throughput.
+For example, using a **SK hynix Gold P31 2TB NVME** and running `prefill --force` on previously cached game yields the following performance
 <img src="docs/img/AutoDns-ServerPerf.png" width="830" alt="Prefill running on Lancache Server in Docker">
 
 # Detailed Command Usage
@@ -140,6 +140,7 @@ You can also find us at the [**LanCache.NET** Discord](https://discord.com/invit
 # External Docs
 * https://wowdev.wiki/TACT
 * https://github.com/d07RiV/blizzget/wiki
+* [BlizzTrack - Battle.Net Product Code Tracking](https://blizztrack.com/)
 
 ## Acknowledgements
 
