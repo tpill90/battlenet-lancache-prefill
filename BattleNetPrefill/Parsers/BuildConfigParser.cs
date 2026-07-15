@@ -112,6 +112,7 @@
                     case "client-version":
                     case "no-frame-encoding":
                     case "download-size":
+                    case "feature-placeholder":
                     case "root":
                     case "patch-size":
                         // We don't use these fields anywhere, so we're purposefully doing nothing with these.

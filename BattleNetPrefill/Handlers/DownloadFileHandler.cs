@@ -160,6 +160,7 @@
             // Default tags that work with most products
             if (targetProduct.DefaultTags == null)
             {
+                // TODO should I add dummy in here? Should probably test how many products actually have a dummy tag.
                 var tags = new List<string> { "enUS", "Windows", "noigr", "x86_64" };
                 return _downloadFile.tags.Where(e => tags.Contains(e.Name)).ToList();
             }
