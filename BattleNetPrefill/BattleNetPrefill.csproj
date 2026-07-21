@@ -78,7 +78,7 @@
     <PackageReference Include="HexMate" Version="0.0.3" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
     <PackageReference Include="Polly" Version="7.2.3" />
-    <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.67" />
+    <PackageReference Include="Spectre.Console" Version="0.51.1" />
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
     <PackageReference Include="ThisAssembly.AssemblyInfo" Version="1.4.3">
       <PrivateAssets>all</PrivateAssets>

@@ -7,6 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BattleNetPrefill\BattleNetPrefill.csproj" />
-    <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.67" />
+    <PackageReference Include="Spectre.Console" Version="0.51.1" />
   </ItemGroup>
 </Project>
