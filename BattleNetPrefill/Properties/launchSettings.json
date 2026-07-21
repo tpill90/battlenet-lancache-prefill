@@ -4,6 +4,10 @@
       "commandName": "Project",
       "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --no-download --verbose"
     },
+    "Prefill Test Products": {
+      "commandName": "Project",
+      "commandLineArgs": "prefill -p s1 s2 pro wow wow_classic wow_classic_era --verbose"
+    },
     "Prefill Single - No Download": {
       "commandName": "Project",
       "commandLineArgs": "prefill -p auks --no-download --force --verbose"

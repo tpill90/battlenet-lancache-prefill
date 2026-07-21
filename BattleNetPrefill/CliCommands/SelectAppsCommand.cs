@@ -1,4 +1,6 @@
 ﻿// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
+// ReSharper disable UnusedAutoPropertyAccessor.Global - Init setters are used even if resharper thinks they aren't, since CliFx sets them at runtime.
+
 namespace BattleNetPrefill.CliCommands
 {
     [UsedImplicitly]
@@ -8,8 +10,7 @@ namespace BattleNetPrefill.CliCommands
     {
         [CommandOption("no-ansi",
             Description = "Application output will be in plain text.  " +
-                          "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.",
-            Converter = typeof(NullableBoolConverter))]
+                          "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.")]
         public bool? NoAnsiEscapeSequences { get; init; }
 
         public async ValueTask ExecuteAsync(IConsole console)

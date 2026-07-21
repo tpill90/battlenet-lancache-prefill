@@ -1,4 +1,6 @@
 ﻿// ReSharper disable MemberCanBePrivate.Global - Properties used as parameters can't be private with CliFx, otherwise they won't work.
+// ReSharper disable UnusedAutoPropertyAccessor.Global - Init setters are used even if resharper thinks they aren't, since CliFx sets them at runtime.
+
 namespace BattleNetPrefill.CliCommands
 {
     [UsedImplicitly]
@@ -10,29 +12,28 @@ namespace BattleNetPrefill.CliCommands
             Converter = typeof(TactProductConverter))]
         public IReadOnlyList<TactProduct> ProductCodes { get; init; }
 
-        [CommandOption("all", Description = "Prefills all available products.  Includes all Activision, Blizzard and Microsoft games", Converter = typeof(NullableBoolConverter))]
-        public bool? PrefillAllProducts { get; init; }
+        [CommandOption("all", Description = "Prefills all available products.  Includes all Activision, Blizzard and Microsoft games")]
+        public bool PrefillAllProducts { get; init; }
 
-        [CommandOption("activision", Description = "Prefills all Activision products.", Converter = typeof(NullableBoolConverter))]
-        public bool? PrefillActivision { get; init; }
+        [CommandOption("activision", Description = "Prefills all Activision products.")]
+        public bool PrefillActivision { get; init; }
 
-        [CommandOption("blizzard", Description = "Prefills all Blizzard products.", Converter = typeof(NullableBoolConverter))]
-        public bool? PrefillBlizzard { get; init; }
+        [CommandOption("blizzard", Description = "Prefills all Blizzard products.")]
+        public bool PrefillBlizzard { get; init; }
 
-        [CommandOption("microsoft", Description = "Prefills all Microsoft products.", Converter = typeof(NullableBoolConverter))]
-        public bool? PrefillMicrosoft { get; init; }
+        [CommandOption("microsoft", Description = "Prefills all Microsoft products.")]
+        public bool PrefillMicrosoft { get; init; }
 
-        [CommandOption("verbose", Description = "Produces more detailed log output. Will output logs for games are already up to date.", Converter = typeof(NullableBoolConverter))]
-        public bool? Verbose
+        [CommandOption("verbose", Description = "Produces more detailed log output. Will output logs for games are already up to date.")]
+        public bool Verbose
         {
             get => AppConfig.VerboseLogs;
-            init => AppConfig.VerboseLogs = value ?? default(bool);
+            init => AppConfig.VerboseLogs = value;
         }
 
         [CommandOption("force", shortName: 'f',
-            Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.",
-            Converter = typeof(NullableBoolConverter))]
-        public bool? ForcePrefill { get; init; }
+            Description = "Forces the prefill to always run, overrides the default behavior of only prefilling if a newer version is available.")]
+        public bool ForcePrefill { get; init; }
 
         [CommandOption("unit",
             Description = "Specifies which unit to use to display download speed.  Can be either bits/bytes.",
@@ -45,9 +46,8 @@ namespace BattleNetPrefill.CliCommands
 
         [CommandOption("no-ansi",
             Description = "Application output will be in plain text.  " +
-                          "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.",
-            Converter = typeof(NullableBoolConverter))]
-        public bool? NoAnsiEscapeSequences { get; init; }
+                          "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.")]
+        public bool NoAnsiEscapeSequences { get; init; }
 
         private IAnsiConsole _ansiConsole;
 
@@ -55,13 +55,13 @@ namespace BattleNetPrefill.CliCommands
         {
             _ansiConsole = console.CreateAnsiConsole();
             // Property must be set to false in order to disable ansi escape sequences
-            _ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences ?? true;
+            _ansiConsole.Profile.Capabilities.Ansi = !NoAnsiEscapeSequences;
 
             await UpdateChecker.CheckForUpdatesAsync(typeof(Program), "tpill90/battlenet-lancache-prefill", AppConfig.TempDir);
 
             ValidateUserHasSelectedApps();
 
-            var tactProductHandler = new TactProductHandler(_ansiConsole, forcePrefill: ForcePrefill ?? default(bool));
+            var tactProductHandler = new TactProductHandler(_ansiConsole, forcePrefill: ForcePrefill);
 
             List<TactProduct> productsToProcess = BuildProductListFromArgs();
             await tactProductHandler.ProcessMultipleProductsAsync(productsToProcess);
@@ -78,22 +78,22 @@ namespace BattleNetPrefill.CliCommands
                 productsToProcess.AddRange(ProductCodes);
             }
             // --all flag
-            if (PrefillAllProducts ?? default(bool))
+            if (PrefillAllProducts)
             {
                 productsToProcess.AddRange(TactProduct.AllEnumValues);
             }
             // --activision flag
-            if (PrefillActivision ?? default(bool))
+            if (PrefillActivision)
             {
                 productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsActivision));
             }
             // --blizzard flag
-            if (PrefillBlizzard ?? default(bool))
+            if (PrefillBlizzard)
             {
                 productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsBlizzard));
             }
             // --microsoft flag
-            if (PrefillMicrosoft ?? default(bool))
+            if (PrefillMicrosoft)
             {
                 productsToProcess.AddRange(TactProduct.AllEnumValues.Where(e => e.IsMicrosoft));
             }
@@ -105,7 +105,7 @@ namespace BattleNetPrefill.CliCommands
         private void ValidateUserHasSelectedApps()
         {
             var userSelectedApps = TactProductHandler.LoadPreviouslySelectedApps();
-            if ((PrefillAllProducts ?? default(bool)) || (PrefillActivision ?? default(bool)) || (PrefillBlizzard ?? default(bool)) || (PrefillMicrosoft ?? default(bool))
+            if ((PrefillAllProducts) || (PrefillActivision) || (PrefillBlizzard) || (PrefillMicrosoft)
                     || (ProductCodes != null && ProductCodes.Any()) || userSelectedApps.Any())
             {
                 return;
