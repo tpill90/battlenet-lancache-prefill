@@ -130,7 +130,8 @@
             }
 
             // Logging some metrics about the download
-            _ansiConsole.LogMarkupLine($"Finished in {LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.CalculateBitrate(downloadTimer))}");
+            _ansiConsole.LogMarkupLine($"Finish downloading {Magenta(totalDownloadSize.ToDecimalString())} in " +
+                                       $"{LightYellow(downloadTimer.FormatElapsedString())} - {Magenta(totalDownloadSize.CalculateBitrate(downloadTimer))}");
             _ansiConsole.WriteLine();
 
 
