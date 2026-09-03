@@ -11,7 +11,7 @@ Automatically fills a Lancache with games from {{ gaming_service_name }} so that
 
 Keeps track of which games have been previously downloaded, and will only download games that have updates.
 
------
+---
 
 ## Example usage
 
@@ -23,12 +23,12 @@ Initiating a `prefill` run is as simple as running the following from the termin
 ./{{prefill_name}} prefill
 ```
 
-At the beginning of a `prefill` run, **{{prefill_name}}** will check to see which apps have new updates since the last `prefill` run, as well as checking to see if any apps have never been successfully prefilled.  If `prefill` detects that there are any apps that need to be downloaded, it will begin doing so.  If there are no apps that need to be downloaded, then the `prefill` run will simply finish immediately.
+At the beginning of a `prefill` run, **{{prefill_name}}** will check to see which apps have new updates since the last `prefill` run, as well as checking to see if any apps have never been successfully prefilled.  If `prefill` detects that there are any apps that need to be downloaded, it will begin doing so. If there are no apps that need to be downloaded, then the `prefill` run will simply finish immediately.
 
 
-### Prefilling your entire BattleNet library
+### Prefilling your entire {{gaming_service_name}} library
 
-Depending on the size of your library, and which apps you want to prefill, it may be easier to simply prefill the entire library instead.  This will also automatically include any new games you may have purchased, without having to use `select-apps` to select the newly purchased game.
+Depending on the size of your library, and which apps you want to prefill, it may be easier to simply prefill the entire library instead of manually selecting your apps with `select-apps`. This will also automatically include any new games you may have purchased, without having to use `select-apps` to select the newly purchased game.
 
 ```powershell
 ./{{prefill_name}} prefill --all
@@ -42,14 +42,14 @@ Suppose that you have an event coming up, and you want to be 100% certain that y
 ./{{prefill_name}} prefill --force
 ```
 
------
+---
 
 ## Options
 
-| Option      |     | Values                | Default     |     |
-| ----------- | --- | --------------------- | ----------- | --- |
-| --all       |     |                       |             | Downloads all owned apps, useful for prefilling a completely empty cache.  |
-| --force     | -f  |                       |             | By default, **{{prefill_name}}** will keep track of the most recently prefilled apps, and will only attempt to prefill if there it determines there a newer version available for download.  This default behavior will work best for most use cases, as no time will be wasted re-downloading files that have been previously prefilled.  <br/><br/> Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the selected apps.  This flag may be useful for diagnostics, or benchmarking network performance.  |
-| --verbose   |     |                       |             | Produces more detailed log output.  By default, games that are already up to date will not be displayed at all.  Specifying this option will make it so that all games, even ones up to date, will be logged.  |
-| --unit      |     | bits, bytes           | **bits**    | Specifies which unit to use to display download speed.   |
-| --no-ansi   |     |                       |             | Application output will be in plain text, rather than using the visually appealing colors and progress bars.  Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file. |
+| Option &nbsp; &nbsp; &nbsp; | &nbsp; &nbsp; | Values      | Default  |     |
+| --------------------------- | ------------- | ----------- | -------- | --- |
+| --all                       |               |             |          | Downloads all owned apps, useful for prefilling a completely empty cache.  |
+| --force                     | -f            |             |          | By default, **{{prefill_name}}** will keep track of the most recently prefilled apps, and will only attempt to prefill if there it determines there a newer version available for download.  This default behavior will work best for most use cases, as no time will be wasted re-downloading files that have been previously prefilled.  <br/><br/> Running with the flag `--force` will override this behavior, and instead will always run the prefill, re-downloading all files for the selected apps.  This flag may be useful for diagnostics, or benchmarking network performance.  |
+| --verbose                   |               |             |          | Produces more detailed log output.  By default, games that are already up to date will not be displayed at all.  Specifying this option will make it so that all games, even ones up to date, will be logged.  |
+| --unit                      |               | bits, bytes | **bits** | Specifies which unit to use to display download speed.  |
+| --no-ansi                   |               |             |          | Application output will be in plain text, rather than using the visually appealing colors and progress bars.  Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.  |

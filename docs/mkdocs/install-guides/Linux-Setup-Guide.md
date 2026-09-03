@@ -22,6 +22,8 @@ apt-get install curl jq unzip wget -y
 
 Once the install command has finished successfully, we can move on to installing **{{prefill_name}}**.
 
+---
+
 ## Installing {{prefill_name}}
 
 We will be using a script to assist with installing **{{prefill_name}}** for the first time.  This will be helpful as it will save us from running several manual steps.
@@ -61,6 +63,8 @@ If everything worked as expected, you should see output similar to below
 
 
 **{{prefill_name}}** is now installed on your machine!  You can now run it with `./{{prefill_name}}`
+
+---
 
 ## Next Steps
 

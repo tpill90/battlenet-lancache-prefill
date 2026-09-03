@@ -13,8 +13,6 @@ extra_javascript:
     - assets/extra.js
 # Defines global variables that can be used by templates
 extra:
-    # TODO Remove this one
-    prefillName: BattleNetPrefill
     prefill_name: BattleNetPrefill
     gaming_service_name: BattleNet
     repo_name: battlenet-lancache-prefill
@@ -61,6 +59,9 @@ plugins:
                   build: true
               gr:
                   name: Ελληνικά
+                  build: true
+              de:
+                  name: Deutsch
                   build: true
     # Allows global variables - https://github.com/fralau/mkdocs_macros_plugin
     - macros
