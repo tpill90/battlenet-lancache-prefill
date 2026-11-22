@@ -56,6 +56,11 @@
             DefaultTags = ["Windows", "enUS", "x86"],
             IsBlizzard = true
         };
+        public static readonly TactProduct WowForever = new TactProduct("wowf")
+        {
+            DisplayName = "WoW: Forever",
+            IsBlizzard = true
+        };
         public static readonly TactProduct WowClassic = new TactProduct("wow_classic")
         {
             DisplayName = "WoW Cataclysm Classic",
