@@ -2,7 +2,7 @@
 
 ## Installing Prerequisites
 
-Prior to installing **{{prefillName}}** we will need to make sure that `curl`, `jq`, and `unzip` are already installed on our system.  Depending on your machine's configuration, this software may or may not already be installed.  Regardless, the following steps will ensure that everything needed is successfully installed.
+Prior to installing **{{prefill_name}}** we will need to make sure that `curl`, `jq`, and `unzip` are already installed on our system.  Depending on your machine's configuration, this software may or may not already be installed.  Regardless, the following steps will ensure that everything needed is successfully installed.
 
 !!! note
     These steps assume that you are using Ubuntu/Debian.  Depending on which Linux distro you are using, you may have to use slightly different commands.
@@ -20,17 +20,19 @@ apt-get install curl jq unzip wget -y
 !!! Warning
     You may run into a "Could not open lock file" error when running `apt-get install`, and will need to prefix the command with `sudo`
 
-Once the install command has finished successfully, we can move on to installing **{{prefillName}}**.
+Once the install command has finished successfully, we can move on to installing **{{prefill_name}}**.
 
-## Installing {{prefillName}}
+---
 
-We will be using a script to assist with installing **{{prefillName}}** for the first time.  This will be helpful as it will save us from running several manual steps.
+## Installing {{prefill_name}}
 
-To begin, open up a new terminal session.  We will want to create a new directory to install **{{prefillName}}** into.  For example, to create the directory and to move into it, run
+We will be using a script to assist with installing **{{prefill_name}}** for the first time.  This will be helpful as it will save us from running several manual steps.
+
+To begin, open up a new terminal session.  We will want to create a new directory to install **{{prefill_name}}** into.  For example, to create the directory and to move into it, run
 
 ``` bash
-mkdir {{prefillName}}
-cd {{prefillName}}/
+mkdir {{prefill_name}}
+cd {{prefill_name}}/
 ```
 
 After running the above commands successfully, you should see similar output in your terminal :
@@ -38,7 +40,7 @@ After running the above commands successfully, you should see similar output in 
 <div data-cli-player="../casts/make-new-directory.cast" data-rows=4></div>
 <br>
 
-We can now move on to downloading the [install script](https://github.com/tpill90/{{repo_name}}/blob/master/scripts/update.sh) from the repo, and running it to install **{{prefillName}}**
+We can now move on to downloading the [install script](https://github.com/tpill90/{{repo_name}}/blob/master/scripts/update.sh) from the repo, and running it to install **{{prefill_name}}**
 
 ```bash
 # Downloads the install script
@@ -50,8 +52,8 @@ chmod +x update.sh
 # Does the install!
 ./update.sh
 
-# Allows {{prefillName}} to be executed
-chmod +x ./{{prefillName}}
+# Allows {{prefill_name}} to be executed
+chmod +x ./{{prefill_name}}
 ```
 
 If everything worked as expected, you should see output similar to below
@@ -60,10 +62,12 @@ If everything worked as expected, you should see output similar to below
 <br>
 
 
-**{{prefillName}}** is now installed on your machine!  You can now run it with `./{{prefillName}}`
+**{{prefill_name}}** is now installed on your machine!  You can now run it with `./{{prefill_name}}`
+
+---
 
 ## Next Steps
 
-If you are new to **{{prefillName}}** and would like an introductory tutorial, see the [Getting Started](https://github.com/tpill90/{{repo_name}}#getting-started) guide.
+If you are new to **{{prefill_name}}** and would like an introductory tutorial, see the [Getting Started](https://github.com/tpill90/{{repo_name}}#getting-started) guide.
 
 Answers to common issues and questions can be found at [Frequently Asked Questions](https://github.com/tpill90/{{repo_name}}#frequently-asked-questions).
