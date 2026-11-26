@@ -43,6 +43,12 @@
 
         public static TransferSpeedUnit TransferSpeedUnit { get; set; } = TransferSpeedUnit.Bits;
 
+        /// <summary>
+        /// Upper limit on download requests in flight at once.  Split 60/40 between small (under 1 MB) and large requests,
+        /// so the default of 25 keeps the original fixed limits of 15 and 10.
+        /// </summary>
+        public static uint MaxConcurrentRequests { get; set; } = 25;
+
         #region Debugging Settings
 
         private static bool _compareAgainstRealRequests;
