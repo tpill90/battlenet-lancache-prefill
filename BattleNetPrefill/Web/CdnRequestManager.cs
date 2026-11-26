@@ -153,11 +153,16 @@
             // requests from choking out overall throughput.
             var byteThreshold = (long)ByteSize.FromMegaBytes(1).Bytes;
 
+            // AppConfig.MaxConcurrentRequests is split 60/40 between the batches (25 -> 15 small + 10 large).
+            var maxConcurrency = (int)AppConfig.MaxConcurrentRequests;
+            var smallConcurrency = Math.Max(1, (int)Math.Round(maxConcurrency * 0.6));
+            var largeConcurrency = Math.Max(1, maxConcurrency - smallConcurrency);
+
             var smallRequests = requests.Where(e => e.TotalBytes < byteThreshold).ToList();
-            var smallDownloadTask = Parallel.ForEachAsync(smallRequests, new ParallelOptions { MaxDegreeOfParallelism = 15 }, async (request, _) => await DownloadRequestWrapper(request, _));
+            var smallDownloadTask = Parallel.ForEachAsync(smallRequests, new ParallelOptions { MaxDegreeOfParallelism = smallConcurrency }, async (request, _) => await DownloadRequestWrapper(request, _));
 
             var largeRequests = requests.Where(e => e.TotalBytes >= byteThreshold).ToList();
-            var largeDownloadTask = Parallel.ForEachAsync(largeRequests, new ParallelOptions { MaxDegreeOfParallelism = 10 }, async (request, _) => await DownloadRequestWrapper(request, _));
+            var largeDownloadTask = Parallel.ForEachAsync(largeRequests, new ParallelOptions { MaxDegreeOfParallelism = largeConcurrency }, async (request, _) => await DownloadRequestWrapper(request, _));
 
             await Task.WhenAll(smallDownloadTask, largeDownloadTask);
 

@@ -44,6 +44,14 @@ namespace BattleNetPrefill.CliCommands
             init => AppConfig.TransferSpeedUnit = value ?? TransferSpeedUnit.Bits;
         }
 
+        [CommandOption("max-threads",
+            Description = "Maximum number of concurrent download requests.  Raising this can speed up prefills on fast connections.")]
+        public uint MaxThreads
+        {
+            get => AppConfig.MaxConcurrentRequests;
+            init => AppConfig.MaxConcurrentRequests = Math.Max(1, value);
+        }
+
         [CommandOption("no-ansi",
             Description = "Application output will be in plain text.  " +
                           "Should only be used if terminal does not support Ansi Escape sequences, or when redirecting output to a file.")]
